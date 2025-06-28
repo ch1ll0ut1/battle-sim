@@ -1,4 +1,4 @@
-import { Weapon } from './weapon'
+import { Weapon } from './weapon.js'
 
 describe('Weapon', () => {
   describe('constructor', () => {

@@ -1,5 +1,5 @@
-import { Weapon } from '../weapons/weapon'
-import { UnitBody } from './body'
+import { Weapon } from '../weapons/weapon.js'
+import { UnitBody } from './body.js'
 
 // Stamina costs for different actions
 const STAMINA_COSTS = {

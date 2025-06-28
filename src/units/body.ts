@@ -1,5 +1,5 @@
-import { Injury, BodyPart } from './unit'
-import { Armor, ArmorSlot } from '../armor/armor'
+import { Injury, BodyPart } from './unit.js'
+import { Armor, ArmorSlot } from '../armor/armor.js'
 
 // Consciousness threshold - above this to be able to fight
 const CONSCIOUSNESS_THRESHOLD = 30
@@ -35,12 +35,9 @@ const BODY_PART_TO_ARMOR_SLOT: Record<BodyPart, ArmorSlot> = {
 }
 
 /**
- * UnitBody manages the physical state of a unit including injuries, consciousness,
- * blood loss, and armor protection. It handles injury effects, body part functionality,
- * and determines if the unit can perform various actions based on their physical state.
- * 
- * This class is responsible for realistic injury modeling including pain, shock,
- * bleeding, and permanent damage that affects combat capabilities.
+ * UnitBody handles all physical aspects of a unit including injuries, consciousness,
+ * blood loss, and armor integration. It manages the relationship between physical
+ * damage and combat effectiveness.
  */
 export class UnitBody {
   /**

@@ -1,6 +1,6 @@
 // Tests for UnitBody (injury, pain, shock, body part functionality, armor)
-import { Unit, Injury, BodyPart } from './unit'
-import { Armor } from '../armor/armor'
+import { Unit, Injury, BodyPart } from './unit.js'
+import { Armor } from '../armor/armor.js'
 
 describe('UnitBody', () => {
   let unit: Unit

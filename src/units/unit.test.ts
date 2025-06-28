@@ -1,7 +1,5 @@
-// ... keep only high-level integration tests in this file ... 
-
 // Integration tests for Unit class
-import { Unit } from './unit'
+import { Unit } from './unit.js'
 
 describe('Unit Integration', () => {
   it('should create a unit with basic stats', () => {

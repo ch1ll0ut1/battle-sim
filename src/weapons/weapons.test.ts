@@ -1,5 +1,5 @@
-import { Weapons } from './weapons'
-import { Unit } from '../units/unit'
+import { Weapons } from './weapons.js'
+import { Unit } from '../units/unit.js'
 
 describe('Weapons', () => {
   describe('weapon categories', () => {

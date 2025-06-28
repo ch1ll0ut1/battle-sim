@@ -8,10 +8,8 @@
  * systems to determine what actions are possible and how effective they are.
  */
 
-import { UnitBody } from './body'
-import { UnitCombat } from './combat'
-import { Armor } from '../armor/armor'
-import { Weapon } from '../weapons/weapon'
+import { UnitBody } from './body.js'
+import { UnitCombat } from './combat.js'
 
 export type BodyPart = 'head' | 'torso' | 'leftArm' | 'rightArm' | 'leftLeg' | 'rightLeg'
 

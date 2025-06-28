@@ -1,7 +1,7 @@
 // Realistic weapon definitions with weapon types and damage types
 
-import { Weapon, DamageType } from './weapon'
-import { Unit } from '../units/unit'
+import { Weapon, DamageType } from './weapon.js'
+import { Unit } from '../units/unit.js'
 
 export class Weapons {
   // Light Weapons (1-3 kg) - Fast, precise

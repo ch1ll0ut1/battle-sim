@@ -1,6 +1,6 @@
-import { Unit } from './unit'
-import { Armor } from '../armor/armor'
-import { Weapon } from '../weapons/weapon'
+import { Unit } from './unit.js'
+import { Armor } from '../armor/armor.js'
+import { Weapon } from '../weapons/weapon.js'
 
 describe('Unit Combat', () => {
   it('should handle armor and weapon compatibility', () => {
