@@ -1,18 +1,470 @@
-// Combat Engine - Handles battle mechanics and hit calculations
+// Combat Engine - Handles real-time battle mechanics and unit interactions
+
+import { Unit } from '../units/unit.js'
+import { Weapon } from '../weapons/weapon.js'
 
 export interface CombatResult {
   hit: boolean
   blocked: boolean
+  dodged: boolean
   fatal: boolean
   damage: number
+  injury?: any
+}
+
+export interface CombatAction {
+  type: 'attack' | 'block' | 'dodge' | 'defend' | 'move'
+  target?: Unit
+  style?: 'normal' | 'heavy' | 'quick'
+  direction?: 'front' | 'side' | 'back'
+  handedness?: 'one-handed' | 'two-handed'
+}
+
+export interface CombatEvent {
+  timestamp: number
+  unit: Unit
+  action: CombatAction
+  result?: CombatResult
+  message: string
+}
+
+export interface BattleState {
+  units: Unit[]
+  events: CombatEvent[]
+  isActive: boolean
+  startTime: number
+  currentTime: number
 }
 
 export class CombatEngine {
-  // Placeholder for combat logic
-  // Will implement hit rate, armor blocking, weak points, etc.
-  
-  static calculateHit(attackerLevel: number, weaponWeight: number): boolean {
-    // TODO: Implement hit rate calculation based on weapon weight and experience
-    return Math.random() > 0.5
+  private battleState: BattleState
+  private readonly TURN_INTERVAL = 0.1 // 100ms intervals for realistic reaction time
+
+  constructor(units: Unit[]) {
+    this.battleState = {
+      units,
+      events: [],
+      isActive: true,
+      startTime: 0,
+      currentTime: 0
+    }
   }
+
+  /**
+   * Runs a complete battle simulation
+   * @param logLevel - Level of detail for event logging
+   * @returns Battle result with winner and events
+   */
+  runBattle(logLevel: 'summary' | 'events' | 'detailed' = 'events'): BattleResult {
+    this.battleState.startTime = Date.now()
+    this.battleState.currentTime = 0
+
+    this.logEvent(null, null, `Battle started between ${this.battleState.units.length} units`)
+
+    while (this.battleState.isActive && this.battleState.currentTime < 300) { // Max 5 minutes
+      this.executeCombatTurn()
+      this.battleState.currentTime += this.TURN_INTERVAL
+      
+      // Check for battle end conditions
+      this.checkBattleEnd()
+    }
+
+    const winner = this.determineWinner()
+    this.logEvent(null, null, `Battle ended - ${winner ? 'Unit victorious' : 'Draw'}`)
+
+    return {
+      winner,
+      events: this.battleState.events,
+      duration: this.battleState.currentTime,
+      logLevel
+    }
+  }
+
+  /**
+   * Executes a single combat turn with unit decision making and action resolution
+   */
+  private executeCombatTurn(): void {
+    const [unitA, unitB] = this.battleState.units
+
+    if (!unitA.body.isAlive() || !unitB.body.isAlive()) return
+
+    // Unit A decides action
+    const actionA = this.decideAction(unitA, unitB)
+    
+    // Unit B sees Unit A's action and can react
+    const actionB = this.decideReaction(unitB, unitA, actionA)
+
+    // Resolve both actions simultaneously
+    this.resolveActions(unitA, actionA, unitB, actionB)
+
+    // Update unit states
+    this.updateUnits()
+  }
+
+  /**
+   * Unit decides what action to take based on current situation
+   */
+  private decideAction(unit: Unit, enemy: Unit): CombatAction {
+    // If enemy is attacking, consider defensive actions
+    if (this.isEnemyAttacking(enemy)) {
+      if (unit.combat.canPerformAction('block') && unit.combat.experience > 0.3) {
+        return { type: 'block', target: enemy }
+      }
+      if (unit.combat.canPerformAction('dodge') && unit.combat.stamina > 15) {
+        return { type: 'dodge', direction: 'side' }
+      }
+    }
+
+    // If we're in good position, attack
+    if (unit.combat.canPerformAction('attack') && unit.combat.stamina > 10) {
+      const style = unit.combat.stamina > 30 ? 'normal' : 'quick'
+      return { 
+        type: 'attack', 
+        target: enemy, 
+        style,
+        handedness: 'one-handed' // Default to one-handed for now
+      }
+    }
+
+    // If low stamina, try to recover
+    if (unit.combat.stamina < 20) {
+      return { type: 'defend' }
+    }
+
+    // Default to defensive stance
+    return { type: 'defend' }
+  }
+
+  /**
+   * Unit reacts to enemy's action based on reaction time and experience
+   */
+  private decideReaction(unit: Unit, enemy: Unit, enemyAction: CombatAction): CombatAction {
+    // Calculate reaction time based on experience
+    const reactionTime = this.calculateReactionTime(unit)
+    
+    // If enemy is attacking and we can react in time
+    if (enemyAction.type === 'attack' && reactionTime < this.TURN_INTERVAL) {
+      if (unit.combat.canPerformAction('block') && unit.combat.experience > 0.2) {
+        return { type: 'block', target: enemy }
+      }
+      if (unit.combat.canPerformAction('dodge') && unit.combat.stamina > 10) {
+        return { type: 'dodge', direction: 'back' }
+      }
+    }
+
+    // Otherwise, continue with planned action
+    return this.decideAction(unit, enemy)
+  }
+
+  /**
+   * Resolves both units' actions simultaneously
+   */
+  private resolveActions(unitA: Unit, actionA: CombatAction, unitB: Unit, actionB: CombatAction): void {
+    // Handle blocking first
+    if (actionA.type === 'attack' && actionB.type === 'block') {
+      this.resolveAttackVsBlock(unitA, actionA, unitB, actionB)
+    } else if (actionB.type === 'attack' && actionA.type === 'block') {
+      this.resolveAttackVsBlock(unitB, actionB, unitA, actionA)
+    }
+    // Handle dodging
+    else if (actionA.type === 'attack' && actionB.type === 'dodge') {
+      this.resolveAttackVsDodge(unitA, actionA, unitB, actionB)
+    } else if (actionB.type === 'attack' && actionA.type === 'dodge') {
+      this.resolveAttackVsDodge(unitB, actionB, unitA, actionA)
+    }
+    // Handle mutual attacks
+    else if (actionA.type === 'attack' && actionB.type === 'attack') {
+      this.resolveMutualAttack(unitA, actionA, unitB, actionB)
+    }
+    // Handle single attacks
+    else if (actionA.type === 'attack') {
+      this.resolveSingleAttack(unitA, actionA, unitB)
+    } else if (actionB.type === 'attack') {
+      this.resolveSingleAttack(unitB, actionB, unitA)
+    }
+    // Handle defensive actions
+    else {
+      this.resolveDefensiveActions(unitA, actionA, unitB, actionB)
+    }
+  }
+
+  /**
+   * Resolves attack vs block interaction
+   */
+  private resolveAttackVsBlock(attacker: Unit, attackAction: CombatAction, blocker: Unit, blockAction: CombatAction): void {
+    const hitRate = this.calculateHitRate(attacker, blocker, attackAction)
+    const blockSuccess = this.calculateBlockSuccess(blocker, attackAction)
+    
+    if (Math.random() < hitRate) {
+      if (blockSuccess) {
+        // Attack hits but is blocked
+        const damage = this.calculateDamage(attacker, attackAction) * 0.3 // Reduced damage
+        this.applyDamage(attacker, blocker, damage, false)
+        this.logEvent(attacker, attackAction, `attacks ${blocker.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, but attack is blocked`)
+      } else {
+        // Attack hits and isn't blocked
+        const damage = this.calculateDamage(attacker, attackAction)
+        this.applyDamage(attacker, blocker, damage, true)
+        this.logEvent(attacker, attackAction, `attacks ${blocker.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, hits for ${Math.round(damage)} damage`)
+      }
+    } else {
+      this.logEvent(attacker, attackAction, `attacks ${blocker.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, but misses`)
+    }
+  }
+
+  /**
+   * Resolves attack vs dodge interaction
+   */
+  private resolveAttackVsDodge(attacker: Unit, attackAction: CombatAction, dodger: Unit, dodgeAction: CombatAction): void {
+    const hitRate = this.calculateHitRate(attacker, dodger, attackAction)
+    const dodgeSuccess = this.calculateDodgeSuccess(dodger, attackAction)
+    
+    if (Math.random() < hitRate && !dodgeSuccess) {
+      const damage = this.calculateDamage(attacker, attackAction)
+      this.applyDamage(attacker, dodger, damage, true)
+      this.logEvent(attacker, attackAction, `attacks ${dodger.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, hits for ${Math.round(damage)} damage`)
+    } else {
+      this.logEvent(attacker, attackAction, `attacks ${dodger.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, but ${dodger.combat.experience > 0.5 ? 'Veteran' : 'Novice'} dodges`)
+    }
+  }
+
+  /**
+   * Resolves mutual attack (both units attack each other)
+   */
+  private resolveMutualAttack(unitA: Unit, actionA: CombatAction, unitB: Unit, actionB: CombatAction): void {
+    const hitRateA = this.calculateHitRate(unitA, unitB, actionA)
+    const hitRateB = this.calculateHitRate(unitB, unitA, actionB)
+    
+    const hitA = Math.random() < hitRateA
+    const hitB = Math.random() < hitRateB
+    
+    if (hitA) {
+      const damageA = this.calculateDamage(unitA, actionA)
+      this.applyDamage(unitA, unitB, damageA, true)
+      this.logEvent(unitA, actionA, `attacks ${unitB.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, hits for ${Math.round(damageA)} damage`)
+    } else {
+      this.logEvent(unitA, actionA, `attacks ${unitB.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, but misses`)
+    }
+    
+    if (hitB) {
+      const damageB = this.calculateDamage(unitB, actionB)
+      this.applyDamage(unitB, unitA, damageB, true)
+      this.logEvent(unitB, actionB, `attacks ${unitA.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, hits for ${Math.round(damageB)} damage`)
+    } else {
+      this.logEvent(unitB, actionB, `attacks ${unitA.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, but misses`)
+    }
+  }
+
+  /**
+   * Resolves single attack (one unit attacks, other defends)
+   */
+  private resolveSingleAttack(attacker: Unit, attackAction: CombatAction, defender: Unit): void {
+    const hitRate = this.calculateHitRate(attacker, defender, attackAction)
+    
+    if (Math.random() < hitRate) {
+      const damage = this.calculateDamage(attacker, attackAction)
+      this.applyDamage(attacker, defender, damage, true)
+      this.logEvent(attacker, attackAction, `attacks ${defender.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, hits for ${Math.round(damage)} damage`)
+    } else {
+      this.logEvent(attacker, attackAction, `attacks ${defender.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, but misses`)
+    }
+  }
+
+  /**
+   * Resolves defensive actions (both units defending, moving, etc.)
+   */
+  private resolveDefensiveActions(unitA: Unit, actionA: CombatAction, unitB: Unit, actionB: CombatAction): void {
+    // Both units are being defensive, just log their actions
+    if (actionA.type === 'defend') {
+      this.logEvent(unitA, actionA, `takes defensive stance`)
+    }
+    if (actionB.type === 'defend') {
+      this.logEvent(unitB, actionB, `takes defensive stance`)
+    }
+  }
+
+  /**
+   * Calculates hit rate based on weapon, experience, and target
+   */
+  private calculateHitRate(attacker: Unit, target: Unit, action: CombatAction): number {
+    let baseHitRate = 0.7 // Base 70% hit rate
+    
+    // Weapon modifier
+    const weapon = attacker.combat.getWeapon()
+    if (weapon) {
+      baseHitRate *= attacker.combat.getHitRateModifier()
+    } else {
+      baseHitRate *= 0.5 // No weapon penalty
+    }
+    
+    // Experience bonus
+    baseHitRate += attacker.combat.experience * 0.2
+    
+    // Target experience (more experienced targets are harder to hit)
+    baseHitRate -= target.combat.experience * 0.1
+    
+    // Stamina effect
+    const staminaEffect = attacker.combat.stamina / attacker.combat.maxStamina
+    baseHitRate *= (0.5 + staminaEffect * 0.5)
+    
+    return Math.max(0.1, Math.min(0.95, baseHitRate))
+  }
+
+  /**
+   * Calculates damage based on weapon, strength, and attack style
+   */
+  private calculateDamage(attacker: Unit, action: CombatAction): number {
+    let baseDamage = 30 // Base damage
+    
+    // Weapon damage calculation
+    const weapon = attacker.combat.getWeapon()
+    if (weapon) {
+      // Calculate damage based on weapon characteristics
+      const primaryDamageType = weapon.getPrimaryDamageType()
+      
+      switch (primaryDamageType) {
+        case 'cutting':
+          baseDamage = 40 + (weapon.edgeSharpness * 30) // 40-70 damage
+          break
+        case 'piercing':
+          baseDamage = 35 + (weapon.pointGeometry * 25) // 35-60 damage
+          break
+        case 'blunt':
+          baseDamage = 45 + (weapon.impactArea / 20) // 45-65 damage
+          break
+      }
+      
+      // Weight affects damage (heavier weapons do more damage)
+      baseDamage += weapon.weight * 2
+    }
+    
+    // Strength modifier
+    baseDamage *= (0.5 + attacker.body.strength / 100)
+    
+    // Attack style modifier
+    if (action.style === 'heavy') {
+      baseDamage *= 1.5
+    } else if (action.style === 'quick') {
+      baseDamage *= 0.7
+    }
+    
+    // Experience bonus
+    baseDamage *= (1 + attacker.combat.experience * 0.3)
+    
+    return Math.round(baseDamage)
+  }
+
+  /**
+   * Calculates block success chance
+   */
+  private calculateBlockSuccess(blocker: Unit, attackAction: CombatAction): boolean {
+    const blockChance = 0.3 + blocker.combat.experience * 0.4 // 30-70% based on experience
+    return Math.random() < blockChance
+  }
+
+  /**
+   * Calculates dodge success chance
+   */
+  private calculateDodgeSuccess(dodger: Unit, attackAction: CombatAction): boolean {
+    const dodgeChance = 0.2 + dodger.combat.experience * 0.3 // 20-50% based on experience
+    return Math.random() < dodgeChance
+  }
+
+  /**
+   * Calculates reaction time based on experience
+   */
+  private calculateReactionTime(unit: Unit): number {
+    // Base reaction time 0.2s, reduced by experience
+    return 0.2 - (unit.combat.experience * 0.15) // 0.05s to 0.2s
+  }
+
+  /**
+   * Applies damage and creates injury
+   */
+  private applyDamage(attacker: Unit, target: Unit, damage: number, createInjury: boolean): void {
+    if (createInjury) {
+      const injury = this.createInjury(damage, attacker.combat.getWeapon())
+      target.body.receiveInjury(injury)
+    }
+  }
+
+  /**
+   * Creates an injury based on damage and weapon
+   */
+  private createInjury(damage: number, weapon: Weapon | null): any {
+    const bodyParts: any[] = ['head', 'torso', 'leftArm', 'rightArm', 'leftLeg', 'rightLeg']
+    const bodyPart = bodyParts[Math.floor(Math.random() * bodyParts.length)]
+    
+    let severity: any = 'minor'
+    if (damage > 80) severity = 'fatal'
+    else if (damage > 60) severity = 'critical'
+    else if (damage > 40) severity = 'severe'
+    else if (damage > 20) severity = 'moderate'
+    
+    return {
+      bodyPart,
+      severity,
+      damage: Math.min(100, damage),
+      bleeding: Math.floor(damage * 0.3),
+      pain: Math.floor(damage * 0.8),
+      shock: Math.floor(damage * 0.5),
+      isFatal: severity === 'fatal'
+    }
+  }
+
+  /**
+   * Checks if enemy is currently attacking
+   */
+  private isEnemyAttacking(enemy: Unit): boolean {
+    // For now, assume enemy might be attacking
+    // In a more complex system, we'd track enemy's last action
+    return Math.random() < 0.3 // 30% chance enemy is attacking
+  }
+
+  /**
+   * Updates all units (stamina, injuries, etc.)
+   */
+  private updateUnits(): void {
+    this.battleState.units.forEach(unit => {
+      unit.update(this.TURN_INTERVAL)
+    })
+  }
+
+  /**
+   * Checks if battle should end
+   */
+  private checkBattleEnd(): void {
+    const aliveUnits = this.battleState.units.filter(unit => unit.body.isAlive())
+    if (aliveUnits.length <= 1) {
+      this.battleState.isActive = false
+    }
+  }
+
+  /**
+   * Determines the winner of the battle
+   */
+  private determineWinner(): Unit | null {
+    const aliveUnits = this.battleState.units.filter(unit => unit.body.isAlive())
+    return aliveUnits.length === 1 ? aliveUnits[0] : null
+  }
+
+  /**
+   * Logs a combat event
+   */
+  private logEvent(unit: Unit | null, action: CombatAction | null, message: string): void {
+    const event: CombatEvent = {
+      timestamp: this.battleState.currentTime,
+      unit: unit!,
+      action: action!,
+      message: `[${this.battleState.currentTime.toFixed(1)}s] ${message}`
+    }
+    this.battleState.events.push(event)
+  }
+}
+
+export interface BattleResult {
+  winner: Unit | null
+  events: CombatEvent[]
+  duration: number
+  logLevel: string
 } 
