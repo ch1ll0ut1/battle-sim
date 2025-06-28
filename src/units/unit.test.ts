@@ -3,14 +3,16 @@ import { Unit } from './unit.js'
 
 describe('Unit Integration', () => {
   it('should create a unit with basic stats', () => {
-    const unit = new Unit(0.8, 70, 80)
+    const unit = new Unit(1, 'Test Unit', 0.8, 70, 80)
+    expect(unit.id).toBe(1)
+    expect(unit.name).toBe('Test Unit')
     expect(unit.body.isAlive()).toBe(true)
     expect(unit.body.isConscious()).toBe(true)
     expect(unit.combat.getCombatEffectiveness()).toBeGreaterThan(0)
   })
 
   it('should update both body and combat systems', () => {
-    const unit = new Unit(0.8, 70, 80)
+    const unit = new Unit(1, 'Test Unit', 0.8, 70, 80)
     const initialStamina = unit.combat.stamina
     
     // Update the unit
@@ -25,7 +27,7 @@ describe('Unit Integration', () => {
   })
 
   it('should drain stamina when performing actions', () => {
-    const unit = new Unit(0.8, 70, 80)
+    const unit = new Unit(1, 'Test Unit', 0.8, 70, 80)
     const initialStamina = unit.combat.stamina
     
     // Perform several actions to drain stamina

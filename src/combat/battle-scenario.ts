@@ -24,8 +24,14 @@ export class BattleScenario {
    * Creates units based on configuration
    */
   static createUnits(configs: UnitConfig[]): Unit[] {
-    return configs.map(config => {
-      const unit = new Unit(config.experience, config.weight, config.strength)
+    return configs.map((config, index) => {
+      const unit = new Unit(
+        index + 1, // id as a number, starting from 1
+        config.name,
+        config.experience,
+        config.weight,
+        config.strength
+      )
       
       // Equip weapon if specified
       if (config.weaponName) {

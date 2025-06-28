@@ -4,7 +4,7 @@ import { Weapon } from '../weapons/weapon.js'
 
 describe('Unit Combat', () => {
   it('should handle armor and weapon compatibility', () => {
-    const unit = new Unit(0.8, 70, 80)
+    const unit = new Unit(1, 'Test Unit', 0.8, 70, 80)
     const plateArmor = Armor.createFullSet('plate')
     expect(unit.body.canWearArmor(plateArmor.getTotalWeight())).toBe(true)
 
@@ -18,7 +18,7 @@ describe('Unit Combat', () => {
   })
 
   it('should reflect combat effectiveness changes due to injury', () => {
-    const unit = new Unit(0.8, 70, 80)
+    const unit = new Unit(1, 'Test Unit', 0.8, 70, 80)
     const initialEffectiveness = unit.combat.getCombatEffectiveness()
     // Apply injury and check combat effectiveness changes
     unit.body.receiveInjury({
@@ -34,7 +34,7 @@ describe('Unit Combat', () => {
   })
 
   it('should reduce combat effectiveness when stamina is low', () => {
-    const unit = new Unit(0.8, 70, 80)
+    const unit = new Unit(1, 'Test Unit', 0.8, 70, 80)
     const initialEffectiveness = unit.combat.getCombatEffectiveness()
     
     // Drain stamina by performing actions
@@ -47,7 +47,7 @@ describe('Unit Combat', () => {
   })
 
   it('should not allow actions when unconscious', () => {
-    const unit = new Unit(0.8, 70, 80)
+    const unit = new Unit(1, 'Test Unit', 0.8, 70, 80)
     
     // Make unit unconscious by causing severe injuries
     unit.body.receiveInjury({

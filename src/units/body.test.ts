@@ -6,7 +6,7 @@ describe('UnitBody', () => {
   let unit: Unit
 
   beforeEach(() => {
-    unit = new Unit(0.8, 70, 80)
+    unit = new Unit(1, 'Test Unit', 0.8, 70, 80)
   })
 
   describe('Injury Creation and Effects', () => {
@@ -218,7 +218,7 @@ describe('UnitBody', () => {
       const noArmorShock = unit.body.getTotalShock()
       const noArmorPain = unit.body.getTotalPain()
       
-      const armoredUnit = new Unit(0.8, 70, 80)
+      const armoredUnit = new Unit(2, 'Armored Unit', 0.8, 70, 80)
       const plateHelmet = new Armor()
       plateHelmet.equipPiece('helmet', 'plate')
       armoredUnit.body.equipArmor(plateHelmet)
@@ -253,7 +253,7 @@ describe('UnitBody', () => {
       const headShock = unit.body.getTotalShock()
       const headPain = unit.body.getTotalPain()
       
-      const legUnit = new Unit(0.8, 70, 80)
+      const legUnit = new Unit(3, 'Leg Unit', 0.8, 70, 80)
       legUnit.body.receiveInjury(legInjury)
       const legShock = legUnit.body.getTotalShock()
       const legPain = legUnit.body.getTotalPain()

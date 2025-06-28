@@ -144,7 +144,7 @@ describe('Weapons', () => {
 
   describe('getWieldableWeapons', () => {
     it('should return only weapons a weak unit can wield', () => {
-      const weakUnit = new Unit(0.5, 100, 15)
+      const weakUnit = new Unit(1, 'Weak Unit', 0.5, 100, 15)
       const wieldableWeapons = Weapons.getWieldableWeapons(weakUnit)
       
       // All returned weapons should be wieldable by the weak unit
@@ -156,7 +156,7 @@ describe('Weapons', () => {
     })
 
     it('should return all weapons for a very strong unit', () => {
-      const strongUnit = new Unit(0.5, 100, 100)
+      const strongUnit = new Unit(2, 'Strong Unit', 0.5, 100, 100)
       const wieldableWeapons = Weapons.getWieldableWeapons(strongUnit)
       // Should include even the heaviest weapons
       expect(wieldableWeapons).toContain(Weapons.ZWEIHANDER)
@@ -165,7 +165,7 @@ describe('Weapons', () => {
     })
 
     it('should return appropriate weapons for medium strength', () => {
-      const mediumUnit = new Unit(0.5, 100, 50)
+      const mediumUnit = new Unit(3, 'Medium Unit', 0.5, 100, 50)
       const wieldableWeapons = Weapons.getWieldableWeapons(mediumUnit)
       // All returned weapons should be wieldable by the medium unit
       wieldableWeapons.forEach(weapon => {
@@ -177,7 +177,7 @@ describe('Weapons', () => {
 
     it('should filter weapons by strength requirements', () => {
       // Test with weak unit (strength 15)
-      const weakUnit = new Unit(0.5, 100, 15)
+      const weakUnit = new Unit(1, 'Weak Unit', 0.5, 100, 15)
       const weakUnitWeapons = Weapons.getWieldableWeapons(weakUnit)
       
       // Weak unit should only get light weapons
@@ -187,7 +187,7 @@ describe('Weapons', () => {
       })
 
       // Test with strong unit (strength 100)
-      const strongUnit = new Unit(0.5, 100, 100)
+      const strongUnit = new Unit(2, 'Strong Unit', 0.5, 100, 100)
       const strongUnitWeapons = Weapons.getWieldableWeapons(strongUnit)
       
       // Strong unit should be able to wield most weapons
@@ -195,7 +195,7 @@ describe('Weapons', () => {
     })
 
     it('should handle medium strength units', () => {
-      const mediumUnit = new Unit(0.5, 100, 50)
+      const mediumUnit = new Unit(3, 'Medium Unit', 0.5, 100, 50)
       const mediumUnitWeapons = Weapons.getWieldableWeapons(mediumUnit)
       
       // Medium unit should get a reasonable selection

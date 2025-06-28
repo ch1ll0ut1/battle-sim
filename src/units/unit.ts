@@ -33,6 +33,16 @@ export interface Injury {
  */
 export class Unit {
   /**
+   * Unique identifier for the unit
+   */
+  public readonly id: number
+
+  /**
+   * Display name for the unit
+   */
+  public readonly name: string
+
+  /**
    * Physical body system managing injuries, consciousness, and armor
    * Handles injury effects, body part functionality, and equipment capacity
    */
@@ -46,15 +56,21 @@ export class Unit {
 
   /**
    * Creates a new unit with specified physical characteristics
+   * @param id - Unique identifier for the unit
+   * @param name - Display name for the unit
    * @param experience - Combat experience (0.0-1.0) affecting weapon handling, stamina, shock resistance, and pain resistance
    * @param weight - Unit weight (0-200) affecting movement and armor capacity
    * @param strength - Physical strength (0-100) affecting damage and equipment capacity
    */
   constructor(
+    id: number,
+    name: string,
     experience: number,
     weight: number,
     strength: number
   ) {
+    this.id = id
+    this.name = name
     this.body = new UnitBody(weight, strength, experience)
     this.combat = new UnitCombat(experience, this.body)
   }
