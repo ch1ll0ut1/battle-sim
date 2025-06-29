@@ -126,7 +126,7 @@ export class UnitBody {
     const shockMultiplier = BODY_PART_SHOCK_MULTIPLIERS[injury.bodyPart]
     const painMultiplier = BODY_PART_PAIN_MULTIPLIERS[injury.bodyPart]
     
-    // Armor reduces shock and pain, but not damage (armor can be penetrated)
+    // Armor reduces shock and pain, but not wound type or bleeding rate
     const modifiedShock = injury.shock * shockMultiplier * (1 - armorReduction * 0.7) // Armor reduces shock by up to 70%
     const modifiedPain = injury.pain * painMultiplier * (1 - armorReduction * 0.5)   // Armor reduces pain by up to 50%
     
@@ -146,9 +146,7 @@ export class UnitBody {
       // Non-fatal injuries also cause immediate shock
       this.consciousness = Math.max(0, this.consciousness - (modifiedShock * 0.5))
     }
-    
-    // Update blood loss
-    this.bloodLoss = Math.min(100, this.bloodLoss + injury.bleeding)
+    // No more direct blood loss from injury, only from bleedingRate over time
   }
 
   /**
@@ -161,9 +159,8 @@ export class UnitBody {
     // Update bleeding and blood loss
     let totalBleeding = 0
     for (const injury of this.injuries) {
-      totalBleeding += injury.bleeding
+      totalBleeding += injury.bleedingRate
     }
-    
     this.bloodLoss = Math.min(100, this.bloodLoss + (totalBleeding * deltaTime))
     
     // Update consciousness based on blood loss and shock
@@ -267,11 +264,23 @@ export class UnitBody {
   getBodyPartFunctionality(bodyPart: BodyPart): number {
     const injuries = this.getInjuriesByBodyPart(bodyPart)
     if (injuries.length === 0) return 100
-    
-    const totalDamage = injuries.reduce((sum, injury) => sum + injury.damage, 0)
-    const permanentDamage = injuries.reduce((sum, injury) => sum + (injury.permanentDamage || 0), 0)
-    
-    return Math.max(0, 100 - totalDamage - permanentDamage)
+    // If any injury is an amputation or has permanentEffect 'loss of limb', functionality is 0
+    if (injuries.some(injury => injury.isAmputation || injury.permanentEffect === 'loss of limb')) {
+      return 0
+    }
+    // Gradual reduction based on severity
+    const severityPenalty: Record<string, number> = {
+      minor: 5,
+      moderate: 15,
+      severe: 40,
+      critical: 60,
+      fatal: 100
+    }
+    let penalty = 0
+    for (const injury of injuries) {
+      penalty += severityPenalty[injury.severity] || 0
+    }
+    return Math.max(0, 100 - penalty)
   }
 
   /**

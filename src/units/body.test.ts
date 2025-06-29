@@ -14,8 +14,8 @@ describe('UnitBody', () => {
       const minorInjury: Injury = {
         bodyPart: 'leftArm',
         severity: 'minor',
-        damage: 10,
-        bleeding: 5,
+        woundType: 'cut',
+        bleedingRate: 0.5,
         pain: 15,
         shock: 5,
         isFatal: false
@@ -30,8 +30,8 @@ describe('UnitBody', () => {
       const severeInjury: Injury = {
         bodyPart: 'rightArm',
         severity: 'severe',
-        damage: 60,
-        bleeding: 20,
+        woundType: 'cut',
+        bleedingRate: 5,
         pain: 50,
         shock: 30,
         isFatal: false
@@ -45,12 +45,12 @@ describe('UnitBody', () => {
       const fatalInjury: Injury = {
         bodyPart: 'head',
         severity: 'fatal',
-        damage: 100,
-        bleeding: 80,
+        woundType: 'cut',
+        bleedingRate: 20,
         pain: 100,
         shock: 100,
         isFatal: true,
-        timeToDeath: 30
+        timeToDeath: 5
       }
       unit.body.receiveInjury(fatalInjury)
       expect(unit.body.isAlive()).toBe(false)
@@ -60,8 +60,8 @@ describe('UnitBody', () => {
       const injury1: Injury = {
         bodyPart: 'leftLeg',
         severity: 'moderate',
-        damage: 30,
-        bleeding: 10,
+        woundType: 'cut',
+        bleedingRate: 2,
         pain: 25,
         shock: 15,
         isFatal: false
@@ -69,8 +69,8 @@ describe('UnitBody', () => {
       const injury2: Injury = {
         bodyPart: 'torso',
         severity: 'moderate',
-        damage: 25,
-        bleeding: 15,
+        woundType: 'stab',
+        bleedingRate: 2,
         pain: 30,
         shock: 20,
         isFatal: false
@@ -90,8 +90,8 @@ describe('UnitBody', () => {
       const armInjury: Injury = {
         bodyPart: 'leftArm',
         severity: 'severe',
-        damage: 95,
-        bleeding: 15,
+        woundType: 'cut',
+        bleedingRate: 5,
         pain: 40,
         shock: 20,
         isFatal: false
@@ -99,8 +99,8 @@ describe('UnitBody', () => {
       const legInjury: Injury = {
         bodyPart: 'rightLeg',
         severity: 'severe',
-        damage: 95,
-        bleeding: 20,
+        woundType: 'cut',
+        bleedingRate: 5,
         pain: 45,
         shock: 25,
         isFatal: false
@@ -115,8 +115,8 @@ describe('UnitBody', () => {
       const leftArmInjury: Injury = {
         bodyPart: 'leftArm',
         severity: 'severe',
-        damage: 90,
-        bleeding: 15,
+        woundType: 'cut',
+        bleedingRate: 5,
         pain: 40,
         shock: 20,
         isFatal: false
@@ -133,8 +133,8 @@ describe('UnitBody', () => {
       const highPainInjury: Injury = {
         bodyPart: 'torso',
         severity: 'severe',
-        damage: 40,
-        bleeding: 20,
+        woundType: 'cut',
+        bleedingRate: 5,
         pain: 80,
         shock: 30,
         isFatal: false
@@ -147,8 +147,8 @@ describe('UnitBody', () => {
       const highShockInjury: Injury = {
         bodyPart: 'head',
         severity: 'critical',
-        damage: 50,
-        bleeding: 30,
+        woundType: 'cut',
+        bleedingRate: 8,
         pain: 60,
         shock: 80,
         isFatal: false
@@ -164,8 +164,8 @@ describe('UnitBody', () => {
       const bleedingInjury1: Injury = {
         bodyPart: 'leftArm',
         severity: 'moderate',
-        damage: 30,
-        bleeding: 25,
+        woundType: 'cut',
+        bleedingRate: 2,
         pain: 20,
         shock: 10,
         isFatal: false
@@ -173,8 +173,8 @@ describe('UnitBody', () => {
       const bleedingInjury2: Injury = {
         bodyPart: 'rightLeg',
         severity: 'severe',
-        damage: 50,
-        bleeding: 40,
+        woundType: 'cut',
+        bleedingRate: 5,
         pain: 35,
         shock: 20,
         isFatal: false
@@ -191,12 +191,12 @@ describe('UnitBody', () => {
       const permanentInjury: Injury = {
         bodyPart: 'rightArm',
         severity: 'critical',
-        damage: 40,
-        bleeding: 20,
+        woundType: 'crush',
+        bleedingRate: 8,
         pain: 30,
         shock: 25,
         isFatal: false,
-        permanentDamage: 30
+        permanentEffect: 'loss of function'
       }
       unit.body.receiveInjury(permanentInjury)
       expect(unit.body.getBodyPartFunctionality('rightArm')).toBeLessThan(100)
@@ -208,8 +208,8 @@ describe('UnitBody', () => {
       const headInjury: Injury = {
         bodyPart: 'head',
         severity: 'severe',
-        damage: 50,
-        bleeding: 20,
+        woundType: 'cut',
+        bleedingRate: 5,
         pain: 60,
         shock: 70,
         isFatal: false
@@ -234,8 +234,8 @@ describe('UnitBody', () => {
       const headInjury: Injury = {
         bodyPart: 'head',
         severity: 'moderate',
-        damage: 30,
-        bleeding: 15,
+        woundType: 'cut',
+        bleedingRate: 2,
         pain: 40,
         shock: 50,
         isFatal: false
@@ -243,8 +243,8 @@ describe('UnitBody', () => {
       const legInjury: Injury = {
         bodyPart: 'leftLeg',
         severity: 'moderate',
-        damage: 30,
-        bleeding: 15,
+        woundType: 'cut',
+        bleedingRate: 2,
         pain: 40,
         shock: 50,
         isFatal: false
@@ -276,8 +276,8 @@ describe('UnitBody', () => {
       const heavyHeadInjury: Injury = {
         bodyPart: 'head',
         severity: 'critical',
-        damage: 60,
-        bleeding: 30,
+        woundType: 'cut',
+        bleedingRate: 8,
         pain: 80,
         shock: 90,
         isFatal: false

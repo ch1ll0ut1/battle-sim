@@ -24,8 +24,8 @@ describe('Unit Combat', () => {
     unit.body.receiveInjury({
       bodyPart: 'rightArm',
       severity: 'severe',
-      damage: 50,
-      bleeding: 15,
+      woundType: 'cut',
+      bleedingRate: 5,
       pain: 40,
       shock: 25,
       isFatal: false
@@ -53,8 +53,8 @@ describe('Unit Combat', () => {
     unit.body.receiveInjury({
       bodyPart: 'head',
       severity: 'critical',
-      damage: 100,
-      bleeding: 0,
+      woundType: 'cut',
+      bleedingRate: 8,
       pain: 0,
       shock: 100,
       isFatal: false

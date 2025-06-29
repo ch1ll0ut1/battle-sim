@@ -397,14 +397,55 @@ export class CombatEngine {
     else if (damage > 40) severity = 'severe'
     else if (damage > 20) severity = 'moderate'
 
+    // Determine wound type
+    let woundType: 'cut' | 'stab' | 'crush' | 'amputation' = 'cut'
+    if (weapon) {
+      if (weapon.weaponType === 'sword' || weapon.weaponType === 'axe') woundType = 'cut'
+      else if (weapon.weaponType === 'spear' || weapon.weaponType === 'dagger') woundType = 'stab'
+      else if (weapon.weaponType === 'hammer' || weapon.weaponType === 'mace') woundType = 'crush'
+    }
+    if (severity === 'fatal' && (bodyPart === 'leftArm' || bodyPart === 'rightArm' || bodyPart === 'leftLeg' || bodyPart === 'rightLeg')) {
+      woundType = 'amputation'
+    }
+
+    // Set realistic bleeding rates
+    let bleedingRate = 0
+    let isAmputation = false
+    let permanentEffect: string | undefined = undefined
+    if (severity === 'fatal') {
+      if (bodyPart === 'head') bleedingRate = 20
+      else if (bodyPart === 'torso') bleedingRate = 15
+      else {
+        bleedingRate = 12
+        isAmputation = true
+        permanentEffect = 'loss of limb'
+      }
+    } else if (severity === 'critical') {
+      bleedingRate = 8
+    } else if (severity === 'severe') {
+      bleedingRate = 5
+    } else if (severity === 'moderate') {
+      bleedingRate = 2
+    } else {
+      bleedingRate = 0.5
+    }
+
+    let timeToDeath: number | undefined = undefined
+    if (severity === 'fatal') {
+      timeToDeath = 100 / bleedingRate
+    }
+
     return {
       bodyPart,
       severity,
-      damage: Math.min(100, damage),
-      bleeding: Math.floor(damage * 0.3),
+      woundType,
+      bleedingRate,
       pain: Math.floor(damage * 0.8),
       shock: Math.floor(damage * 0.5),
-      isFatal: severity === 'fatal'
+      isFatal: severity === 'fatal',
+      isAmputation,
+      permanentEffect,
+      timeToDeath
     }
   }
 

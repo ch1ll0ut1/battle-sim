@@ -18,13 +18,14 @@ export type InjurySeverity = 'minor' | 'moderate' | 'severe' | 'critical' | 'fat
 export interface Injury {
   bodyPart: BodyPart
   severity: InjurySeverity
-  damage: number // 0-100, reduces body part functionality
-  bleeding: number // 0-100, causes blood loss over time
+  woundType: 'cut' | 'stab' | 'crush' | 'amputation'
+  bleedingRate: number // realistic bleeding per second
   pain: number // 0-100, affects combat effectiveness
   shock: number // 0-100, affects consciousness
   isFatal: boolean
+  isAmputation?: boolean
+  permanentEffect?: string
   timeToDeath?: number // seconds until death for fatal injuries
-  permanentDamage?: number // 0-100, permanent reduction in functionality
 }
 
 /**
