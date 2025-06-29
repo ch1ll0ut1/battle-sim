@@ -181,7 +181,8 @@ describe('UnitBody', () => {
       }
       unit.body.receiveInjury(bleedingInjury1)
       unit.body.receiveInjury(bleedingInjury2)
-      unit.body.updateInjuries(2.0)
+      // Realistic fatal blood loss: 40% of 100 units = 40 units. Combined bleeding rate = 7/sec. 40/7 ≈ 5.7s, so simulate 6s.
+      unit.body.updateInjuries(6.0)
       expect(unit.body.isAlive()).toBe(false)
     })
   })

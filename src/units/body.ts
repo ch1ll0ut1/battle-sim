@@ -57,11 +57,14 @@ export class UnitBody {
 
   /**
    * Current blood loss level (0-100)
-   * 0 = no blood loss, 100 = fatal blood loss
+   * 0 = no blood loss, 40 = fatal blood loss
    * Accumulates from bleeding injuries over time
    * High blood loss causes unconsciousness and death
+   * Realistic model: Unit dies when blood loss reaches 40% (realistic fatal threshold)
+   * Blood loss accumulates at the combined rate of all bleeding injuries per second
+   * Example: Two injuries with bleeding rates 2 and 5 = 7 units/second blood loss
    */
-  private bloodLoss: number = 0 // 0-100, 100 = fatal blood loss
+  private bloodLoss: number = 0
 
   /**
    * Currently equipped armor that provides protection against injuries
@@ -171,7 +174,7 @@ export class UnitBody {
     this.consciousness = Math.max(0, this.consciousness - (shockEffect + bloodLossEffect) * deltaTime)
     
     // Check for death
-    if (this.bloodLoss >= 100 || this.consciousness <= 0) {
+    if (this.bloodLoss >= 40 || this.consciousness <= 0) {
       this.die()
     }
   }
@@ -187,11 +190,11 @@ export class UnitBody {
 
   /**
    * Checks if the unit is alive
-   * Unit is alive if consciousness > 0 and blood loss < 100%
+   * Unit is alive if consciousness > 0 and blood loss < 40%
    * @returns True if the unit is alive
    */
   isAlive(): boolean {
-    return this.consciousness > 0 && this.bloodLoss < 100
+    return this.consciousness > 0 && this.bloodLoss < 40
   }
 
   /**

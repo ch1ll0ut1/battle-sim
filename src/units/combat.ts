@@ -29,10 +29,10 @@ const RECOVERY_RATES = {
 
 // Body part functionality thresholds for actions
 const BODY_PART_THRESHOLDS = {
-  attack: 10,      // Both arms must be above this to attack
-  block: 20,       // Both arms must be above this to block
-  move: 15,        // Both legs must be above this to move
-  dodge: 25        // Both legs must be above this to dodge
+  attack: 60,      // Both arms must be above this to attack
+  block: 60,       // Both arms must be above this to block
+  move: 60,        // Both legs must be above this to move
+  dodge: 60        // Both legs must be above this to dodge
 }
 
 /**
