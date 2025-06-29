@@ -1,8 +1,11 @@
 // Combat Engine - Handles real-time battle mechanics and unit interactions
 
+import { Injuries } from '../injuries/injuries.js'
+import { InjurySeverity } from '../injuries/injury.js'
 import { Unit } from '../units/unit.js'
+import { BodyPart } from '../units/body.js'
 import { Weapon } from '../weapons/weapon.js'
-import { BattleLogger, CombatEvent } from './battle-logger.js'
+import { BattleLogger } from './battle-logger.js'
 
 export interface CombatResult {
   hit: boolean
@@ -388,65 +391,49 @@ export class CombatEngine {
    * Creates an injury based on damage and weapon
    */
   private createInjury(damage: number, weapon: Weapon | null): any {
-    const bodyParts: any[] = ['head', 'torso', 'leftArm', 'rightArm', 'leftLeg', 'rightLeg']
+    const bodyParts: BodyPart[] = ['head', 'torso', 'leftArm', 'rightArm', 'leftLeg', 'rightLeg']
     const bodyPart = bodyParts[Math.floor(Math.random() * bodyParts.length)]
     
-    let severity: any = 'minor'
+    // Determine severity based on damage
+    let severity: InjurySeverity = 'minor'
     if (damage > 80) severity = 'fatal'
     else if (damage > 60) severity = 'critical'
     else if (damage > 40) severity = 'severe'
     else if (damage > 20) severity = 'moderate'
 
-    // Determine wound type
+    // Determine wound type based on weapon's primary damage type
     let woundType: 'cut' | 'stab' | 'crush' | 'amputation' = 'cut'
     if (weapon) {
-      if (weapon.weaponType === 'sword' || weapon.weaponType === 'axe') woundType = 'cut'
-      else if (weapon.weaponType === 'spear' || weapon.weaponType === 'dagger') woundType = 'stab'
-      else if (weapon.weaponType === 'hammer' || weapon.weaponType === 'mace') woundType = 'crush'
+      const primaryDamageType = weapon.getPrimaryDamageType()
+      switch (primaryDamageType) {
+        case 'cutting':
+          woundType = 'cut'
+          break
+        case 'piercing':
+          woundType = 'stab'
+          break
+        case 'blunt':
+          woundType = 'crush'
+          break
+      }
     }
+    
+    // Handle amputation for fatal limb injuries (overrides weapon type)
     if (severity === 'fatal' && (bodyPart === 'leftArm' || bodyPart === 'rightArm' || bodyPart === 'leftLeg' || bodyPart === 'rightLeg')) {
       woundType = 'amputation'
     }
 
-    // Set realistic bleeding rates
-    let bleedingRate = 0
-    let isAmputation = false
-    let permanentEffect: string | undefined = undefined
-    if (severity === 'fatal') {
-      if (bodyPart === 'head') bleedingRate = 20
-      else if (bodyPart === 'torso') bleedingRate = 15
-      else {
-        bleedingRate = 12
-        isAmputation = true
-        permanentEffect = 'loss of limb'
-      }
-    } else if (severity === 'critical') {
-      bleedingRate = 8
-    } else if (severity === 'severe') {
-      bleedingRate = 5
-    } else if (severity === 'moderate') {
-      bleedingRate = 2
-    } else {
-      bleedingRate = 0.5
+    // Get appropriate injury type based on severity and wound type
+    const availableInjuries = Injuries.getInjuriesBySeverity(severity)
+      .filter(injury => injury.woundType === woundType)
+    
+    if (availableInjuries.length === 0) {
+      throw new Error(`No injuries found for severity: ${severity} and woundType: ${woundType}`)
     }
 
-    let timeToDeath: number | undefined = undefined
-    if (severity === 'fatal') {
-      timeToDeath = 100 / bleedingRate
-    }
-
-    return {
-      bodyPart,
-      severity,
-      woundType,
-      bleedingRate,
-      pain: Math.floor(damage * 0.8),
-      shock: Math.floor(damage * 0.5),
-      isFatal: severity === 'fatal',
-      isAmputation,
-      permanentEffect,
-      timeToDeath
-    }
+    // Select random injury from available options
+    const selectedInjury = availableInjuries[Math.floor(Math.random() * availableInjuries.length)]
+    return selectedInjury.createInjury(bodyPart)
   }
 
   /**

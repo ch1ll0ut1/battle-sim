@@ -344,19 +344,23 @@ export class UnitCombat {
     switch (action) {
       case 'attack':
       case 'heavyAttack': {
-        const handedness = options?.handedness || 'two-handed'
+        const leftArmFunctionality = this.body.getBodyPartFunctionality('leftArm')
+        const rightArmFunctionality = this.body.getBodyPartFunctionality('rightArm')
+        
+        // Check if both arms are functional for two-handed actions
+        const bothArmsFunctional = leftArmFunctionality > BODY_PART_THRESHOLDS.attack && 
+                                  rightArmFunctionality > BODY_PART_THRESHOLDS.attack
+        
+        // Check if at least one arm is functional for one-handed actions
+        const oneArmFunctional = leftArmFunctionality > BODY_PART_THRESHOLDS.attack || 
+                                rightArmFunctionality > BODY_PART_THRESHOLDS.attack
+        
+        const handedness = options?.handedness || (bothArmsFunctional ? 'two-handed' : 'one-handed')
+        
         if (handedness === 'one-handed') {
-          // At least one arm must be functional
-          return (
-            this.body.getBodyPartFunctionality('leftArm') > BODY_PART_THRESHOLDS.attack ||
-            this.body.getBodyPartFunctionality('rightArm') > BODY_PART_THRESHOLDS.attack
-          )
+          return oneArmFunctional
         } else {
-          // Both arms must be functional
-          return (
-            this.body.getBodyPartFunctionality('leftArm') > BODY_PART_THRESHOLDS.attack &&
-            this.body.getBodyPartFunctionality('rightArm') > BODY_PART_THRESHOLDS.attack
-          )
+          return bothArmsFunctional
         }
       }
       case 'move':
@@ -367,17 +371,23 @@ export class UnitCombat {
           this.body.getBodyPartFunctionality('rightLeg') > BODY_PART_THRESHOLDS.move
         )
       case 'block': {
-        const handedness = options?.handedness || 'two-handed'
+        const leftArmFunctionality = this.body.getBodyPartFunctionality('leftArm')
+        const rightArmFunctionality = this.body.getBodyPartFunctionality('rightArm')
+        
+        // Check if both arms are functional for two-handed actions
+        const bothArmsFunctional = leftArmFunctionality > BODY_PART_THRESHOLDS.block && 
+                                  rightArmFunctionality > BODY_PART_THRESHOLDS.block
+        
+        // Check if at least one arm is functional for one-handed actions
+        const oneArmFunctional = leftArmFunctionality > BODY_PART_THRESHOLDS.block || 
+                                rightArmFunctionality > BODY_PART_THRESHOLDS.block
+        
+        const handedness = options?.handedness || (bothArmsFunctional ? 'two-handed' : 'one-handed')
+        
         if (handedness === 'one-handed') {
-          return (
-            this.body.getBodyPartFunctionality('leftArm') > BODY_PART_THRESHOLDS.block ||
-            this.body.getBodyPartFunctionality('rightArm') > BODY_PART_THRESHOLDS.block
-          )
+          return oneArmFunctional
         } else {
-          return (
-            this.body.getBodyPartFunctionality('leftArm') > BODY_PART_THRESHOLDS.block &&
-            this.body.getBodyPartFunctionality('rightArm') > BODY_PART_THRESHOLDS.block
-          )
+          return bothArmsFunctional
         }
       }
       case 'dodge':

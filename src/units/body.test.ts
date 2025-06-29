@@ -1,6 +1,7 @@
 // Tests for UnitBody (injury, pain, shock, body part functionality, armor)
-import { Unit, Injury, BodyPart } from './unit.js'
 import { Armor } from '../armor/armor.js'
+import { Injuries } from '../injuries/injuries.js'
+import { Unit } from './unit.js'
 
 describe('UnitBody', () => {
   let unit: Unit
@@ -11,15 +12,7 @@ describe('UnitBody', () => {
 
   describe('Injury Creation and Effects', () => {
     it('should handle minor injuries without significant combat impact', () => {
-      const minorInjury: Injury = {
-        bodyPart: 'leftArm',
-        severity: 'minor',
-        woundType: 'cut',
-        bleedingRate: 0.5,
-        pain: 15,
-        shock: 5,
-        isFatal: false
-      }
+      const minorInjury = Injuries.SCRATCH.createInjury('leftArm')
       unit.body.receiveInjury(minorInjury)
       expect(unit.body.isAlive()).toBe(true)
       expect(unit.body.isConscious()).toBe(true)
@@ -27,54 +20,21 @@ describe('UnitBody', () => {
       expect(unit.body.getTotalShock()).toBeGreaterThan(0)
     })
     it('should handle severe injuries that significantly impact combat', () => {
-      const severeInjury: Injury = {
-        bodyPart: 'rightArm',
-        severity: 'severe',
-        woundType: 'cut',
-        bleedingRate: 5,
-        pain: 50,
-        shock: 30,
-        isFatal: false
-      }
+      const severeInjury = Injuries.BROKEN_BONE.createInjury('rightArm')
       unit.body.receiveInjury(severeInjury)
       expect(unit.body.isAlive()).toBe(true)
       expect(unit.body.isConscious()).toBe(true)
       expect(unit.body.getBodyPartFunctionality('rightArm')).toBeLessThan(100)
     })
     it('should handle fatal injuries that lead to death', () => {
-      const fatalInjury: Injury = {
-        bodyPart: 'head',
-        severity: 'fatal',
-        woundType: 'cut',
-        bleedingRate: 20,
-        pain: 100,
-        shock: 100,
-        isFatal: true,
-        timeToDeath: 5
-      }
+      const fatalInjury = Injuries.HEART_PENETRATION.createInjury('torso')
       unit.body.receiveInjury(fatalInjury)
       expect(unit.body.isAlive()).toBe(false)
       expect(unit.body.isConscious()).toBe(false)
     })
     it('should accumulate multiple injuries correctly', () => {
-      const injury1: Injury = {
-        bodyPart: 'leftLeg',
-        severity: 'moderate',
-        woundType: 'cut',
-        bleedingRate: 2,
-        pain: 25,
-        shock: 15,
-        isFatal: false
-      }
-      const injury2: Injury = {
-        bodyPart: 'torso',
-        severity: 'moderate',
-        woundType: 'stab',
-        bleedingRate: 2,
-        pain: 30,
-        shock: 20,
-        isFatal: false
-      }
+      const injury1 = Injuries.DEEP_CUT.createInjury('leftLeg')
+      const injury2 = Injuries.STAB_WOUND.createInjury('torso')
       unit.body.receiveInjury(injury1)
       unit.body.receiveInjury(injury2)
       expect(unit.body.getInjuries()).toHaveLength(2)
@@ -87,40 +47,27 @@ describe('UnitBody', () => {
 
   describe('Body Part Functionality', () => {
     it('should prevent actions when required body parts are severely damaged', () => {
-      const armInjury: Injury = {
-        bodyPart: 'leftArm',
-        severity: 'severe',
-        woundType: 'cut',
-        bleedingRate: 5,
-        pain: 40,
-        shock: 20,
-        isFatal: false
-      }
-      const legInjury: Injury = {
-        bodyPart: 'rightLeg',
-        severity: 'severe',
-        woundType: 'cut',
-        bleedingRate: 5,
-        pain: 45,
-        shock: 25,
-        isFatal: false
-      }
+      const armInjury = Injuries.DEEP_STAB.createInjury('leftArm')
+      const legInjury = Injuries.BROKEN_BONE.createInjury('rightLeg')
       unit.body.receiveInjury(armInjury)
       unit.body.receiveInjury(legInjury)
-      expect(unit.combat.canPerformAction('attack')).toBe(false)
+      // Unit can still attack and block with the remaining functional arm
+      expect(unit.combat.canPerformAction('attack')).toBe(true)
+      expect(unit.combat.canPerformAction('block')).toBe(true)
+      // But cannot move with only one functional leg
       expect(unit.combat.canPerformAction('move')).toBe(false)
+    })
+    it('should prevent attack and block when both arms are severely damaged', () => {
+      const leftArmInjury = Injuries.COMPOUND_FRACTURE.createInjury('leftArm')
+      const rightArmInjury = Injuries.ORGAN_DAMAGE.createInjury('rightArm')
+      unit.body.receiveInjury(leftArmInjury)
+      unit.body.receiveInjury(rightArmInjury)
+      // Unit cannot attack or block when both arms are critically damaged (functionality = 40, threshold = 60)
+      expect(unit.combat.canPerformAction('attack')).toBe(false)
       expect(unit.combat.canPerformAction('block')).toBe(false)
     })
     it('should allow actions when at least one required body part is functional', () => {
-      const leftArmInjury: Injury = {
-        bodyPart: 'leftArm',
-        severity: 'severe',
-        woundType: 'cut',
-        bleedingRate: 5,
-        pain: 40,
-        shock: 20,
-        isFatal: false
-      }
+      const leftArmInjury = Injuries.DEEP_STAB.createInjury('leftArm')
       unit.body.receiveInjury(leftArmInjury)
       expect(unit.combat.canPerformAction('attack', { handedness: 'one-handed' })).toBe(true)
       expect(unit.combat.canPerformAction('block', { handedness: 'one-handed' })).toBe(true)
@@ -130,29 +77,13 @@ describe('UnitBody', () => {
 
   describe('Pain and Shock Effects', () => {
     it('should reduce combat effectiveness based on pain tolerance', () => {
-      const highPainInjury: Injury = {
-        bodyPart: 'torso',
-        severity: 'severe',
-        woundType: 'cut',
-        bleedingRate: 5,
-        pain: 80,
-        shock: 30,
-        isFatal: false
-      }
+      const highPainInjury = Injuries.SEVERE_BURN.createInjury('torso')
       unit.body.receiveInjury(highPainInjury)
       const effectiveness = unit.combat.getCombatEffectiveness()
       expect(effectiveness).toBeLessThan(1.0)
     })
     it('should handle shock effects on consciousness', () => {
-      const highShockInjury: Injury = {
-        bodyPart: 'head',
-        severity: 'critical',
-        woundType: 'cut',
-        bleedingRate: 8,
-        pain: 60,
-        shock: 80,
-        isFatal: false
-      }
+      const highShockInjury = Injuries.SEVERE_HEAD_TRAUMA.createInjury('head')
       unit.body.receiveInjury(highShockInjury)
       expect(unit.body.isConscious()).toBe(false)
       expect(unit.combat.getCombatEffectiveness()).toBe(0)
@@ -161,44 +92,19 @@ describe('UnitBody', () => {
 
   describe('Blood Loss and Death', () => {
     it('should track blood loss from multiple injuries', () => {
-      const bleedingInjury1: Injury = {
-        bodyPart: 'leftArm',
-        severity: 'moderate',
-        woundType: 'cut',
-        bleedingRate: 2,
-        pain: 20,
-        shock: 10,
-        isFatal: false
-      }
-      const bleedingInjury2: Injury = {
-        bodyPart: 'rightLeg',
-        severity: 'severe',
-        woundType: 'cut',
-        bleedingRate: 5,
-        pain: 35,
-        shock: 20,
-        isFatal: false
-      }
+      const bleedingInjury1 = Injuries.DEEP_CUT.createInjury('leftArm')
+      const bleedingInjury2 = Injuries.ARTERIAL_CUT.createInjury('rightLeg')
       unit.body.receiveInjury(bleedingInjury1)
       unit.body.receiveInjury(bleedingInjury2)
-      // Realistic fatal blood loss: 40% of 100 units = 40 units. Combined bleeding rate = 7/sec. 40/7 ≈ 5.7s, so simulate 6s.
-      unit.body.updateInjuries(6.0)
+      // Realistic fatal blood loss: 40% of 100 units = 40 units. Combined bleeding rate = 10/sec. 40/10 = 4s, so simulate 5s.
+      unit.body.updateInjuries(5.0)
       expect(unit.body.isAlive()).toBe(false)
     })
   })
 
   describe('Injury Recovery and Permanent Damage', () => {
     it('should handle permanent damage correctly', () => {
-      const permanentInjury: Injury = {
-        bodyPart: 'rightArm',
-        severity: 'critical',
-        woundType: 'crush',
-        bleedingRate: 8,
-        pain: 30,
-        shock: 25,
-        isFatal: false,
-        permanentEffect: 'loss of function'
-      }
+      const permanentInjury = Injuries.LIMB_AMPUTATION.createInjury('rightArm')
       unit.body.receiveInjury(permanentInjury)
       expect(unit.body.getBodyPartFunctionality('rightArm')).toBeLessThan(100)
     })
@@ -206,15 +112,7 @@ describe('UnitBody', () => {
 
   describe('Armor System', () => {
     it('should reduce shock and pain based on armor protection', () => {
-      const headInjury: Injury = {
-        bodyPart: 'head',
-        severity: 'severe',
-        woundType: 'cut',
-        bleedingRate: 5,
-        pain: 60,
-        shock: 70,
-        isFatal: false
-      }
+      const headInjury = Injuries.DEEP_STAB.createInjury('head')
       unit.body.receiveInjury(headInjury)
       const noArmorShock = unit.body.getTotalShock()
       const noArmorPain = unit.body.getTotalPain()
@@ -232,24 +130,8 @@ describe('UnitBody', () => {
     })
     
     it('should have different effects based on body part location', () => {
-      const headInjury: Injury = {
-        bodyPart: 'head',
-        severity: 'moderate',
-        woundType: 'cut',
-        bleedingRate: 2,
-        pain: 40,
-        shock: 50,
-        isFatal: false
-      }
-      const legInjury: Injury = {
-        bodyPart: 'leftLeg',
-        severity: 'moderate',
-        woundType: 'cut',
-        bleedingRate: 2,
-        pain: 40,
-        shock: 50,
-        isFatal: false
-      }
+      const headInjury = Injuries.DEEP_CUT.createInjury('head')
+      const legInjury = Injuries.DEEP_CUT.createInjury('leftLeg')
       unit.body.receiveInjury(headInjury)
       const headShock = unit.body.getTotalShock()
       const headPain = unit.body.getTotalPain()
@@ -274,15 +156,7 @@ describe('UnitBody', () => {
     })
     
     it('should cause unconsciousness with high shock head injuries even with armor', () => {
-      const heavyHeadInjury: Injury = {
-        bodyPart: 'head',
-        severity: 'critical',
-        woundType: 'cut',
-        bleedingRate: 8,
-        pain: 80,
-        shock: 90,
-        isFatal: false
-      }
+      const heavyHeadInjury = Injuries.SEVERE_HEAD_TRAUMA.createInjury('head')
       const chainHelmet = new Armor()
       chainHelmet.equipPiece('helmet', 'chainmail')
       unit.body.equipArmor(chainHelmet)

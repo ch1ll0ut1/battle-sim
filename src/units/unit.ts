@@ -11,23 +11,6 @@
 import { UnitBody } from './body.js'
 import { UnitCombat } from './combat.js'
 
-export type BodyPart = 'head' | 'torso' | 'leftArm' | 'rightArm' | 'leftLeg' | 'rightLeg'
-
-export type InjurySeverity = 'minor' | 'moderate' | 'severe' | 'critical' | 'fatal'
-
-export interface Injury {
-  bodyPart: BodyPart
-  severity: InjurySeverity
-  woundType: 'cut' | 'stab' | 'crush' | 'amputation'
-  bleedingRate: number // realistic bleeding per second
-  pain: number // 0-100, affects combat effectiveness
-  shock: number // 0-100, affects consciousness
-  isFatal: boolean
-  isAmputation?: boolean
-  permanentEffect?: string
-  timeToDeath?: number // seconds until death for fatal injuries
-}
-
 /**
  * Unit represents a complete combatant with integrated body and combat systems.
  * It manages the relationship between physical state, equipment, and combat capabilities.

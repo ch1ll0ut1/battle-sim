@@ -1,6 +1,6 @@
-import { Injury, BodyPart } from './unit.js'
+import { Injury } from '../injuries/injury.js'
 import { Armor, ArmorSlot } from '../armor/armor.js'
-
+ 
 // Consciousness threshold - above this to be able to fight
 const CONSCIOUSNESS_THRESHOLD = 30
 
@@ -33,6 +33,8 @@ const BODY_PART_TO_ARMOR_SLOT: Record<BodyPart, ArmorSlot> = {
   leftLeg: 'pants',   // Simplified mapping
   rightLeg: 'pants'
 }
+
+export type BodyPart = 'head' | 'torso' | 'leftArm' | 'rightArm' | 'leftLeg' | 'rightLeg'
 
 /**
  * UnitBody handles all physical aspects of a unit including injuries, consciousness,
@@ -309,4 +311,4 @@ export class UnitBody {
     const maxWeaponWeight = this.strength * 0.3 // 30% of strength as max weapon weight
     return weaponWeight <= maxWeaponWeight
   }
-} 
+}

@@ -1,10 +1,8 @@
 // Battle Scenario - Sets up and runs different battle configurations
 
 import { Unit } from '../units/unit.js'
-import { Weapon } from '../weapons/weapon.js'
 import { Weapons } from '../weapons/weapons.js'
-import { CombatEngine, BattleResult } from './combat-engine.js'
-import { BattleLogger } from './battle-logger.js'
+import { BattleResult, CombatEngine } from './combat-engine.js'
 
 export interface BattleConfig {
   type: '1v1' | '1v2' | '2v2'

@@ -1,6 +1,7 @@
 import { Unit } from './unit.js'
 import { Armor } from '../armor/armor.js'
 import { Weapon } from '../weapons/weapon.js'
+import { Injuries } from '../injuries/injuries.js'
 
 describe('Unit Combat', () => {
   it('should handle armor and weapon compatibility', () => {
@@ -21,15 +22,8 @@ describe('Unit Combat', () => {
     const unit = new Unit(1, 'Test Unit', 0.8, 70, 80)
     const initialEffectiveness = unit.combat.getCombatEffectiveness()
     // Apply injury and check combat effectiveness changes
-    unit.body.receiveInjury({
-      bodyPart: 'rightArm',
-      severity: 'severe',
-      woundType: 'cut',
-      bleedingRate: 5,
-      pain: 40,
-      shock: 25,
-      isFatal: false
-    })
+    const injury = Injuries.DEEP_STAB.createInjury('rightArm')
+    unit.body.receiveInjury(injury)
     expect(unit.combat.getCombatEffectiveness()).toBeLessThan(initialEffectiveness)
   })
 
@@ -50,15 +44,8 @@ describe('Unit Combat', () => {
     const unit = new Unit(1, 'Test Unit', 0.8, 70, 80)
     
     // Make unit unconscious by causing severe injuries
-    unit.body.receiveInjury({
-      bodyPart: 'head',
-      severity: 'critical',
-      woundType: 'cut',
-      bleedingRate: 8,
-      pain: 0,
-      shock: 100,
-      isFatal: false
-    })
+    const injury = Injuries.SEVERE_HEAD_TRAUMA.createInjury('head')
+    unit.body.receiveInjury(injury)
     
     expect(unit.combat.canPerformAction('attack')).toBe(false)
   })
