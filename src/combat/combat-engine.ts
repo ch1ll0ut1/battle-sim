@@ -191,6 +191,10 @@ export class CombatEngine {
    * Resolves attack vs block interaction
    */
   private resolveAttackVsBlock(attacker: Unit, attackAction: CombatAction, blocker: Unit, blockAction: CombatAction): void {
+    // Consume stamina for actions
+    attacker.combat.performAction('attack')
+    blocker.combat.performAction('block')
+
     const hitRate = this.calculateHitRate(attacker, blocker, attackAction)
     const blockSuccess = this.calculateBlockSuccess(blocker, attackAction)
     
@@ -215,6 +219,10 @@ export class CombatEngine {
    * Resolves attack vs dodge interaction
    */
   private resolveAttackVsDodge(attacker: Unit, attackAction: CombatAction, dodger: Unit, dodgeAction: CombatAction): void {
+    // Consume stamina for actions
+    attacker.combat.performAction('attack')
+    dodger.combat.performAction('dodge')
+
     const hitRate = this.calculateHitRate(attacker, dodger, attackAction)
     const dodgeSuccess = this.calculateDodgeSuccess(dodger, attackAction)
     
@@ -231,6 +239,10 @@ export class CombatEngine {
    * Resolves mutual attack (both units attack each other)
    */
   private resolveMutualAttack(unitA: Unit, actionA: CombatAction, unitB: Unit, actionB: CombatAction): void {
+    // Consume stamina for actions
+    unitA.combat.performAction('attack')
+    unitB.combat.performAction('attack')
+
     const hitRateA = this.calculateHitRate(unitA, unitB, actionA)
     const hitRateB = this.calculateHitRate(unitB, unitA, actionB)
     
@@ -258,6 +270,9 @@ export class CombatEngine {
    * Resolves single attack (one unit attacks, other defends)
    */
   private resolveSingleAttack(attacker: Unit, attackAction: CombatAction, defender: Unit): void {
+    // Consume stamina for action
+    attacker.combat.performAction('attack')
+
     const hitRate = this.calculateHitRate(attacker, defender, attackAction)
     
     if (Math.random() < hitRate) {
