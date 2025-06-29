@@ -4,6 +4,7 @@ import { Unit } from '../units/unit.js'
 import { Weapon } from '../weapons/weapon.js'
 import { Weapons } from '../weapons/weapons.js'
 import { CombatEngine, BattleResult } from './combat-engine.js'
+import { BattleLogger } from './battle-logger.js'
 
 export interface BattleConfig {
   type: '1v1' | '1v2' | '2v2'
@@ -63,7 +64,7 @@ export class BattleScenario {
     const result = engine.runBattle(logLevel)
     
     // Display results
-    this.displayBattleResult(result)
+    result.logger.displayBattleResult(result, units)
     
     return result
   }
@@ -88,7 +89,7 @@ export class BattleScenario {
     const result = engine.runBattle(logLevel)
     
     // Display results
-    this.displayBattleResult(result)
+    result.logger.displayBattleResult(result, units)
     
     return result
   }
@@ -111,7 +112,7 @@ export class BattleScenario {
     const result = engine.runBattle(logLevel)
     
     // Display results
-    this.displayBattleResult(result)
+    result.logger.displayBattleResult(result, units)
     
     return result
   }
@@ -119,29 +120,8 @@ export class BattleScenario {
   /**
    * Displays battle results based on log level
    */
-  private static displayBattleResult(result: BattleResult): void {
-    console.log(`\n--- Battle Results ---`)
-    console.log(`Duration: ${this.formatDuration(result.duration)}`)
-    
-    if (result.winner) {
-      const winnerIndex = result.winner === result.events[0]?.unit ? 0 : 1
-      console.log(`Winner: Unit ${winnerIndex + 1}`)
-    } else {
-      console.log(`Result: Draw`)
-    }
-
-    // Display events based on log level
-    switch (result.logLevel) {
-      case 'summary':
-        this.displaySummary(result)
-        break
-      case 'events':
-        this.displayEvents(result)
-        break
-      case 'detailed':
-        this.displayDetailed(result)
-        break
-    }
+  private static displayBattleResult(result: BattleResult, units: Unit[]): void {
+    // This function is now obsolete and can be removed
   }
 
   /**
@@ -161,9 +141,10 @@ export class BattleScenario {
    * Displays summary of battle
    */
   private static displaySummary(result: BattleResult): void {
-    const totalEvents = result.events.length
-    const attackEvents = result.events.filter(e => e.action?.type === 'attack').length
-    const hitEvents = result.events.filter(e => e.message.includes('hits')).length
+    const events = result.logger.getEvents();
+    const totalEvents = events.length
+    const attackEvents = events.filter(e => e.message.includes('attacks')).length
+    const hitEvents = events.filter(e => e.message.includes('hits')).length
     
     console.log(`\nSummary:`)
     console.log(`- Total actions: ${totalEvents}`)
@@ -177,9 +158,10 @@ export class BattleScenario {
    */
   private static displayEvents(result: BattleResult): void {
     console.log(`\nKey Events:`)
+    const events = result.logger.getEvents();
     
-    // Show first few events, last few events, and key moments
-    const keyEvents = result.events.filter(event => 
+    // Show key moments
+    const keyEvents = events.filter(event => 
       event.message.includes('hits') || 
       event.message.includes('fatal') || 
       event.message.includes('dies') ||
@@ -196,7 +178,8 @@ export class BattleScenario {
    */
   private static displayDetailed(result: BattleResult): void {
     console.log(`\nDetailed Events:`)
-    result.events.forEach(event => {
+    const events = result.logger.getEvents();
+    events.forEach(event => {
       console.log(event.message)
     })
   }

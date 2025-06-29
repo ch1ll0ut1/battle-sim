@@ -2,6 +2,7 @@
 
 import { Unit } from '../units/unit.js'
 import { Weapon } from '../weapons/weapon.js'
+import { BattleLogger, CombatEvent } from './battle-logger.js'
 
 export interface CombatResult {
   hit: boolean
@@ -20,17 +21,8 @@ export interface CombatAction {
   handedness?: 'one-handed' | 'two-handed'
 }
 
-export interface CombatEvent {
-  timestamp: number
-  unit: Unit
-  action: CombatAction
-  result?: CombatResult
-  message: string
-}
-
 export interface BattleState {
   units: Unit[]
-  events: CombatEvent[]
   isActive: boolean
   startTime: number
   currentTime: number
@@ -38,16 +30,17 @@ export interface BattleState {
 
 export class CombatEngine {
   private battleState: BattleState
+  private logger: BattleLogger
   private readonly TURN_INTERVAL = 0.1 // 100ms intervals for realistic reaction time
 
   constructor(units: Unit[]) {
     this.battleState = {
       units,
-      events: [],
       isActive: true,
       startTime: 0,
       currentTime: 0
     }
+    this.logger = new BattleLogger()
   }
 
   /**
@@ -58,23 +51,26 @@ export class CombatEngine {
   runBattle(logLevel: 'summary' | 'events' | 'detailed' = 'events'): BattleResult {
     this.battleState.startTime = Date.now()
     this.battleState.currentTime = 0
+    this.logger.clear()
 
-    this.logEvent(null, null, `Battle started between ${this.battleState.units.length} units`)
+    this.logger.setTime(this.battleState.currentTime)
+    this.logger.log(`Battle started between ${this.battleState.units.length} units`)
 
     while (this.battleState.isActive && this.battleState.currentTime < 300) { // Max 5 minutes
       this.executeCombatTurn()
       this.battleState.currentTime += this.TURN_INTERVAL
+      this.logger.setTime(this.battleState.currentTime)
       
       // Check for battle end conditions
       this.checkBattleEnd()
     }
 
     const winner = this.determineWinner()
-    this.logEvent(null, null, `Battle ended - ${winner ? 'Unit victorious' : 'Draw'}`)
+    this.logger.log(`Battle ended - ${winner ? 'Unit victorious' : 'Draw'}`)
 
     return {
       winner,
-      events: this.battleState.events,
+      logger: this.logger,
       duration: this.battleState.currentTime,
       logLevel
     }
@@ -200,15 +196,15 @@ export class CombatEngine {
         // Attack hits but is blocked
         const damage = this.calculateDamage(attacker, attackAction) * 0.3 // Reduced damage
         this.applyDamage(attacker, blocker, damage, false)
-        this.logEvent(attacker, attackAction, `attacks ${blocker.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, but attack is blocked`)
+        this.logger.log(`${attacker.name}#${attacker.id} attacks ${blocker.name}#${blocker.id}, but attack is blocked`)
       } else {
         // Attack hits and isn't blocked
         const damage = this.calculateDamage(attacker, attackAction)
         this.applyDamage(attacker, blocker, damage, true)
-        this.logEvent(attacker, attackAction, `attacks ${blocker.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, hits for ${Math.round(damage)} damage`)
+        this.logger.log(`${attacker.name}#${attacker.id} attacks ${blocker.name}#${blocker.id}, hits for ${Math.round(damage)} damage`)
       }
     } else {
-      this.logEvent(attacker, attackAction, `attacks ${blocker.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, but misses`)
+      this.logger.log(`${attacker.name}#${attacker.id} attacks ${blocker.name}#${blocker.id}, but misses`)
     }
   }
 
@@ -222,9 +218,9 @@ export class CombatEngine {
     if (Math.random() < hitRate && !dodgeSuccess) {
       const damage = this.calculateDamage(attacker, attackAction)
       this.applyDamage(attacker, dodger, damage, true)
-      this.logEvent(attacker, attackAction, `attacks ${dodger.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, hits for ${Math.round(damage)} damage`)
+      this.logger.log(`${attacker.name}#${attacker.id} attacks ${dodger.name}#${dodger.id}, hits for ${Math.round(damage)} damage`)
     } else {
-      this.logEvent(attacker, attackAction, `attacks ${dodger.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, but ${dodger.combat.experience > 0.5 ? 'Veteran' : 'Novice'} dodges`)
+      this.logger.log(`${attacker.name}#${attacker.id} attacks ${dodger.name}#${dodger.id}, but ${dodger.combat.experience > 0.5 ? 'Veteran' : 'Novice'} dodges`)
     }
   }
 
@@ -241,17 +237,17 @@ export class CombatEngine {
     if (hitA) {
       const damageA = this.calculateDamage(unitA, actionA)
       this.applyDamage(unitA, unitB, damageA, true)
-      this.logEvent(unitA, actionA, `attacks ${unitB.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, hits for ${Math.round(damageA)} damage`)
+      this.logger.log(`${unitA.name}#${unitA.id} attacks ${unitB.name}#${unitB.id}, hits for ${Math.round(damageA)} damage`)
     } else {
-      this.logEvent(unitA, actionA, `attacks ${unitB.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, but misses`)
+      this.logger.log(`${unitA.name}#${unitA.id} attacks ${unitB.name}#${unitB.id}, but misses`)
     }
     
     if (hitB) {
       const damageB = this.calculateDamage(unitB, actionB)
       this.applyDamage(unitB, unitA, damageB, true)
-      this.logEvent(unitB, actionB, `attacks ${unitA.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, hits for ${Math.round(damageB)} damage`)
+      this.logger.log(`${unitB.name}#${unitB.id} attacks ${unitA.name}#${unitA.id}, hits for ${Math.round(damageB)} damage`)
     } else {
-      this.logEvent(unitB, actionB, `attacks ${unitA.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, but misses`)
+      this.logger.log(`${unitB.name}#${unitB.id} attacks ${unitA.name}#${unitA.id}, but misses`)
     }
   }
 
@@ -264,9 +260,9 @@ export class CombatEngine {
     if (Math.random() < hitRate) {
       const damage = this.calculateDamage(attacker, attackAction)
       this.applyDamage(attacker, defender, damage, true)
-      this.logEvent(attacker, attackAction, `attacks ${defender.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, hits for ${Math.round(damage)} damage`)
+      this.logger.log(`${attacker.name}#${attacker.id} attacks ${defender.name}#${defender.id}, hits for ${Math.round(damage)} damage`)
     } else {
-      this.logEvent(attacker, attackAction, `attacks ${defender.combat.experience > 0.5 ? 'Veteran' : 'Novice'}, but misses`)
+      this.logger.log(`${attacker.name}#${attacker.id} attacks ${defender.name}#${defender.id}, but misses`)
     }
   }
 
@@ -276,10 +272,10 @@ export class CombatEngine {
   private resolveDefensiveActions(unitA: Unit, actionA: CombatAction, unitB: Unit, actionB: CombatAction): void {
     // Both units are being defensive, just log their actions
     if (actionA.type === 'defend') {
-      this.logEvent(unitA, actionA, `takes defensive stance`)
+      this.logger.log(`${unitA.name}#${unitA.id} takes defensive stance`)
     }
     if (actionB.type === 'defend') {
-      this.logEvent(unitB, actionB, `takes defensive stance`)
+      this.logger.log(`${unitB.name}#${unitB.id} takes defensive stance`)
     }
   }
 
@@ -400,7 +396,7 @@ export class CombatEngine {
     else if (damage > 60) severity = 'critical'
     else if (damage > 40) severity = 'severe'
     else if (damage > 20) severity = 'moderate'
-    
+
     return {
       bodyPart,
       severity,
@@ -447,24 +443,11 @@ export class CombatEngine {
     const aliveUnits = this.battleState.units.filter(unit => unit.body.isAlive())
     return aliveUnits.length === 1 ? aliveUnits[0] : null
   }
-
-  /**
-   * Logs a combat event
-   */
-  private logEvent(unit: Unit | null, action: CombatAction | null, message: string): void {
-    const event: CombatEvent = {
-      timestamp: this.battleState.currentTime,
-      unit: unit!,
-      action: action!,
-      message: `[${this.battleState.currentTime.toFixed(1)}s] ${message}`
-    }
-    this.battleState.events.push(event)
-  }
 }
 
 export interface BattleResult {
   winner: Unit | null
-  events: CombatEvent[]
+  logger: BattleLogger
   duration: number
   logLevel: string
 } 
