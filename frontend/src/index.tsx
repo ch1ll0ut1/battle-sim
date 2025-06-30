@@ -1,6 +1,6 @@
 import { render } from 'solid-js/web';
 
-import { TodoList } from './todo-list';
+import { BattleVisualization } from './battle-map/battle-visualization.js';
 
 const root = document.getElementById('root');
 
@@ -10,4 +10,4 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
-render(() => <TodoList />, root!);
+render(() => <BattleVisualization />, root!);
