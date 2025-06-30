@@ -1,5 +1,6 @@
 // Integration tests for Unit class
 import { Unit } from './unit.js'
+import { Position } from '../common/position.js'
 
 describe('Unit Integration', () => {
   it('should create a unit with basic stats', () => {
@@ -37,5 +38,11 @@ describe('Unit Integration', () => {
     
     // Stamina should be reduced after actions
     expect(unit.combat.stamina).toBeLessThan(initialStamina)
+  })
+
+  it('should set and use position', () => {
+    const unit = new Unit(1, 'Test', 0.5, 70, 80, new Position(5, 10))
+    expect(unit.position.x).toBe(5)
+    expect(unit.position.y).toBe(10)
   })
 }) 
