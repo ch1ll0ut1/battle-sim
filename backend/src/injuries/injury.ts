@@ -46,17 +46,14 @@ export type WoundType = 'cut' | 'stab' | 'crush' | 'amputation'
 
 export interface Injury {
   bodyPart: BodyPart
-  severity: InjurySeverity
   woundType: WoundType
-  bleedingRate: number // realistic bleeding per second
-  pain: number // 0-100, affects combat effectiveness
-  shock: number // 0-100, affects consciousness
-  isFatal: boolean
-  isAmputation?: boolean
-  permanentEffect?: string
-  timeToDeath?: number // seconds until death for fatal injuries
+  severity: InjurySeverity
+  shock: number // 0-100, immediate shock from injury
+  pain: number // 0-100, ongoing pain from injury
+  bleedingRate: number // 0-10, blood loss per second
+  isAmputation: boolean // True if injury removes body part
 }
- 
+
 export interface InjuryTypeProfile {
   name: string
   severity: InjurySeverity
@@ -64,7 +61,6 @@ export interface InjuryTypeProfile {
   bleedingRate: number // units per second
   pain: number // 0-100
   shock: number // 0-100
-  isFatal: boolean
   isAmputation?: boolean
   permanentEffect?: string
   timeToDeath?: number // seconds until death for fatal injuries
@@ -82,7 +78,6 @@ export class InjuryType {
   public readonly bleedingRate: number
   public readonly pain: number
   public readonly shock: number
-  public readonly isFatal: boolean
   public readonly isAmputation: boolean
   public readonly permanentEffect?: string
   public readonly timeToDeath?: number
@@ -95,7 +90,6 @@ export class InjuryType {
     this.bleedingRate = profile.bleedingRate
     this.pain = profile.pain
     this.shock = profile.shock
-    this.isFatal = profile.isFatal
     this.isAmputation = profile.isAmputation || false
     this.permanentEffect = profile.permanentEffect
     this.timeToDeath = profile.timeToDeath
@@ -115,7 +109,6 @@ export class InjuryType {
       bleedingRate: this.bleedingRate,
       pain: this.pain,
       shock: this.shock,
-      isFatal: this.isFatal,
       isAmputation: this.isAmputation,
       permanentEffect: this.permanentEffect,
       timeToDeath: this.timeToDeath
@@ -135,21 +128,5 @@ export class InjuryType {
       fatal: 100
     }
     return penalties[this.severity]
-  }
-
-  /**
-   * Checks if this injury type would prevent combat actions
-   * @returns True if the injury would significantly impair combat ability
-   */
-  wouldPreventCombat(): boolean {
-    return this.severity === 'critical' || this.severity === 'fatal'
-  }
-
-  /**
-   * Gets a human-readable description of the injury's effects
-   * @returns Description of what this injury does to the victim
-   */
-  getEffectDescription(): string {
-    return this.description
   }
 }

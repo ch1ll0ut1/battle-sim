@@ -24,7 +24,6 @@ export interface UnitHealthReport {
     shock: number
     woundType: string
     bleedingRate: number
-    permanentEffect?: string
   }>
   causeOfDeath?: string
   timeToDeath?: number
@@ -71,7 +70,7 @@ export class BattleLogger {
    * Generates health report for a unit
    */
   generateHealthReport(unit: Unit): UnitHealthReport {
-    const injuries = unit.body.getInjuries();
+    const injuries = unit.body.injuries;
     let causeOfDeath: string | undefined = undefined;
     let timeToDeath: number | undefined = undefined;
     if (!unit.body.isAlive()) {
@@ -80,17 +79,20 @@ export class BattleLogger {
       } else if (unit.body.getConsciousness() <= 0) {
         causeOfDeath = 'Unconsciousness';
       }
-      const fatal = injuries.find(i => i.isFatal);
+      const fatal = injuries.find(i => i.severity === 'fatal');
       if (fatal) {
         causeOfDeath = `Fatal injury (${fatal.bodyPart})`;
-        if (fatal.timeToDeath) timeToDeath = fatal.timeToDeath;
+        // Estimate time to death based on bleeding rate
+        if (fatal.bleedingRate > 0) {
+          timeToDeath = 40 / fatal.bleedingRate; // 40 is the fatal blood loss threshold
+        }
       }
     } else {
       // If alive but has fatal wounds, estimate time to death
-      const fatal = injuries.find(i => i.isFatal);
+      const fatal = injuries.find(i => i.severity === 'fatal');
       if (fatal && fatal.bleedingRate > 0) {
         // Estimate time to bleed out from current blood loss
-        const remaining = 100 - unit.body.getBloodLoss();
+        const remaining = 40 - unit.body.getBloodLoss(); // 40 is the fatal blood loss threshold
         timeToDeath = remaining / fatal.bleedingRate;
       }
     }
@@ -110,8 +112,7 @@ export class BattleLogger {
         pain: injury.pain,
         shock: injury.shock,
         woundType: injury.woundType,
-        bleedingRate: injury.bleedingRate,
-        permanentEffect: injury.permanentEffect
+        bleedingRate: injury.bleedingRate
       })),
       causeOfDeath,
       timeToDeath
@@ -144,9 +145,6 @@ export class BattleLogger {
         console.log(`  Injuries:`)
         report.injuries.forEach(injury => {
           let details = `${injury.bodyPart}: ${injury.severity}, ${injury.woundType} (${injury.bleedingRate.toFixed(1)} bleeding/sec)`
-          if (injury.permanentEffect) {
-            details += `, permanent: ${injury.permanentEffect}`
-          }
           console.log(`    ${details}`)
         })
       } else {

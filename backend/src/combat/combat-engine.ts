@@ -416,6 +416,7 @@ export class CombatEngine {
     else if (damage > 40) severity = 'severe'
     else if (damage > 20) severity = 'moderate'
 
+    // TODO: handle secondary damage types
     // Determine wound type based on weapon's primary damage type
     let woundType: 'cut' | 'stab' | 'crush' | 'amputation' = 'cut'
     if (weapon) {

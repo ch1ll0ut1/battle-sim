@@ -71,7 +71,7 @@ export class BattleWebSocketServer {
 
   private getArmorLevel(unit: Unit): number {
     // Simple armor level calculation based on armor weight
-    const armorWeight = unit.body.getArmorWeight();
+    const armorWeight = unit.body.armor.getTotalWeight();
     if (armorWeight > 15) return 3;
     if (armorWeight > 8) return 2;
     if (armorWeight > 3) return 1;

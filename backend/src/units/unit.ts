@@ -11,38 +11,33 @@
 import { UnitBody } from './body.js'
 import { UnitCombat } from './combat.js'
 import { Position } from '../common/position.js'
+import { ActionType, Action } from './action.js';
+
+export type BodyPart = 'leftArm' | 'rightArm' | 'leftLeg' | 'rightLeg' | 'head';
 
 /**
  * Unit represents a complete combatant with integrated body and combat systems.
  * It manages the relationship between physical state, equipment, and combat capabilities.
  */
 export class Unit {
-  /**
-   * Unique identifier for the unit
-   */
   public readonly id: number
-
-  /**
-   * Display name for the unit
-   */
   public readonly name: string
-
-  /**
-   * Physical body system managing injuries, consciousness, and armor
-   * Handles injury effects, body part functionality, and equipment capacity
-   */
   public readonly body: UnitBody
-
-  /**
-   * Combat system managing stamina, actions, and combat effectiveness
-   * Handles weapon wielding, action validation, and performance calculations
-   */
   public readonly combat: UnitCombat
-
   public position: Position
   public direction: number = 0 // radians, 0 = facing right (x+)
-  public movementTarget: Position | null = null
-  public movementSpeed: number = 5 // units per second (example default)
+
+  /**
+   * Current action for each body part (null if idle)
+   */
+  public bodyPartActions: Partial<Record<BodyPart, Action | null>> = {}
+
+  /**
+   * Team identifier (e.g., 1 or 2)
+   */
+  public readonly team: number;
+
+  public movementAction: Action | null = null;
 
   /**
    * Creates a new unit with specified physical characteristics
@@ -52,6 +47,7 @@ export class Unit {
    * @param weight - Unit weight (0-200) affecting movement and armor capacity
    * @param strength - Physical strength (0-100) affecting damage and equipment capacity
    * @param position - Initial position of the unit
+   * @param team - Team identifier (e.g., 1 or 2)
    */
   constructor(
     id: number,
@@ -59,13 +55,15 @@ export class Unit {
     experience: number,
     weight: number,
     strength: number,
-    position: Position = new Position(0, 0)
+    position: Position = new Position(0, 0),
+    team: number = 1 // default to team 1
   ) {
     this.id = id
     this.name = name
     this.body = new UnitBody(weight, strength, experience)
     this.combat = new UnitCombat(experience, this.body)
     this.position = position
+    this.team = team
     // direction defaults to 0 (facing right)
   }
 
@@ -78,7 +76,7 @@ export class Unit {
     // Update facing direction
     this.direction = this.position.directionTo(target)
     // Move up to max possible distance this tick
-    const maxMove = this.movementSpeed * deltaTime
+    const maxMove = this.body.getMovementSpeed() * deltaTime
     if (distance <= maxMove) {
       this.position = new Position(target.x, target.y)
     } else {
@@ -90,15 +88,46 @@ export class Unit {
    * Update the unit's state over time
    * If movementTarget is set, move towards it
    */
+  update(deltaTime: number, currentTime?: number): void {
   update(deltaTime: number): void {
     if (this.movementTarget) {
       this.moveTowards(this.movementTarget, deltaTime)
       // If reached target, clear it
       if (this.position.distanceTo(this.movementTarget) < 0.01) {
         this.movementTarget = null
+        }
       }
-    }
+
+    // Update injuries and stamina
     this.body.updateInjuries(deltaTime)
     this.combat.updateStamina(deltaTime)
+
+  /**
+   * Calculates reaction time in seconds based on experience, fatigue, and injuries
+   * @returns Reaction time in seconds
+   */
+  getReactionTime(): number {
+    // Base reaction time for combat (choice reaction)
+    const baseReactionTime = 0.28 // 280ms base for combat decisions
+    
+    // Experience can improve reaction time up to 20%
+    const experienceBonus = this.combat.experience * 0.2
+    
+    // Fatigue increases reaction time up to 50%
+    const fatiguePenalty = (1 - this.combat.stamina / this.combat.maxStamina) * 0.5
+    
+    // Head injuries and blood loss affect reaction time
+    const headFunctionality = this.body.getBodyPartFunctionality('head') / 100
+    const bloodLossPenalty = this.body.getBloodLoss() / 100 * 0.3 // Up to 30% slower
+    
+    // Calculate final reaction time
+    const reactionTime = baseReactionTime * 
+      (1 - experienceBonus) * // Experience bonus
+      (1 + fatiguePenalty) *  // Fatigue penalty
+      (2 - headFunctionality) * // Head injury effect
+      (1 + bloodLossPenalty)   // Blood loss effect
+      
+    // Clamp between realistic minimum and maximum
+    return Math.max(0.22, Math.min(0.6, reactionTime))
   }
 } 

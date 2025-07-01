@@ -1,6 +1,6 @@
-import { Injury } from '../injuries/injury.js'
 import { Armor, ArmorSlot } from '../armor/armor.js'
- 
+import { Injury, InjurySeverity } from '../injuries/injury.js'
+
 // Consciousness threshold - above this to be able to fight
 const CONSCIOUSNESS_THRESHOLD = 30
 
@@ -47,7 +47,7 @@ export class UnitBody {
    * Each injury affects specific body parts and contributes to overall pain/shock
    * Injuries can accumulate and have permanent effects
    */
-  private injuries: Injury[] = []
+  public readonly injuries: Injury[] = []
 
   /**
    * Current consciousness level (0-100)
@@ -73,7 +73,7 @@ export class UnitBody {
    * Armor reduces shock and pain from injuries but doesn't prevent damage
    * Null when no armor is equipped
    */
-  private armor: Armor | null = null
+  readonly armor: Armor
 
   /**
    * Creates a new unit body with specified physical characteristics
@@ -85,73 +85,79 @@ export class UnitBody {
     public readonly weight: number, // 0-200, affects movement and armor capacity
     public readonly strength: number, // 0-100, affects damage and armor capacity
     public readonly experience: number, // 0.0-1.0, affects shock and pain resistance from combat experience
-  ) {}
-
-  /**
-   * Equips armor on the unit
-   * Armor provides protection that reduces injury effects
-   * @param armor - The armor to equip
-   */
-  equipArmor(armor: Armor): void {
-    this.armor = armor
+  ) {
+    this.armor = new Armor()
   }
 
-  /**
-   * Gets the armor protection value for a specific body part
-   * Maps body parts to armor slots and returns protection value
-   * @param bodyPart - The body part to check protection for
-   * @returns Protection value (0-100) or 0 if no armor equipped
-   */
-  getArmorProtection(bodyPart: BodyPart): number {
-    if (!this.armor) return 0
+  getWoundTypeProtection(bodyPart: BodyPart, woundType: 'cut' | 'stab' | 'crush'): number {
     const slot = BODY_PART_TO_ARMOR_SLOT[bodyPart]
-    return this.armor.getProtection(slot)
+    return this.armor.getWoundTypeProtection(slot, woundType)
   }
 
   /**
-   * Gets the total weight of currently equipped armor
-   * @returns Total armor weight in kg, or 0 if no armor equipped
+   * Reduces injury severity by specified number of levels
+   * @param severity - The original severity level
+   * @param levels - Number of levels to reduce (defaults to 1)
    */
-  getArmorWeight(): number {
-    return this.armor ? this.armor.getTotalWeight() : 0
+  private getReducedSeverity(severity: InjurySeverity, levels: number = 1): InjurySeverity {
+    const severityLevels: InjurySeverity[] = ['minor', 'moderate', 'severe', 'critical', 'fatal']
+    const currentIndex = severityLevels.indexOf(severity)
+    const newIndex = Math.max(0, currentIndex - levels)
+    return severityLevels[newIndex]
   }
 
   /**
    * Processes a new injury, applying armor protection and body part effects
-   * Armor reduces shock and pain but doesn't prevent damage
-   * Different body parts have different shock/pain multipliers
-   * @param injury - The injury to receive
+   * @param injury - The injury to process
    */
   receiveInjury(injury: Injury): void {
-    // Apply armor protection to reduce injury effects
-    const armorProtection = this.getArmorProtection(injury.bodyPart)
-    const armorReduction = armorProtection / 100 // 0.0 to 1.0
-
-    // Calculate modified injury effects based on armor and body part
-    const shockMultiplier = BODY_PART_SHOCK_MULTIPLIERS[injury.bodyPart]
-    const painMultiplier = BODY_PART_PAIN_MULTIPLIERS[injury.bodyPart]
-    
-    // Armor reduces shock and pain, but not wound type or bleeding rate
-    const modifiedShock = injury.shock * shockMultiplier * (1 - armorReduction * 0.7) // Armor reduces shock by up to 70%
-    const modifiedPain = injury.pain * painMultiplier * (1 - armorReduction * 0.5)   // Armor reduces pain by up to 50%
-    
-    // Create modified injury
-    const modifiedInjury: Injury = {
-      ...injury,
-      shock: Math.round(modifiedShock),
-      pain: Math.round(modifiedPain)
+    // Get armor protection for this wound type
+    const slot = BODY_PART_TO_ARMOR_SLOT[injury.bodyPart]
+    const armorProtection = this.armor.getWoundTypeProtection(slot, injury.woundType === 'amputation' ? 'crush' : injury.woundType)
+    // Apply armor protection effects
+    if (armorProtection >= 90) {
+      // Complete protection - no injury
+      return
     }
 
+    // Create a copy of the injury to modify
+    const modifiedInjury: Injury = { ...injury }
+
+    if (armorProtection >= 80) {
+      // Convert to crush damage with reduced severity
+      modifiedInjury.woundType = 'crush'
+      modifiedInjury.severity = this.getReducedSeverity(modifiedInjury.severity, 2)
+      modifiedInjury.shock *= 0.5
+      modifiedInjury.pain *= 0.5
+      modifiedInjury.bleedingRate = 0
+    } else if (armorProtection >= 60) {
+      // Significant reduction
+      modifiedInjury.severity = this.getReducedSeverity(modifiedInjury.severity, 2)
+      modifiedInjury.shock *= 0.6
+      modifiedInjury.pain *= 0.6
+      modifiedInjury.bleedingRate *= 0.3
+    } else if (armorProtection >= 40) {
+      // Moderate reduction
+      modifiedInjury.severity = this.getReducedSeverity(modifiedInjury.severity)
+      modifiedInjury.shock *= 0.8
+      modifiedInjury.pain *= 0.8
+      modifiedInjury.bleedingRate *= 0.6
+    } else if (armorProtection >= 20) {
+      // Minor reduction
+      modifiedInjury.shock *= 0.9
+      modifiedInjury.pain *= 0.9
+      modifiedInjury.bleedingRate *= 0.8
+    }
+
+    // Apply body part multipliers
+    modifiedInjury.shock *= BODY_PART_SHOCK_MULTIPLIERS[modifiedInjury.bodyPart]
+    modifiedInjury.pain *= BODY_PART_PAIN_MULTIPLIERS[modifiedInjury.bodyPart]
+
+    // Add the injury
     this.injuries.push(modifiedInjury)
-    
-    // Immediate effects
-    if (injury.isFatal) {
-      this.consciousness = Math.max(0, this.consciousness - modifiedShock)
-    } else {
-      // Non-fatal injuries also cause immediate shock
-      this.consciousness = Math.max(0, this.consciousness - (modifiedShock * 0.5))
-    }
-    // No more direct blood loss from injury, only from bleedingRate over time
+
+    // Update unit status
+    this.consciousness = Math.max(0, this.consciousness - (modifiedInjury.shock * (modifiedInjury.severity === 'fatal' ? 1.0 : 0.5)))
   }
 
   /**
@@ -176,18 +182,10 @@ export class UnitBody {
     this.consciousness = Math.max(0, this.consciousness - (shockEffect + bloodLossEffect) * deltaTime)
     
     // Check for death
-    if (this.bloodLoss >= 40 || this.consciousness <= 0) {
-      this.die()
+    if (!this.isAlive()) {
+        // TODO: call battle logger log to log death
+        console.log('Unit died')
     }
-  }
-
-  /**
-   * Handles unit death by setting consciousness to 0
-   * Called when blood loss reaches 100% or consciousness reaches 0
-   */
-  private die(): void {
-    this.consciousness = 0
-    // TODO: Implement death handling
   }
 
   /**
@@ -225,14 +223,6 @@ export class UnitBody {
   }
 
   /**
-   * Gets a copy of all current injuries
-   * @returns Array of all injuries
-   */
-  getInjuries(): Injury[] {
-    return [...this.injuries]
-  }
-
-  /**
    * Gets all injuries affecting a specific body part
    * @param bodyPart - The body part to check
    * @returns Array of injuries for the specified body part
@@ -260,32 +250,38 @@ export class UnitBody {
   }
 
   /**
-   * Calculates the functionality percentage of a specific body part
-   * Functionality is reduced by damage and permanent damage from injuries
-   * 100% = fully functional, 0% = completely disabled
+   * Gets the functionality level of a body part (0-100)
+   * Affected by injuries to that part
    * @param bodyPart - The body part to check
-   * @returns Functionality percentage (0-100)
+   * @returns Functionality level (0-100)
    */
   getBodyPartFunctionality(bodyPart: BodyPart): number {
     const injuries = this.getInjuriesByBodyPart(bodyPart)
-    if (injuries.length === 0) return 100
-    // If any injury is an amputation or has permanentEffect 'loss of limb', functionality is 0
-    if (injuries.some(injury => injury.isAmputation || injury.permanentEffect === 'loss of limb')) {
-      return 0
+    
+    // Check for amputation or permanent loss
+    if (injuries.some(injury => injury.isAmputation)) {
+      return 0 // No functionality if part is lost
     }
-    // Gradual reduction based on severity
+    
+    // Calculate functionality reduction from injuries
     const severityPenalty: Record<string, number> = {
-      minor: 5,
-      moderate: 15,
-      severe: 40,
-      critical: 60,
+      minor: 10,
+      moderate: 30,
+      severe: 60,
+      critical: 80,
       fatal: 100
     }
-    let penalty = 0
+
+    let totalPenalty = 0
     for (const injury of injuries) {
-      penalty += severityPenalty[injury.severity] || 0
+      // Add severity penalty
+      totalPenalty += severityPenalty[injury.severity] || 0
+      
+      // Add pain penalty (up to 20% additional reduction)
+      totalPenalty += (injury.pain / 100) * 20
     }
-    return Math.max(0, 100 - penalty)
+    
+    return Math.max(0, 100 - totalPenalty)
   }
 
   /**
@@ -310,5 +306,35 @@ export class UnitBody {
   canWieldWeapon(weaponWeight: number): boolean {
     const maxWeaponWeight = this.strength * 0.3 // 30% of strength as max weapon weight
     return weaponWeight <= maxWeaponWeight
+  }
+
+  /**
+   * Calculates realistic movement speed (m/s) based on strength, weight, armor, injuries, and experience.
+   * - Base speed: determined by strength and experience
+   * - Armor penalty: heavier armor reduces speed (diminishing returns)
+   * - Weight penalty: heavier units move slower, lighter units move faster
+   * - Leg injuries: directly reduce speed (multiplicative)
+   * - Experience: more experienced units move more efficiently (modest effect)
+   */
+  getMovementSpeed(): number {
+    // Base speed: 1.5 m/s + 0.03 * strength + 0.01 * experience * 100
+    // (1.5 m/s is a brisk walk, 3 m/s is a run)
+    const baseSpeed = 1.5 + 0.03 * this.strength + 0.01 * this.experience * 100;
+
+    // Armor penalty: each 10kg of armor reduces speed by 15%
+    const armorPenalty = 1 - 0.015 * this.armor.getTotalWeight();
+
+    // Weight penalty: 70kg is neutral; heavier is slower, lighter is faster
+    const weightPenalty = 1 - 0.005 * (this.weight - 70);
+
+    // Leg injuries: if either leg is badly injured, speed drops sharply
+    const leftLegFunc = this.getBodyPartFunctionality('leftLeg');
+    const rightLegFunc = this.getBodyPartFunctionality('rightLeg');
+    const injuryPenalty = Math.min(leftLegFunc, rightLegFunc) / 100;
+
+    // Final speed calculation
+    let speed = baseSpeed * armorPenalty * weightPenalty * injuryPenalty;
+    if (speed < 0.1) speed = 0.1; // Clamp to minimum
+    return speed;
   }
 }
