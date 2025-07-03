@@ -7,8 +7,106 @@
  * combat damage simulation.
  */
 
-import { BodyPart } from '../units/body.js'
+import { BodyPart } from '../units/unit.js'
 
+export type WoundType = 'cut' | 'stab' | 'crush' | 'amputation'
+
+export interface InjuryTypeProfile {
+  name: string
+  severity: InjurySeverity
+  woundType: WoundType
+  bleedingRate: number // units per second
+  pain: number // 0-100
+  shock: number // 0-100
+  isFatal: boolean
+  isAmputation?: boolean
+  permanentEffect?: string
+  timeToDeath?: number // seconds until death for fatal injuries
+  description: string // Realistic description of the injury
+}
+
+/**
+ * InjuryType represents a predefined injury with realistic parameters
+ * based on medical knowledge and combat simulation requirements.
+ */
+export class InjuryType {
+  public readonly name: string
+  public readonly severity: InjurySeverity
+  public readonly woundType: WoundType
+  public readonly bleedingRate: number
+  public readonly pain: number
+  public readonly shock: number
+  public readonly isFatal: boolean
+  public readonly isAmputation: boolean
+  public readonly permanentEffect?: string
+  public readonly timeToDeath?: number
+  public readonly description: string
+
+  constructor(profile: InjuryTypeProfile) {
+    this.name = profile.name
+    this.severity = profile.severity
+    this.woundType = profile.woundType
+    this.bleedingRate = profile.bleedingRate
+    this.pain = profile.pain
+    this.shock = profile.shock
+    this.isFatal = profile.isFatal
+    this.isAmputation = profile.isAmputation || false
+    this.permanentEffect = profile.permanentEffect
+    this.timeToDeath = profile.timeToDeath
+    this.description = profile.description
+  }
+
+  /**
+   * Creates an injury instance for a specific body part
+   * @param bodyPart - The body part that received the injury
+   * @returns Injury object ready to be applied to a unit
+   */
+  createInjury(bodyPart: BodyPart) {
+    return {
+      bodyPart,
+      severity: this.severity,
+      woundType: this.woundType,
+      bleedingRate: this.bleedingRate,
+      pain: this.pain,
+      shock: this.shock,
+      isFatal: this.isFatal,
+      isAmputation: this.isAmputation,
+      permanentEffect: this.permanentEffect,
+      timeToDeath: this.timeToDeath
+    }
+  }
+
+  /**
+   * Gets the functionality penalty for this injury type
+   * @returns Functionality penalty percentage (0-100)
+   */
+  getFunctionalityPenalty(): number {
+    const penalties: Record<InjurySeverity, number> = {
+      minor: 5,
+      moderate: 15,
+      severe: 40,
+      critical: 60,
+      fatal: 100
+    }
+    return penalties[this.severity]
+  }
+
+  /**
+   * Checks if this injury type would prevent combat actions
+   * @returns True if the injury would significantly impair combat ability
+   */
+  wouldPreventCombat(): boolean {
+    return this.severity === 'critical' || this.severity === 'fatal'
+  }
+
+  /**
+   * Gets a human-readable description of the injury's effects
+   * @returns Description of what this injury does to the victim
+   */
+  getEffectDescription(): string {
+    return this.description
+  }
+}
 /**
  * Injury severity levels representing the realistic impact of wounds on body parts
  *
@@ -41,92 +139,16 @@ import { BodyPart } from '../units/body.js'
  */
 
 export type InjurySeverity = 'minor' | 'moderate' | 'severe' | 'critical' | 'fatal'
-
-export type WoundType = 'cut' | 'stab' | 'crush' | 'amputation'
-
 export interface Injury {
   bodyPart: BodyPart
-  woundType: WoundType
   severity: InjurySeverity
-  shock: number // 0-100, immediate shock from injury
-  pain: number // 0-100, ongoing pain from injury
-  bleedingRate: number // 0-10, blood loss per second
-  isAmputation: boolean // True if injury removes body part
-}
-
-export interface InjuryTypeProfile {
-  name: string
-  severity: InjurySeverity
-  woundType: WoundType
-  bleedingRate: number // units per second
-  pain: number // 0-100
-  shock: number // 0-100
+  woundType: 'cut' | 'stab' | 'crush' | 'amputation'
+  bleedingRate: number // realistic bleeding per second
+  pain: number // 0-100, affects combat effectiveness
+  shock: number // 0-100, affects consciousness
+  isFatal: boolean
   isAmputation?: boolean
   permanentEffect?: string
   timeToDeath?: number // seconds until death for fatal injuries
-  description: string // Realistic description of the injury
 }
-
-/**
- * InjuryType represents a predefined injury with realistic parameters
- * based on medical knowledge and combat simulation requirements.
- */
-export class InjuryType {
-  public readonly name: string
-  public readonly severity: InjurySeverity
-  public readonly woundType: WoundType
-  public readonly bleedingRate: number
-  public readonly pain: number
-  public readonly shock: number
-  public readonly isAmputation: boolean
-  public readonly permanentEffect?: string
-  public readonly timeToDeath?: number
-  public readonly description: string
-
-  constructor(profile: InjuryTypeProfile) {
-    this.name = profile.name
-    this.severity = profile.severity
-    this.woundType = profile.woundType
-    this.bleedingRate = profile.bleedingRate
-    this.pain = profile.pain
-    this.shock = profile.shock
-    this.isAmputation = profile.isAmputation || false
-    this.permanentEffect = profile.permanentEffect
-    this.timeToDeath = profile.timeToDeath
-    this.description = profile.description
-  }
-
-  /**
-   * Creates an injury instance for a specific body part
-   * @param bodyPart - The body part that received the injury
-   * @returns Injury object ready to be applied to a unit
-   */
-  createInjury(bodyPart: BodyPart) {
-    return {
-      bodyPart,
-      severity: this.severity,
-      woundType: this.woundType,
-      bleedingRate: this.bleedingRate,
-      pain: this.pain,
-      shock: this.shock,
-      isAmputation: this.isAmputation,
-      permanentEffect: this.permanentEffect,
-      timeToDeath: this.timeToDeath
-    }
-  }
-
-  /**
-   * Gets the functionality penalty for this injury type
-   * @returns Functionality penalty percentage (0-100)
-   */
-  getFunctionalityPenalty(): number {
-    const penalties: Record<InjurySeverity, number> = {
-      minor: 5,
-      moderate: 15,
-      severe: 40,
-      critical: 60,
-      fatal: 100
-    }
-    return penalties[this.severity]
-  }
-}
+ 

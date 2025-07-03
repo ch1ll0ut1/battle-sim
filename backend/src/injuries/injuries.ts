@@ -1,7 +1,7 @@
 // Realistic injury definitions with severity levels and wound types
 
 import { InjuryType, WoundType } from './injury.js'
-import { BodyPart } from '../units/body.js'
+import { BodyPart } from '../units/unit.js'
 import { InjurySeverity } from './injury.js'
 
 export class Injuries {
@@ -13,6 +13,7 @@ export class Injuries {
     bleedingRate: 0.5,
     pain: 10,
     shock: 5,
+    isFatal: false,
     description: 'A superficial scratch that causes minimal bleeding and pain'
   })
 
@@ -23,6 +24,7 @@ export class Injuries {
     bleedingRate: 0,
     pain: 15,
     shock: 3,
+    isFatal: false,
     description: 'A bruise caused by blunt force trauma, no bleeding but some pain'
   })
 
@@ -33,6 +35,7 @@ export class Injuries {
     bleedingRate: 0.5,
     pain: 20,
     shock: 8,
+    isFatal: false,
     description: 'A small cut that bleeds slightly and causes moderate pain'
   })
 
@@ -44,6 +47,7 @@ export class Injuries {
     bleedingRate: 2,
     pain: 35,
     shock: 15,
+    isFatal: false,
     description: 'A deep cut that bleeds moderately and causes significant pain'
   })
 
@@ -54,6 +58,7 @@ export class Injuries {
     bleedingRate: 2,
     pain: 40,
     shock: 20,
+    isFatal: false,
     description: 'A penetrating stab wound that bleeds steadily and causes sharp pain'
   })
 
@@ -64,6 +69,7 @@ export class Injuries {
     bleedingRate: 0,
     pain: 45,
     shock: 12,
+    isFatal: false,
     description: 'A broken finger that causes intense pain but no bleeding'
   })
 
@@ -74,6 +80,7 @@ export class Injuries {
     bleedingRate: 1,
     pain: 30,
     shock: 18,
+    isFatal: false,
     description: 'Damage to muscle tissue that impairs movement and causes pain'
   })
 
@@ -85,6 +92,7 @@ export class Injuries {
     bleedingRate: 5,
     pain: 60,
     shock: 35,
+    isFatal: false,
     description: 'A deep stab wound that bleeds heavily and causes severe pain'
   })
 
@@ -95,6 +103,7 @@ export class Injuries {
     bleedingRate: 2,
     pain: 70,
     shock: 40,
+    isFatal: false,
     description: 'A broken bone that causes intense pain and impairs function'
   })
 
@@ -105,6 +114,7 @@ export class Injuries {
     bleedingRate: 0,
     pain: 80,
     shock: 30,
+    isFatal: false,
     description: 'A severe burn that causes extreme pain and tissue damage'
   })
 
@@ -115,6 +125,7 @@ export class Injuries {
     bleedingRate: 8,
     pain: 50,
     shock: 45,
+    isFatal: false,
     description: 'A cut that damages an artery, causing heavy bleeding'
   })
 
@@ -126,6 +137,7 @@ export class Injuries {
     bleedingRate: 8,
     pain: 85,
     shock: 60,
+    isFatal: false,
     description: 'A compound fracture where bone breaks through skin, causing heavy bleeding'
   })
 
@@ -136,6 +148,7 @@ export class Injuries {
     bleedingRate: 10,
     pain: 90,
     shock: 70,
+    isFatal: false,
     description: 'Damage to internal organs causing severe bleeding and shock'
   })
 
@@ -146,6 +159,7 @@ export class Injuries {
     bleedingRate: 6,
     pain: 75,
     shock: 80,
+    isFatal: false,
     description: 'Severe trauma to the head causing brain damage and unconsciousness'
   })
 
@@ -156,6 +170,7 @@ export class Injuries {
     bleedingRate: 12,
     pain: 65,
     shock: 75,
+    isFatal: false,
     description: 'A puncture wound that damages a major artery, causing rapid blood loss'
   })
 
@@ -166,6 +181,7 @@ export class Injuries {
     bleedingRate: 15,
     pain: 80,
     shock: 65,
+    isFatal: false,
     description: 'A deep cut that severs a major artery, causing life-threatening blood loss'
   })
 
@@ -177,6 +193,7 @@ export class Injuries {
     bleedingRate: 20,
     pain: 100,
     shock: 100,
+    isFatal: true,
     timeToDeath: 5,
     description: 'Complete severing of the head, causing immediate death'
   })
@@ -188,6 +205,7 @@ export class Injuries {
     bleedingRate: 18,
     pain: 95,
     shock: 90,
+    isFatal: true,
     timeToDeath: 10,
     description: 'A deep cut across the throat that severs major blood vessels, causing rapid death'
   })
@@ -199,6 +217,7 @@ export class Injuries {
     bleedingRate: 15,
     pain: 95,
     shock: 100,
+    isFatal: true,
     timeToDeath: 8,
     description: 'A stab wound that penetrates the heart, causing rapid death'
   })
@@ -210,6 +229,7 @@ export class Injuries {
     bleedingRate: 12,
     pain: 85,
     shock: 90,
+    isFatal: true,
     timeToDeath: 12,
     description: 'Severe damage to the lungs causing respiratory failure'
   })
@@ -221,6 +241,7 @@ export class Injuries {
     bleedingRate: 12,
     pain: 90,
     shock: 85,
+    isFatal: true,
     isAmputation: true,
     permanentEffect: 'loss of limb',
     timeToDeath: 15,
@@ -301,8 +322,9 @@ export class Injuries {
     return this.getAllInjuries().filter(injury => injury.woundType === woundType)
   }
 
-  static getInjuries(severity: InjurySeverity, woundType: WoundType): InjuryType[] {
-    return this.getAllInjuries().filter(injury => injury.severity === severity && injury.woundType === woundType)
+  // Get injuries that would prevent combat
+  static getCombatPreventingInjuries(): InjuryType[] {
+    return this.getAllInjuries().filter(injury => injury.wouldPreventCombat())
   }
 
   // Create injury by name for a specific body part

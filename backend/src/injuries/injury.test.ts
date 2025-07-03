@@ -1,4 +1,6 @@
+import { InjuryType } from './injury.js'
 import { Injuries } from './injuries.js'
+import { BodyPart } from '../units/unit.js'
 
 describe('InjuryType', () => {
   describe('Basic Functionality', () => {
@@ -12,6 +14,7 @@ describe('InjuryType', () => {
       expect(injury.bleedingRate).toBe(0.5)
       expect(injury.pain).toBe(10)
       expect(injury.shock).toBe(5)
+      expect(injury.isFatal).toBe(false)
     })
 
     it('should return correct functionality penalty', () => {
@@ -22,9 +25,16 @@ describe('InjuryType', () => {
       expect(Injuries.DECAPITATION.getFunctionalityPenalty()).toBe(100)
     })
 
+    it('should correctly identify combat-preventing injuries', () => {
+      expect(Injuries.SCRATCH.wouldPreventCombat()).toBe(false)
+      expect(Injuries.DEEP_CUT.wouldPreventCombat()).toBe(false)
+      expect(Injuries.COMPOUND_FRACTURE.wouldPreventCombat()).toBe(true)
+      expect(Injuries.DECAPITATION.wouldPreventCombat()).toBe(true)
+    })
+
     it('should provide meaningful descriptions', () => {
-      expect(Injuries.SCRATCH.description).toContain('superficial')
-      expect(Injuries.DECAPITATION.description).toContain('death')
+      expect(Injuries.SCRATCH.getEffectDescription()).toContain('superficial')
+      expect(Injuries.DECAPITATION.getEffectDescription()).toContain('death')
     })
   })
 
@@ -128,16 +138,15 @@ describe('InjuryType', () => {
       })
     })
 
-    it('should have time to death for fatal injuries', () => {
+    it('should have fatal injuries marked correctly', () => {
       Injuries.getFatalInjuries().forEach(injury => {
-        expect(injury.severity).toBe('fatal')
+        expect(injury.isFatal).toBe(true)
         expect(injury.timeToDeath).toBeDefined()
         expect(injury.timeToDeath).toBeGreaterThan(0)
       })
 
       Injuries.getMinorInjuries().forEach(injury => {
-        expect(injury.severity).toBe('minor')
-        expect(injury.timeToDeath).toBeUndefined()
+        expect(injury.isFatal).toBe(false)
       })
     })
   })
