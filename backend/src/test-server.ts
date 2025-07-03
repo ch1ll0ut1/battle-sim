@@ -1,6 +1,6 @@
-import { Battle } from './battle/battle.js';
-import { Unit } from './units/unit.js';
-import { Position } from './common/position.js';
+import { Battle } from './_OLD/battle/battle.js';
+import { Unit } from './_OLD/units/unit.js';
+import { Position } from './_OLD/common/position.js';
 import { BattleWebSocketServer } from './websocket-server.js';
 
 // Create some test units positioned in team areas (500x500 coordinates)

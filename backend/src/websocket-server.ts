@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
-import { Battle } from './battle/battle.js';
-import { Unit } from './units/unit.js';
+import { Battle } from './_OLD/battle/battle.js';
+import { Unit } from './_OLD/units/unit.js';
 
 type BattleState = {
   time: number;

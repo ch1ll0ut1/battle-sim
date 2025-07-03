@@ -1,6 +1,6 @@
 // Test script to run a simple battle
 
-import { BattleScenario } from './combat/battle-scenario.js'
+import { BattleScenario } from './_OLD/combat/battle-scenario.js'
 
 // Parse command line arguments
 const args = process.argv.slice(2)
