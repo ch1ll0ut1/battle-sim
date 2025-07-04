@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+All files in the folder "_OLD" are deprecated and only remain to use as example and maybe extract some logic and values later.
