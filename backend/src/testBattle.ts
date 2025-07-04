@@ -2,6 +2,7 @@
 
 import { Logger } from './utils/Logger.js';
 import { BattleEngine, Unit } from './BattleEngine/BattleEngine.js';
+import { printBattleReport } from './utils/printBattleReport.js';
 
 // Create test units
 const units: Unit[] = [
@@ -55,6 +56,4 @@ console.log('\nStarting battle...\n');
 const result = engine.runBattle();
 
 // Display battle summary
-logger.displaySummary(result.duration, result.winner);
-console.log('\nDetailed Battle Log:');
-logger.displayEvents(); 
+printBattleReport(logger.getEvents(), result.duration, result.winner);
