@@ -1,12 +1,21 @@
 import { WebSocketServer, WebSocket } from 'ws';
 
 /**
+ * Message structure for WebSocket communication
+ */
+export interface WebSocketMessage<T = any> {
+    type: string;
+    data: T;
+}
+
+/**
  * Generic WebSocket server that broadcasts messages to connected clients
  */
 export class WebsocketServer {
     private wss: WebSocketServer;
     private clients: WebSocket[] = [];
     private onClientConnectCallback?: (ws: WebSocket) => void;
+    private onMessageCallback?: (ws: WebSocket, message: WebSocketMessage) => void;
 
     /**
      * Creates a new WebSocket server instance
@@ -27,60 +36,23 @@ export class WebsocketServer {
     }
 
     /**
-     * Handles new WebSocket connections
+     * Registers a callback to be called when a message is received from a client
+     * @param callback - Function to be called with the WebSocket client and message
      */
-    private handleConnection(ws: WebSocket): void {
-        // Wait for connection to be established
-        if (ws.readyState === WebSocket.CONNECTING) {
-            ws.once('open', () => this.setupClient(ws));
-        } else if (ws.readyState === WebSocket.OPEN) {
-            this.setupClient(ws);
-        }
-    }
-
-    /**
-     * Sets up event handlers for a connected client
-     */
-    private setupClient(ws: WebSocket): void {
-        this.clients.push(ws);
-
-        ws.on('error', (error) => {
-            console.error('WebSocket client error:', error);
-            this.removeClient(ws);
-        });
-
-        ws.on('close', () => {
-            this.removeClient(ws);
-        });
-
-        // Notify consumer of new connection
-        if (this.onClientConnectCallback) {
-            this.onClientConnectCallback(ws);
-        }
-    }
-
-    /**
-     * Removes a client from the clients list
-     */
-    private removeClient(ws: WebSocket): void {
-        const index = this.clients.indexOf(ws);
-        if (index !== -1) {
-            this.clients.splice(index, 1);
-        }
-    }
-
-    /**
-     * Handles server-level WebSocket errors
-     */
-    private handleServerError(error: Error): void {
-        console.error('WebSocket server error:', error);
+    onMessage(callback: (ws: WebSocket, message: WebSocketMessage) => void): void {
+        this.onMessageCallback = callback;
     }
 
     /**
      * Sends a message to a specific client
-     * @returns true if message was sent successfully, false otherwise
+     * 
+     * @throws Error if client is not connected
      */
-    send(ws: WebSocket, type: string, data: any) {
+    send(ws: WebSocket, type: string, data: any): void {
+        if (ws.readyState !== WebSocket.OPEN) {
+            throw new Error('Client is not connected');
+        }
+
         try {
             ws.send(JSON.stringify({ type, data }));
         } catch (error) {
@@ -92,7 +64,7 @@ export class WebsocketServer {
     /**
      * Broadcasts a message to all connected clients
      */
-    broadcast(type: string, data: any) {
+    broadcast(type: string, data: any): void {
         const message = JSON.stringify({ type, data });
 
         this.clients.forEach(client => {
@@ -133,5 +105,78 @@ export class WebsocketServer {
 
         // Close the server
         this.wss.close();
+    }
+
+    /**
+     * Handles new WebSocket connections
+     */
+    private handleConnection(ws: WebSocket): void {
+        // Wait for connection to be established
+        if (ws.readyState === WebSocket.CONNECTING) {
+            ws.once('open', () => this.setupClient(ws));
+        } else if (ws.readyState === WebSocket.OPEN) {
+            this.setupClient(ws);
+        }
+    }
+
+    /**
+     * Sets up event handlers for a connected client
+     */
+    private setupClient(ws: WebSocket): void {
+        this.clients.push(ws);
+
+        ws.on('error', (error) => {
+            console.error('WebSocket client error:', error);
+            this.removeClient(ws);
+        });
+
+        ws.on('close', () => {
+            this.removeClient(ws);
+        });
+
+        ws.on('message', (data: string) => {
+            try {
+                const message = JSON.parse(data) as WebSocketMessage;
+                if (this.validateMessage(message) && this.onMessageCallback) {
+                    this.onMessageCallback(ws, message);
+                }
+            } catch (error) {
+                console.error('Error parsing message from client:', error);
+            }
+        });
+
+        // Notify consumer of new connection
+        if (this.onClientConnectCallback) {
+            this.onClientConnectCallback(ws);
+        }
+    }
+
+    /**
+     * Validates a WebSocket message
+     */
+    private validateMessage(message: any): message is WebSocketMessage {
+        return (
+            message &&
+            typeof message === 'object' &&
+            typeof message.type === 'string' &&
+            'data' in message
+        );
+    }
+
+    /**
+     * Removes a client from the clients list
+     */
+    private removeClient(ws: WebSocket): void {
+        const index = this.clients.indexOf(ws);
+        if (index !== -1) {
+            this.clients.splice(index, 1);
+        }
+    }
+
+    /**
+     * Handles server-level WebSocket errors
+     */
+    private handleServerError(error: Error): void {
+        console.error('WebSocket server error:', error);
     }
 } 
