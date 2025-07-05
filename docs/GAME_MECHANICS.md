@@ -1,6 +1,69 @@
 # Battle Simulation Game Mechanics
 
-This document describes the realistic mechanics that govern our battle simulation system.
+## System Overview
+
+The battle simulation uses a combination of physical and psychological systems to create realistic combat behavior.
+
+### System Interactions
+
+```bash
+Physical Systems:
+Experience ──┬─► Combat Effectiveness
+            ├─► Morale
+            ├─► Pain Resistance
+            └─► Stamina Management
+
+Weight ─────┬─► Movement Speed
+            ├─► Stamina Costs
+            ├─► Equipment Capacity
+            └┬► Conditioning ──► Stamina Pool
+             └─────────────────┘
+
+Strength ───┬─► Damage Output
+            ├─► Equipment Capacity
+            ├─► Weapon Selection
+            └┬► Conditioning ──► Stamina Pool
+             └─────────────────┘
+
+Weapon ─────┬─► Damage Output
+            ├─► Hit Probability
+            ├─► Stamina Costs
+            └─► Action Speed
+
+Blood Loss ─┬─► Combat Effectiveness
+            ├─► Consciousness
+            └─► Morale
+
+Consciousness ┬─► Combat Effectiveness
+              ├─► Decision Making
+              └─► Action Success
+
+Injuries ───┬─► Combat Effectiveness
+            ├─► Morale
+            ├─► Pain
+            ├─► Blood Loss
+            ├─► Body Part Functionality
+            └─► Shock ──► Consciousness
+
+Pain ───────┬─► Combat Effectiveness
+            ├─► Morale
+            └─► Consciousness
+
+Shock ──────► Consciousness
+
+Stamina ────┬─► Combat Effectiveness
+            ├─► Movement Speed
+            └─► Morale
+
+Body Part ──┬─► Action Availability
+Functionality├─► Combat Effectiveness
+            └─► Movement Speed
+
+Psychological Systems:
+Battlefield Events ─┐
+Unit Status ───────┼─► Morale ──► Decision Making
+Leadership ────────┘
+```
 
 ## Physical Characteristics
 
