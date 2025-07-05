@@ -73,6 +73,8 @@ Leadership ────────┘
   - Affects movement speed, stamina, and equipment capacity
   - Optimal fighting weight: 70-85 kg
   - Every 10 kg above optimal reduces speed by 5%
+  - Influences conditioning ratio (strength/weight)
+  - Higher weight increases stamina costs for actions
 
 - **Strength**: Scale 0-100
   - 20: Untrained adult
@@ -80,6 +82,28 @@ Leadership ────────┘
   - 60: Athletic
   - 80: Elite athlete
   - 100: Peak human strength
+  - Determines weapon selection and equipment capacity
+  - Higher strength improves damage output
+  - Influences conditioning ratio (strength/weight)
+
+### Conditioning
+
+The relationship between strength and weight creates a conditioning bonus that affects stamina:
+
+```ts
+conditioningRatio = strength / weight
+conditioningBonus = min(conditioningRatio * 10, 20) // Capped at 20
+```
+
+Effects:
+
+- Improves stamina pool (up to +20)
+- Better strength-to-weight ratio means more efficient movements
+- Optimal ratio is around 1.0 (balanced strength and weight)
+- Examples:
+  - 80 strength, 80 kg: 1.0 ratio = +10 stamina
+  - 100 strength, 70 kg: 1.43 ratio = +20 stamina (capped)
+  - 60 strength, 90 kg: 0.67 ratio = +6.7 stamina
 
 - **Experience**: Scale 0.0-1.0
   - Affects weapon handling, stamina management, and pain resistance
@@ -240,6 +264,7 @@ Example Calculations:
 Experience represents a unit's training and combat exposure, ranging from 0.0 (untrained) to 1.0 (legendary).
 
 ### Effects
+
 1. Combat:
    - Improved accuracy
    - Better damage control
@@ -249,14 +274,15 @@ Experience represents a unit's training and combat exposure, ranging from 0.0 (u
    - Pain and shock reduced by up to 50%
    - Stamina drain reduced by up to 30%
    - Morale stress resistance (see Morale System)
-     * Reduces negative morale effects by up to 20 points
-     * Higher base morale (+30 at maximum experience)
+     - Reduces negative morale effects by up to 20 points
+     - Higher base morale (+30 at maximum experience)
 
 ## Pain System
 
 Pain represents accumulated trauma and its impact on performance.
 
-### Effects
+### Pain Effects
+
 1. Physical Impact:
    - Reduces action speed
    - Increases stamina costs
@@ -271,7 +297,8 @@ Pain represents accumulated trauma and its impact on performance.
 
 Stamina represents a unit's current energy level and ability to perform actions.
 
-### Effects
+### Stamina Effects
+
 1. Physical Performance:
    - Action execution speed
    - Damage output
@@ -312,21 +339,21 @@ maxStamina = baseStamina + experienceBonus + conditioningBonus
    - Reduces action costs by up to 30%
    - Improves recovery rates by up to 20%
    - Example: Veteran (0.5 exp)
-     * Action costs reduced by 15%
-     * Recovery improved by 10%
+     - Action costs reduced by 15%
+     - Recovery improved by 10%
 
 2. Pain Effects:
    - Each 10 points of pain:
-     * +10% stamina costs
-     * -5% recovery rate
+     - +10% stamina costs
+     - -5% recovery rate
 
 3. Weight Impact:
    - Heavy armor/weapons increase costs
    - Base cost multiplier = weight/strength
    - Minimum multiplier = 1.0
    - Example: 80kg unit, 60 strength
-     * Multiplier = 1.33
-     * Light attack: 4% (3% * 1.33)
+     - Multiplier = 1.33
+     - Light attack: 4% (3% * 1.33)
 
 ### Performance Thresholds
 
@@ -453,25 +480,64 @@ Combat effectiveness replaces traditional health systems with a realistic measur
 ### Core Components
 
 1. Physical State (Multiplicative):
-   - Stamina percentage effects:
+
+   ```ts
+   physicalState = staminaEffect * painEffect * consciousnessEffect * bloodLossEffect
+   ```
+
+   - **Stamina Effect**:
      - >75%: 1.0x
      - >50%: 0.8x
      - >25%: 0.6x
      - >10%: 0.3x
      - ≤10%: 0.1x
 
-   - Pain impact:
-     - Formula: 1 - (totalPain/100) *(1 - experience* 0.5)
-     - Example: 60 pain with 0.8 experience = 0.64x
+   - **Pain Effect**:
 
-   - Consciousness level:
-     - Direct multiplier (consciousness/100)
-     - Below 30% = unable to fight
+     ```ts
+     painEffect = 1 - (totalPain/100) * (1 - experience * 0.5)
+     ```
 
-2. Body Functionality (Multiplicative):
-   - Arms: min(leftArm, rightArm)/100
-   - Legs: min(leftLeg, rightLeg)/100
+     Example: 60 pain with 0.8 experience = 0.64x
+
+   - **Consciousness Effect**:
+
+     ```ts
+     consciousnessEffect = consciousness/100
+     // Consciousness affected by:
+     // - Blood Loss (-10 at 15%, -30 at 25%, -60 at 35%)
+     // - Pain (-0.5 per point)
+     // - Shock (immediate reduction based on injury)
+     ```
+
+   - **Blood Loss Effect**:
+
+     ```ts
+     bloodLossEffect = 1 - (bloodLoss/40) // 40% is fatal threshold
+     ```
+
+2. Body Part Functionality (Multiplicative):
+
+   ```ts
+   // Critical parts (any of these at 0 means unit is incapacitated)
+   criticalParts = min(head, torso)/100
+   
+   // Limb functionality
+   limbFunctionality = min(leftArm, rightArm)/100 * min(leftLeg, rightLeg)/100
+   
+   // Combined functionality
+   bodyFunctionality = criticalParts * limbFunctionality
+   
+   // Examples:
+   // - Head/Torso at 0: bodyFunctionality = 0 (incapacitated)
+   // - Head 50%, Torso 80%, Arms 100%, Legs 100%: bodyFunctionality = 0.5
+   // - Head 100%, Torso 100%, One arm 0%: bodyFunctionality = 0.5
+   ```
+
+   - Critical body parts (head, torso) must be functional for any action
    - Each injury reduces relevant part functionality
+   - Critical injuries may disable parts entirely
+   - Affects available actions and their effectiveness
 
 ### Practical Applications
 
@@ -518,6 +584,18 @@ Combat effectiveness replaces traditional health systems with a realistic measur
    - Total effectiveness: 0.015 (1.5% capable)
    - Effectively combat ineffective
 
+### Decision Making Integration
+
+1. **AI Evaluation**:
+   - Uses effectiveness to assess unit capabilities
+   - Retreat decisions based on effectiveness thresholds
+   - Formation positioning based on unit effectiveness
+
+2. **Visual Feedback**:
+   - Unit stance/animation reflects effectiveness
+   - Helps players assess unit state realistically
+   - More intuitive than abstract health bars
+
 ## Hit Probability
 
 Base hit chance: 70%
@@ -555,104 +633,236 @@ damage = baseDamage * partFunctionality * (1 + strengthBonus + experienceBonus) 
 
 ## Weapon System
 
-### Weight Categories
+Weapons affect combat through four main channels: Damage Output, Hit Probability, Stamina Costs, and Action Speed.
 
-- Light (1-3 kg): Fast, precise
-  - Examples: Dagger (0.5kg), Short Sword (1.0kg), Rapier (1.2kg)
-  - High accuracy, lower stamina cost
-  - Ideal for quick strikes and precision
+### Damage Output
 
-- Medium (3-6 kg): Balanced
-  - Examples: Long Sword (3.0kg), Battle Axe (4.0kg), Spear (2.5kg)
-  - Good balance of speed and power
-  - Versatile in most combat situations
+#### Weapon Properties
 
-- Heavy (6-10 kg): Powerful
-  - Examples: Great Sword (6.0kg), Maul (9.0kg), Poleaxe (6.5kg)
-  - High damage, requires more strength
-  - Effective against armored opponents
+- **Damage Type**
+  - **Cutting**
+    - Affected by edge sharpness (0-1 scale)
+    - Most effective against unarmored targets
+    - Examples: Swords, Axes
+    - Reduced by flexible armor (chainmail)
+    - Damage multiplier = edgeSharpness * (1 - armorCutProtection)
 
-- Massive (10+ kg): Devastating
-  - Examples: Zweihander (12.0kg), Giant Axe (15.0kg)
-  - Extreme damage, requires exceptional strength
-  - Very high stamina cost
+  - **Piercing**
+    - Affected by point geometry (0-1 scale)
+    - Good against gaps in armor
+    - Examples: Spears, Daggers
+    - Most effective thrust attacks
+    - Damage multiplier = pointGeometry * (1 - armorStabProtection)
 
-### Damage Types
+  - **Blunt**
+    - Affected by impact area (cm²)
+    - Effective against any armor type
+    - Examples: Maces, Hammers
+    - Transfers force through armor
+    - Damage multiplier = (impactArea/20) * (1 - armorCrushProtection)
 
-- Cutting
-  - Affected by edge sharpness (0-1 scale)
-  - Most effective against unarmored targets
-  - Examples: Swords, Axes
-  - Reduced by flexible armor (chainmail)
+- **Weight**: Affects handling and stamina (in kg)
+  - Light (1-3 kg): Fast, precise
+    - Examples: Dagger (0.5kg), Short Sword (1.0kg), Rapier (1.2kg)
+    - High accuracy, lower stamina cost
+    - Ideal for quick strikes and precision
+  
+  - Medium (3-6 kg): Balanced
+    - Examples: Long Sword (3.0kg), Battle Axe (4.0kg), Spear (2.5kg)
+    - Good balance of speed and power
+    - Versatile in most combat situations
+  
+  - Heavy (6-10 kg): Powerful
+    - Examples: Great Sword (6.0kg), Maul (9.0kg), Poleaxe (6.5kg)
+    - High damage, requires more strength
+    - Effective against armored opponents
+  
+  - Massive (10+ kg): Devastating
+    - Examples: Zweihander (12.0kg), Giant Axe (15.0kg)
+    - Extreme damage, requires exceptional strength
+    - Very high stamina cost
 
-- Piercing
-  - Affected by point geometry (0-1 scale)
-  - Good against gaps in armor
-  - Examples: Spears, Daggers
-  - Most effective thrust attacks
-
-- Blunt
-  - Affected by impact area (cm²)
-  - Effective against any armor type
-  - Examples: Maces, Hammers
-  - Transfers force through armor
-
-### Weapon Properties
-
-- Length: Affects reach and handling (in cm)
+- **Length**: Affects reach and handling (in cm)
   - Short (25-60cm): Quick, good in tight spaces
   - Medium (60-100cm): Balanced reach
   - Long (100-200cm): Superior reach, harder to use close
 
-- Edge Sharpness (0-1)
+- **Edge Sharpness** (0-1)
   - 0.9+: Razor sharp, maximum cutting
   - 0.7-0.8: Standard military edge
   - 0.5-0.6: Serviceable but dulled
 
-- Point Geometry (0-1)
+- **Point Geometry** (0-1)
   - 0.9+: Needle-point, maximum penetration
   - 0.7-0.8: Standard military point
   - 0.5-0.6: Basic point
 
+### Hit Probability & Action Speed
+
+#### Weight Categories
+
+Each category affects accuracy and action speed differently:
+
+- **Light (1-3 kg)**
+  - +10% hit probability
+  - -20% action time
+  - Examples: Dagger (0.5kg), Short Sword (1.0kg), Rapier (1.2kg)
+
+- **Medium (3-6 kg)**
+  - Base hit probability
+  - Base action time
+  - Examples: Long Sword (3.0kg), Battle Axe (4.0kg), Spear (2.5kg)
+
+- **Heavy (6-10 kg)**
+  - -10% hit probability
+  - +20% action time
+  - Examples: Great Sword (6.0kg), Maul (9.0kg), Poleaxe (6.5kg)
+
+- **Massive (10+ kg)**
+  - -20% hit probability
+  - +40% action time
+  - Examples: Zweihander (12.0kg), Giant Axe (15.0kg)
+
+#### Reach and Handling
+
+- **Length** affects both hit probability and engagement range:
+  - Short (25-60cm): +5% hit probability in close range
+  - Medium (60-100cm): Base hit probability
+  - Long (100-200cm): -5% hit probability in close range, +10% at optimal range
+
+### Stamina Costs
+
+Base stamina costs are modified by weapon weight:
+
+```ts
+staminaCost = baseActionCost * (weight/3) // 3kg is reference weight
+```
+
+Weight Category Modifiers:
+
+- Light: 0.8x stamina cost
+- Medium: 1.0x stamina cost
+- Heavy: 1.3x stamina cost
+- Massive: 1.6x stamina cost
+
+### Weapon Selection
+
+Strength requirements determine which weapons a unit can effectively wield:
+
+```ts
+minStrength = weapon.weight * 10 // Minimum strength to wield
+optimalStrength = weapon.weight * 15 // Strength for optimal performance
+```
+
+Performance penalties when strength is below optimal:
+
+- Hit probability reduced by 5% per point below optimal
+- Action speed increased by 3% per point below optimal
+- Stamina costs increased by 5% per point below optimal
+
 ## Armor System
 
-### Materials and Properties
+Armor affects combat through three main channels: Protection, Movement Speed, and Stamina Costs.
 
-Leather Armor:
+### Protection by Material
 
-- Light weight (0.3-1.5 kg per piece)
-- Cut protection: 30-45%
-- Stab protection: 20-35%
-- Crush protection: 10-25%
-- Best for mobility and stealth
-- Typical pieces:
+#### Leather Armor
+
+- **Weight Range**: 0.3-1.5 kg per piece
+- **Protection**:
+  - Cut: 30-45%
+  - Stab: 20-35%
+  - Crush: 10-25%
+- **Movement**: -5% speed per 2kg total weight
+- **Stamina**: +10% action costs
+- **Typical Pieces**:
   - Boots: 0.5kg, 50% cut protection
   - Jerkin: 1.5kg, 60% cut protection
   - Cap: 0.7kg, 65% cut protection
 
-Chainmail:
+#### Chainmail
 
-- Medium weight (0.8-3.0 kg per piece)
-- Cut protection: 80-90%
-- Stab protection: 60-70%
-- Crush protection: 30-40%
-- Good balance of protection and weight
-- Typical pieces:
+- **Weight Range**: 0.8-3.0 kg per piece
+- **Protection**:
+  - Cut: 80-90%
+  - Stab: 60-70%
+  - Crush: 30-40%
+- **Movement**: -5% speed per 1.5kg total weight
+- **Stamina**: +20% action costs
+- **Typical Pieces**:
   - Leggings: 3.5kg, 85% cut protection
   - Hauberk: 4.5kg, 90% cut protection
   - Coif: 2.5kg, 90% cut protection
 
-Plate:
+#### Plate
 
-- Heavy weight (1.2-5.0 kg per piece)
-- Cut protection: 95-100%
-- Stab protection: 90-95%
-- Crush protection: 80-90%
-- Maximum protection at cost of weight
-- Typical pieces:
+- **Weight Range**: 1.2-5.0 kg per piece
+- **Protection**:
+  - Cut: 95-100%
+  - Stab: 90-95%
+  - Crush: 80-90%
+- **Movement**: -5% speed per 1kg total weight
+- **Stamina**: +30% action costs
+- **Typical Pieces**:
   - Greaves: 3.0kg, 95% cut protection
   - Cuirass: 8.0kg, 100% cut protection
   - Helm: 3.5kg, 100% cut protection
+
+### Movement Effects
+
+Total armor weight affects movement speed:
+
+```ts
+speedPenalty = totalArmorWeight * armorTypePenaltyMultiplier
+// Penalty multipliers:
+// Leather: 0.025 (2.5% per kg)
+// Chainmail: 0.033 (3.3% per kg)
+// Plate: 0.05 (5% per kg)
+```
+
+### Stamina Impact
+
+Armor increases the stamina cost of all actions:
+
+```ts
+staminaCostMultiplier = 1 + (totalArmorWeight * armorTypeMultiplier)
+// Type multipliers:
+// Leather: 0.02 (2% per kg)
+// Chainmail: 0.03 (3% per kg)
+// Plate: 0.04 (4% per kg)
+```
+
+### Protection Calculation
+
+Damage reduction is calculated per damage type:
+
+```ts
+finalDamage = baseDamage * (1 - armorProtection[damageType])
+// Additional effects:
+// - Crushing damage ignores 50% of armor protection
+// - Critical hits ignore 30% of armor protection
+// - Worn/damaged armor provides 50-80% of normal protection
+```
+
+### Mixed Armor Examples
+
+1. Light Scout (4kg total):
+   - Leather armor set
+   - -10% movement speed
+   - +8% stamina costs
+   - ~40% overall protection
+
+2. Standard Infantry (12kg total):
+   - Chainmail with leather
+   - -30% movement speed
+   - +30% stamina costs
+   - ~70% overall protection
+
+3. Heavy Knight (20kg total):
+   - Full plate
+   - -50% movement speed
+   - +60% stamina costs
+   - ~90% overall protection
 
 ## Combat Ranges
 
@@ -819,7 +1029,7 @@ Example starting morale:
    - Leader rallies troops: +15
    - Reaching defensive position: +10
 
-### Example Scenarios
+### Moral System - Example Scenarios
 
 1. Formation Charge:
    - Veteran soldier (base 70)
