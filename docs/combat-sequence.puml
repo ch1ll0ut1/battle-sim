@@ -1,0 +1,36 @@
+@startuml Combat Sequence
+
+skinparam monochrome true
+skinparam shadowing false
+
+participant "Unit A" as UnitA
+participant "Combat Engine" as CE
+participant "Spatial Hash Grid" as SHG
+participant "Injury Manager" as IM
+participant "Terrain Grid" as TG
+participant "Event Bus" as EB
+
+UnitA -> CE: performAttack()
+CE -> SHG: getUnitsInRange(position, range)
+SHG --> CE: nearbyUnits[]
+CE -> TG: getCombatModifiers(position)
+TG --> CE: terrainModifiers
+CE -> IM: processInjury(damage, target)
+IM -> EB: emit("unit.injured")
+EB -> UnitA: update stamina/state
+
+note right of CE
+  Combat Engine calculates:
+  - Hit chance
+  - Damage
+  - Critical hits
+end note
+
+note right of TG
+  Terrain modifiers affect:
+  - Attack accuracy
+  - Damage
+  - Defense
+end note
+
+@enduml 

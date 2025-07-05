@@ -1,0 +1,37 @@
+@startuml Movement Sequence
+
+skinparam monochrome true
+skinparam shadowing false
+
+participant "Unit" as U
+participant "Movement Component" as MC
+participant "Pathfinding Manager" as PFM
+participant "Pathfinding Worker" as PW
+participant "Terrain Grid" as TG
+participant "Spatial Hash Grid" as SHG
+
+U -> MC: moveTo(target)
+MC -> PFM: findPath(current, target)
+PFM -> PW: calculatePath(async)
+PW -> TG: getTerrainCosts()
+TG --> PW: terrainData
+PW --> PFM: calculatedPath
+PFM --> MC: path
+MC -> SHG: updatePosition()
+SHG -> MC: checkCollisions()
+
+note right of PW
+  Worker performs:
+  - A* pathfinding
+  - Terrain cost calculation
+  - Path optimization
+end note
+
+note right of SHG
+  Spatial Grid:
+  - Tracks unit positions
+  - Handles collisions
+  - Optimizes queries
+end note
+
+@enduml 

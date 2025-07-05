@@ -217,26 +217,170 @@ A comprehensive battle simulation system that models realistic combat mechanics,
 
 ## Technical Architecture
 
-### Modular Design
+### Component-Based Design
 
-- Self-contained modules with single responsibilities
-- Clear interfaces between systems
-- Comprehensive test coverage for behavior and business logic
-- TypeScript for type safety and development experience
+The system uses a component-based architecture for maximum flexibility and maintainability:
+
+```typescript
+class Unit {
+  readonly attributes: UnitAttributes;  // Core stats
+  readonly combat: CombatComponent;     // Combat capabilities
+  readonly body: BodyComponent;         // Physical representation
+  readonly movement: MovementComponent; // Movement and positioning
+  readonly work: WorkComponent;         // Non-combat activities
+}
+```
+
+### Core Systems
+
+#### Event System
+
+- Decoupled communication between components
+- Event-based state updates
+- Battle event logging and replay
+
+#### Time Management
+
+- Simulation timing control
+- Update cycle coordination
+- Pause/resume functionality
+
+#### Performance Optimization
+
+- Spatial partitioning for efficient unit queries
+- Batch processing for large unit counts
+- Worker threads for pathfinding and AI
+
+### Terrain System
+
+- Grid-based terrain representation
+- Height, forest, river, and obstacle features
+- Pathfinding with terrain costs
+- Combat modifiers based on terrain
+
+### Visualization
+
+- Multiple view modes (Battle, Tactical, Strategic)
+- Canvas-based 2D rendering
+- Zoom-dependent detail levels
+- Real-time unit visualization
+
+### Network Layer
+
+- WebSocket-based real-time updates
+- State synchronization
+- Battle coordination
+- Client management
+
+For detailed architecture information, see [ARCHITECTURE_PLAN.md](ARCHITECTURE_PLAN.md).
+
+## Game Modes
+
+### Test Battle Mode
+
+- Quick battle simulations
+- Predefined unit configurations
+- Performance testing
+- Combat system validation
+
+### Test Visual Mode
+
+- Real-time battle visualization
+- Playback controls
+- Debug information
+- System monitoring
+
+### Game Mode (Future)
+
+- Large-scale battles
+- City building elements
+- Unit lifecycle simulation
+- Strategic map control
+
+## Development Approach
 
 ### Code Organization
 
-- **Units**: Core unit system with body and combat subsystems
-- **Weapons**: Weapon types, properties, and management
-- **Armor**: Armor system with coverage and protection
-- **Combat**: Combat engine and battle mechanics
+- Self-contained modules with clear responsibilities
+- Component-based unit system
+- Event-driven communication
+- Worker-based performance optimization
+
+### Testing Strategy
+
+- Comprehensive component testing
+- Integration tests for system interaction
+- Performance benchmarking
+- Behavior-driven development
+
+### Performance Goals
+
+- Support for thousands of units
+- Efficient spatial queries
+- Optimized batch processing
+- Asynchronous pathfinding
 
 ### Development Philosophy
 
-- **Realism over balance**: Prioritize historical accuracy and realistic mechanics
-- **Emergent gameplay**: Complex behaviors emerge from simple, realistic rules
-- **Transparency**: All calculations and mechanics should be understandable
-- **Modularity**: Systems should be independent and testable
-- **Iterative development**: Small, focused changes with regular review cycles
-- **No proxy methods**: Direct access to underlying systems without unnecessary wrappers
-- **Comprehensive testing**: Behavior and business logic testing without semantic testing
+- **Component-Based**: Clear separation of concerns with composable components
+- **Event-Driven**: Decoupled communication through event system
+- **Performance-Focused**: Optimized for large-scale battles
+- **Modular Design**: Independent, testable components
+- **Realistic Simulation**: Accurate combat and unit behavior
+- **Iterative Development**: Small, focused changes with regular review
+
+## Project Structure
+
+```bash
+backend/
+├── src/
+│   ├── BattleEngine/      # Core battle simulation
+│   ├── utils/             # Shared utilities
+│   └── index.ts           # Main entry point
+│
+frontend/
+├── src/
+│   ├── battle-map/        # Battle visualization
+│   └── index.tsx          # Frontend entry point
+```
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies:
+
+   ```bash
+   cd backend && npm install
+   cd frontend && npm install
+   ```
+
+3. Start the development servers:
+
+   ```bash
+   # Terminal 1
+   cd backend && npm run dev
+   
+   # Terminal 2
+   cd frontend && npm run dev
+   ```
+
+## Documentation
+
+### Development Guides
+
+- [Contributing Guide](docs/CONTRIBUTING.md) - Development standards, best practices, and code organization
+- [Technical Roadmap](docs/ROADMAP.md) - Implementation phases and planned features
+- [API Documentation](docs/API.md) - Core APIs and interfaces documentation
+- [Testing Strategy](docs/TESTING_STRATEGY.md) - Testing approach, patterns and best practices
+
+### Architecture & Design
+
+- [Architecture Plan](docs/ARCHITECTURE_PLAN.md) - Detailed system architecture and design decisions
+- [Architecture Diagram](docs/architecture-diagram.puml) - High-level system architecture visualization
+- [Component Interactions](docs/component-interactions.puml) - PlantUML diagram showing system component relationships
+- [Combat Sequence Diagram](docs/combat-sequence.puml) - PlantUML diagram showing combat sequence
+- [Movement Sequence Diagram](docs/movement-sequence.puml) - PlantUML diagram showing movement sequence
+
+## Contributing
+
+Please see our [Contributing Guide](docs/CONTRIBUTING.md) for development standards, best practices, and workflow guidelines.

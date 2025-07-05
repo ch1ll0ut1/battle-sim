@@ -1,0 +1,173 @@
+@startuml BattleSimulation
+
+' Style settings
+skinparam componentStyle uml2
+skinparam packageStyle rectangle
+skinparam monochrome true
+skinparam shadowing false
+skinparam linetype ortho
+
+' Core Systems
+package "Core Systems" {
+  [EventBus] as EB
+  [TimeManager] as TM
+  [PerformanceMonitor] as PM
+}
+
+' Unit System
+package "Unit System" {
+  component "Unit" {
+    [UnitAttributes] as UA
+    [CombatComponent] as CC
+    [BodyComponent] as BC
+    [MovementComponent] as MC
+    [WorkComponent] as WC
+    
+    UA --> CC
+    UA --> BC
+    UA --> MC
+    UA --> WC
+  }
+  
+  [UnitManager] as UM
+}
+
+' Combat System
+package "Combat System" {
+  [CombatEngine] as CE
+  [ArmorManager] as AM
+  [WeaponManager] as WM
+  [InjuryManager] as IM
+  [BodyPartsSystem] as BPS
+  
+  CE --> AM
+  CE --> WM
+  CE --> IM
+  CE --> BPS
+}
+
+' Terrain System
+package "Terrain System" {
+  [TerrainGrid] as TG
+  [TerrainCell] as TC
+  [TerrainFeatures] as TF
+  [PathfindingManager] as PFM
+  [SpatialHashGrid] as SHG
+  
+  TG --> TC
+  TC --> TF
+  TG --> PFM
+  TG --> SHG
+}
+
+' Performance Optimization
+package "Performance" {
+  [BatchProcessor] as BP
+  [WorkerThreadPool] as WTP
+  [PathfindingWorker] as PW
+  
+  WTP --> PW
+}
+
+' Game Modes
+package "Game Modes" {
+  [TestBattleMode] as TBM
+  [TestVisualMode] as TVM
+  [GameMode] as GM
+}
+
+' Frontend
+package "Frontend" {
+  [BattleView] as BV
+  [TacticalView] as TV
+  [StrategicView] as SV
+  [UIComponents] as UI
+  [WebSocketClient] as WSC
+  
+  BV --> UI
+  TV --> UI
+  SV --> UI
+}
+
+' Network Layer
+package "Network" {
+  [WebSocketServer] as WSS
+  [BattleCoordinator] as BC
+}
+
+' Core System Dependencies
+EB --> UM
+EB --> CE
+EB --> TG
+TM --> UM
+TM --> CE
+PM --> UM
+PM --> CE
+PM --> TG
+
+' Unit System Dependencies
+UM --> SHG
+MC --> TG
+MC --> PFM
+
+' Combat System Dependencies
+CE --> UM
+CE --> TG
+
+' Performance Dependencies
+BP --> UM
+BP --> CE
+WTP --> PFM
+PW --> TG
+
+' Game Mode Dependencies
+TBM --> UM
+TBM --> CE
+TVM --> UM
+TVM --> CE
+GM --> UM
+GM --> CE
+
+' Network Dependencies
+BC --> WSS
+BC --> UM
+BC --> CE
+WSS --> WSC
+
+' Frontend Dependencies
+BV --> WSC
+TV --> WSC
+SV --> WSC
+
+' Notes
+note right of UA
+  Core unit attributes:
+  - Health
+  - Stamina
+  - Age
+  - Gender
+end note
+
+note right of CE
+  Handles:
+  - Combat resolution
+  - Damage calculation
+  - Status effects
+end note
+
+note right of TG
+  Features:
+  - Height
+  - Forest
+  - Rivers
+  - Obstacles
+end note
+
+note right of SHG
+  Optimizes:
+  - Unit queries
+  - Collision detection
+  - Range checks
+end note
+
+@enduml 

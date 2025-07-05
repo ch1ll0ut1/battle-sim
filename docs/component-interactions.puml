@@ -1,0 +1,89 @@
+@startuml Component Interactions
+
+skinparam monochrome true
+skinparam shadowing false
+skinparam componentStyle uml2
+
+' Core Components
+component "Unit" {
+  [UnitAttributes]
+  [CombatComponent]
+  [BodyComponent]
+  [MovementComponent]
+  [WorkComponent]
+}
+
+component "Core Systems" {
+  [EventBus]
+  [TimeManager]
+  [PerformanceMonitor]
+}
+
+component "Battle Systems" {
+  [CombatEngine]
+  [InjuryManager]
+  [FormationManager]
+}
+
+component "Environment" {
+  [TerrainGrid]
+  [PathfindingManager]
+  [WeatherSystem]
+}
+
+component "Performance" {
+  [SpatialHashGrid]
+  [BatchProcessor]
+  [WorkerThreadPool]
+}
+
+' Game Modes
+component "Game Modes" {
+  [TestBattleMode]
+  [TestVisualMode]
+  [GameMode]
+}
+
+' Network & Visualization
+component "Frontend" {
+  [BattleView]
+  [TacticalView]
+  [StrategicView]
+}
+
+component "Network" {
+  [WebSocketServer]
+  [BattleCoordinator]
+}
+
+' Relationships
+[EventBus] --> [Unit] : events
+[TimeManager] --> [Unit] : updates
+[Unit] --> [CombatEngine] : combat actions
+[Unit] --> [TerrainGrid] : position queries
+[TerrainGrid] --> [PathfindingManager] : path costs
+[PathfindingManager] --> [WorkerThreadPool] : async calculation
+[CombatEngine] --> [InjuryManager] : damage processing
+[Unit] --> [SpatialHashGrid] : spatial queries
+[BatchProcessor] --> [Unit] : batch updates
+[BattleCoordinator] --> [WebSocketServer] : state updates
+[WebSocketServer] --> [Frontend] : real-time data
+[GameMode] --> [BattleCoordinator] : game state
+
+' Notes
+note right of [EventBus]
+  Decoupled communication
+  between all components
+end note
+
+note right of [SpatialHashGrid]
+  Efficient spatial queries
+  for large unit counts
+end note
+
+note right of [BatchProcessor]
+  Optimized updates for
+  thousands of units
+end note
+
+@enduml 
