@@ -122,32 +122,33 @@ Each combat action has two distinct phases:
    - Time required to perform the action
    - Can be interrupted during this phase
    - Default timings (seconds):
-     - Attack: 0.3s
+     - Attack: 0.4s
      - Block: 0.2s
-     - Grab: 0.4s
      - Move: 0.1s
-     - Rotate: 0.2s
+     - Rotate: 0.1s
+     - Kick: 0.5s
+     - Headbutt: 0.3s
 
 2. Recovery Time:
    - Cooldown period after execution
    - Cannot be interrupted
    - Default timings (seconds):
-     - Attack: 0.4s
-     - Block: 0.1s
-     - Grab: 0.3s
+     - Attack: 0.1s
+     - Block: 0.05s
      - Move: 0.0s
      - Rotate: 0.0s
+     - Kick: 0.2s
+     - Headbutt: 0.1s
 
 Example: Full Attack Sequence
-
 1. Start attack (t=0)
-2. Execution phase (0.3s)
+2. Execution phase (0.4s)
    - Can be interrupted
    - Damage occurs at end
-3. Recovery phase (0.4s)
+3. Recovery phase (0.1s)
    - Cannot be interrupted
    - Body part locked
-4. Ready for next action (t=0.7s)
+4. Ready for next action (t=0.5s)
 
 #### Timing Modifiers
 
@@ -164,16 +165,16 @@ Action timings are affected by various factors:
    - Below 25% stamina: +50% execution time
    - Below 10% stamina: +100% execution time
    - Example: Attack at 20% stamina
-     - Base execution: 0.3s
-     - Modified: 0.45s (+50%)
+     - Base execution: 0.4s
+     - Modified: 0.6s (+50%)
 
 3. Experience Benefits:
    - Reduces base execution time up to 25%
    - Improves recovery time up to 20%
-   - Formula: time *= (1 - experience* 0.25)
+   - Formula: time *= (1 - experience * 0.25)
    - Example: 0.8 experience
-     - Base attack execution: 0.3s
-     - Modified: 0.24s (-20%)
+     - Base attack execution: 0.4s
+     - Modified: 0.32s (-20%)
 
 #### Parallel Actions
 
@@ -202,20 +203,20 @@ Different body parts can act independently, with specific limitations:
 3. Combined Action Examples:
    - Walking Attack:
      - Legs: continuous move (0.1s cycles)
-     - Either arm: full attack sequence (0.7s)
+     - Either arm: full attack sequence (0.5s)
      - Result: 30% reduced attack accuracy
      - Cannot kick during this sequence
 
    - Dual Weapon Attack:
-     - Left arm: attack sequence (0.7s)
-     - Right arm: attack sequence (0.7s)
+     - Left arm: attack sequence (0.5s)
+     - Right arm: attack sequence (0.5s)
      - Can be synchronized or alternating
      - 20% increased stamina cost
      - Must maintain stable stance (no leg actions)
 
    - Kick Combination:
      - Initial stance: both legs planted
-     - Right leg: kick (0.7s total)
+     - Right leg: kick (0.5s total)
      - Arms: can still act independently
      - Cannot move until kick completes
      - Left leg: maintains stability
@@ -234,13 +235,12 @@ Formula: `finalReactionTime = baseTime * (1 - experienceBonus) * (1 + fatiguePen
 
 ### Movement
 
-Base walking speed: 1.5 m/s
+Base walking speed: 1.4 m/s
 
-- Running multiplier: 2x (3.0 m/s)
+- Running multiplier: 2x (2.8 m/s)
 
 Speed Modifiers:
-
-- Strength bonus: +3% per point above 50
+- Strength bonus: +0.5% per point above 50 (capped at +25% maximum)
 - Weight penalty: -0.5% per kg above 70kg
 - Stamina below 50%: Linear reduction to 70% of normal speed
 - Leg injuries: Direct percentage reduction based on injury severity
@@ -248,16 +248,22 @@ Speed Modifiers:
 Example Calculations:
 
 1. Healthy Unit (80 strength, 70kg):
-   - Base speed: 1.5 m/s
-   - Strength bonus: +90% (30 points × 3%)
-   - Final walking: 2.85 m/s
-   - Final running: 5.7 m/s
+   - Base speed: 1.4 m/s
+   - Strength bonus: +15% (30 points × 0.5%)
+   - Final walking: 1.61 m/s
+   - Final running: 3.22 m/s
 
-2. Fatigued Unit (30% stamina):
-   - Base speed: 1.5 m/s
+2. Elite Unit (100 strength, 70kg):
+   - Base speed: 1.4 m/s  
+   - Strength bonus: +25% (capped maximum)
+   - Final walking: 1.75 m/s
+   - Final running: 3.5 m/s
+
+3. Fatigued Unit (30% stamina):
+   - Base speed: 1.4 m/s
    - Stamina penalty: -40%
-   - Final walking: 0.9 m/s
-   - Final running: 1.8 m/s
+   - Final walking: 0.84 m/s
+   - Final running: 1.68 m/s
 
 ## Experience System
 
@@ -385,17 +391,40 @@ maxStamina = baseStamina + experienceBonus + conditioningBonus
 
 ### Blood Loss
 
-- Fatal threshold: 40% of total blood volume
-- Consciousness effects start at 15% loss
-- Blood pressure effects start at 25% loss
-- Death occurs at 40% loss
+Total blood volume: ~5L for average adult
+Fatal threshold: 40% loss (~2L)
 
-Bleeding Rates (% of blood volume per minute):
+Blood Loss Effects:
+- 10% loss (500ml): Minimal effects
+- 15% loss (750ml): Early shock symptoms
+  - Increased heart rate
+  - Mild anxiety
+  - -10 consciousness
+- 25% loss (1.25L): Moderate shock
+  - Marked anxiety
+  - Rapid breathing
+  - -30 consciousness
+  - Combat effectiveness reduced 50%
+- 35% loss (1.75L): Severe shock
+  - Confusion
+  - Very rapid breathing
+  - -60 consciousness
+  - Combat effectiveness reduced 80%
+- 40% loss (2L): Fatal
+  - Unconsciousness
+  - Death within minutes without treatment
 
-- Light Cut: 0.1%
-- Deep Cut: 0.5%
-- Arterial Cut: 2.0%
-- Severe Trauma: 1.0%
+Bleeding Rates (blood volume per minute):
+- Superficial Cut: 50ml/min (1% per minute)
+- Deep Cut: 100ml/min (2% per minute)
+- Arterial Cut: 250ml/min (5% per minute)
+- Major Artery: 500ml/min (10% per minute)
+
+Recovery:
+- Natural clotting begins after 3-5 minutes
+- Reduces bleeding rate by 50%
+- Field treatment can reduce rate by 75%
+- Full recovery requires 1% blood volume per day
 
 ### Body Parts and Damage
 
@@ -655,30 +684,35 @@ Weapons affect combat through four main channels: Damage Output, Hit Probability
     - Damage multiplier = pointGeometry * (1 - armorStabProtection)
 
   - **Blunt**
-    - Affected by impact area (cm²)
+    - Affected by impact area (cm²) and weapon mass
     - Effective against any armor type
     - Examples: Maces, Hammers
     - Transfers force through armor
-    - Damage multiplier = (impactArea/20) * (1 - armorCrushProtection)
+    - Damage multiplier = (mass * velocity²/2) * (1 - armorCrushProtection)
+    - Velocity affected by weapon length and user strength
+    - Impact area determines force distribution:
+      - Small (< 2cm²): Concentrated force, good for armor penetration
+      - Medium (2-5cm²): Balanced between penetration and impact
+      - Large (> 5cm²): Distributed force, better for unarmored targets
 
 - **Weight**: Affects handling and stamina (in kg)
-  - Light (1-3 kg): Fast, precise
+  - Light (0.5-1.5 kg): Fast, precise
     - Examples: Dagger (0.5kg), Short Sword (1.0kg), Rapier (1.2kg)
     - High accuracy, lower stamina cost
     - Ideal for quick strikes and precision
   
-  - Medium (3-6 kg): Balanced
-    - Examples: Long Sword (3.0kg), Battle Axe (4.0kg), Spear (2.5kg)
+  - Medium (1.5-2.5 kg): Balanced
+    - Examples: Long Sword (1.8kg), Battle Axe (1.5kg), Spear (1.8kg)
     - Good balance of speed and power
     - Versatile in most combat situations
   
-  - Heavy (6-10 kg): Powerful
-    - Examples: Great Sword (6.0kg), Maul (9.0kg), Poleaxe (6.5kg)
+  - Heavy (2.5-3.5 kg): Powerful
+    - Examples: Great Sword (3.0kg), War Hammer (2.2kg), Poleaxe (2.8kg)
     - High damage, requires more strength
     - Effective against armored opponents
   
-  - Massive (10+ kg): Devastating
-    - Examples: Zweihander (12.0kg), Giant Axe (15.0kg)
+  - Massive (3.5+ kg): Devastating
+    - Examples: Zweihander (3.2kg), Dane Axe (3.8kg), Pike (varies by length)
     - Extreme damage, requires exceptional strength
     - Very high stamina cost
 
@@ -688,14 +722,20 @@ Weapons affect combat through four main channels: Damage Output, Hit Probability
   - Long (100-200cm): Superior reach, harder to use close
 
 - **Edge Sharpness** (0-1)
-  - 0.9+: Razor sharp, maximum cutting
-  - 0.7-0.8: Standard military edge
-  - 0.5-0.6: Serviceable but dulled
+  - 0.95-1.0: Surgically sharp, fresh honing (rare in combat)
+  - 0.85-0.95: Razor sharp, just after proper sharpening
+  - 0.75-0.85: Combat ready, typical military maintenance
+  - 0.65-0.75: Field serviceable, needs maintenance
+  - 0.50-0.65: Dulled but still cuts
+  - < 0.50: Too dull for effective cutting, becomes more of a crushing weapon
 
 - **Point Geometry** (0-1)
-  - 0.9+: Needle-point, maximum penetration
-  - 0.7-0.8: Standard military point
-  - 0.5-0.6: Basic point
+  - 0.95-1.0: Needle point (bodkin arrow, stiletto)
+  - 0.85-0.95: Fine point (estoc, rapier)
+  - 0.75-0.85: Military point (spear, sword)
+  - 0.65-0.75: Practical point (typical battlefield condition)
+  - 0.50-0.65: Worn point (still penetrates with force)
+  - < 0.50: Blunted point, ineffective for stabbing
 
 ### Hit Probability & Action Speed
 
@@ -703,25 +743,25 @@ Weapons affect combat through four main channels: Damage Output, Hit Probability
 
 Each category affects accuracy and action speed differently:
 
-- **Light (1-3 kg)**
+- **Light (0.5-1.5 kg)**
   - +10% hit probability
   - -20% action time
   - Examples: Dagger (0.5kg), Short Sword (1.0kg), Rapier (1.2kg)
 
-- **Medium (3-6 kg)**
+- **Medium (1.5-2.5 kg)**
   - Base hit probability
   - Base action time
-  - Examples: Long Sword (3.0kg), Battle Axe (4.0kg), Spear (2.5kg)
+  - Examples: Long Sword (1.8kg), Battle Axe (1.5kg), Spear (1.8kg)
 
-- **Heavy (6-10 kg)**
+- **Heavy (2.5-3.5 kg)**
   - -10% hit probability
   - +20% action time
-  - Examples: Great Sword (6.0kg), Maul (9.0kg), Poleaxe (6.5kg)
+  - Examples: Great Sword (3.0kg), War Hammer (2.2kg), Poleaxe (2.8kg)
 
-- **Massive (10+ kg)**
+- **Massive (3.5+ kg)**
   - -20% hit probability
   - +40% action time
-  - Examples: Zweihander (12.0kg), Giant Axe (15.0kg)
+  - Examples: Zweihander (3.2kg), Dane Axe (3.8kg), Pike (varies by length)
 
 #### Reach and Handling
 
@@ -735,30 +775,36 @@ Each category affects accuracy and action speed differently:
 Base stamina costs are modified by weapon weight:
 
 ```ts
-staminaCost = baseActionCost * (weight/3) // 3kg is reference weight
+staminaCost = baseActionCost * (weight/1.8) // 1.8kg is reference weight
 ```
 
 Weight Category Modifiers:
 
-- Light: 0.8x stamina cost
-- Medium: 1.0x stamina cost
-- Heavy: 1.3x stamina cost
-- Massive: 1.6x stamina cost
+- Light: 0.6x stamina cost
+- Medium: 1.0x stamina cost  
+- Heavy: 1.4x stamina cost
+- Massive: 1.8x stamina cost
 
 ### Weapon Selection
 
 Strength requirements determine which weapons a unit can effectively wield:
 
 ```ts
-minStrength = weapon.weight * 10 // Minimum strength to wield
-optimalStrength = weapon.weight * 15 // Strength for optimal performance
+minStrength = weapon.weight * 15 // Minimum strength to wield
+optimalStrength = weapon.weight * 25 // Strength for optimal performance
 ```
 
 Performance penalties when strength is below optimal:
 
-- Hit probability reduced by 5% per point below optimal
-- Action speed increased by 3% per point below optimal
-- Stamina costs increased by 5% per point below optimal
+- Hit probability reduced by 3% per point below optimal
+- Action speed increased by 2% per point below optimal
+- Stamina costs increased by 3% per point below optimal
+
+Examples:
+- Dagger (0.5kg): Min 8 strength, Optimal 13 strength
+- Long Sword (1.8kg): Min 27 strength, Optimal 45 strength  
+- Great Sword (3.0kg): Min 45 strength, Optimal 75 strength
+- Zweihander (3.2kg): Min 48 strength, Optimal 80 strength
 
 ## Armor System
 
@@ -907,9 +953,12 @@ finalDamage = baseDamage * (1 - armorProtection[damageType])
   - Formation fighting distance
 
 - Ranged Combat
-  - Short Bow: 15-20m effective
-  - Long Bow: 25-30m effective
-  - Crossbow: 20-25m effective
+  - Short Bow: 15-50m effective, up to 100m maximum
+  - Long Bow: 50-100m effective, up to 200m maximum
+  - Crossbow: 30-60m effective, up to 150m maximum
+  - Factors affecting range:
+    - Archer's strength and skill
+    - Weather conditions
 
 ## Combat Examples
 
