@@ -581,3 +581,180 @@ Battle Axe vs Plate Armor:
 - Crush damage more effective than cut
 - Concentrated strikes on same area
 - Focus on joints and gaps
+
+## Morale System
+
+Morale represents a unit's psychological state and willingness to fight. It's a separate core stat from combat effectiveness - while effectiveness represents physical capability, morale represents mental state and can change rapidly based on battlefield events.
+
+### Base Morale
+
+Scale: 0-100
+Starting value: 60 (standard trained soldier)
+
+Experience Modifier (added to base):
+
+- Untrained (0.0-0.2): -10
+- Basic Training (0.2-0.4): +0
+- Combat Veteran (0.4-0.6): +10
+- Elite Warrior (0.6-0.8): +20
+- Legendary Fighter (0.8-1.0): +30
+
+Example starting morale:
+
+- Recruit (0.1 exp): 50 morale (60 - 10)
+- Trained Soldier (0.3 exp): 60 morale
+- Veteran (0.5 exp): 70 morale
+- Elite (0.7 exp): 80 morale
+- Champion (0.9 exp): 90 morale
+
+### Morale Effects
+
+1. Decision Making (Primary Effect):
+   - 80-100: Aggressive, will press attack
+   - 60-79: Follows orders normally
+   - 40-59: Cautious, prefers defensive actions
+   - 20-39: May retreat if opportunity arises
+   - 0-19: Will attempt to flee
+
+2. Action Selection:
+   - High morale (80+):
+     - More likely to choose aggressive actions
+     - Will maintain position in formation
+     - Might protect wounded allies
+
+   - Low morale (below 40):
+     - Prefers defensive actions
+     - More likely to break formation
+     - May abandon wounded allies
+
+3. Tactical Behavior:
+   - High morale units hold formation better
+   - Low morale units may ignore orders
+   - Breaking units seek escape routes
+   - Units prefer to stay near higher morale allies
+
+### Morale Modifiers (Fast-changing)
+
+1. Immediate Battle Events:
+   - Ally death witnessed: -15
+   - Enemy death caused: +10
+   - Taking an injury: -10 to -20
+   - Leader death: -30
+   - Enemy fleeing: +15
+   - Being surrounded: -5 per surrounding enemy
+
+2. Situational (Updated each second):
+   - Leader nearby: +10
+   - In formation: +10
+   - Allies nearby: +5 per ally within 10m
+   - Enemies nearby: -5 per enemy within 10m
+   - Holding advantageous position: +10
+
+### Morale Recovery
+
+1. Out of Combat:
+   - +5 per 10 seconds when no enemies nearby
+   - +10 per 10 seconds when near allies
+   - Cannot exceed starting morale without positive events
+
+2. Combat Events:
+   - Enemy unit flees: +10
+   - Reinforcements arrive: +20
+   - Leader rallies troops: +15
+   - Reaching defensive position: +10
+
+### Example Scenarios
+
+1. Formation Charge:
+   - Veteran soldier (base 70)
+   - In formation (+10)
+   - Leader present (+10)
+   - Allies nearby (+15)
+   - Current morale: 105 (capped at 100)
+   - Result: Aggressive fighting, maintains formation
+
+2. Ambush Response:
+   - Trained soldier (base 60)
+   - Surprised by enemies (-20)
+   - Two allies died (-30)
+   - Surrounded (-15)
+   - Current morale: 0 (minimum)
+   - Result: Immediate flight response
+
+3. Battle Line:
+   - Mixed experience unit (base 65)
+   - In formation (+10)
+   - Even numbers (no modifier)
+   - Leader nearby (+10)
+   - Current morale: 85
+   - Result: Strong fighting resolve, holds position
+
+### Experience Impact on Morale
+
+```ts
+// Experience provides both base modifier and stress resistance
+baseModifier = getExperienceModifier(experience) // -10 to +30 from table above
+stressResistance = Math.floor(experience * 20) // 0-20 reduction to negative morale effects
+
+// Example: Veteran (0.5 exp) taking injury (-20 base effect)
+stressResistance = Math.floor(0.5 * 20) = 10
+actualMoraleLoss = -20 + 10 = -10 // Veteran loses less morale from injury
+```
+
+Experience affects morale in two ways:
+
+1. Base morale modifier (as shown in table above)
+2. Stress resistance: Reduces negative morale effects
+   - 0.0 exp: No reduction
+   - 0.5 exp: 10-point reduction
+   - 1.0 exp: 20-point reduction
+
+Example scenarios:
+
+- Recruit (0.1 exp) seeing ally die: -15 morale (full effect)
+- Veteran (0.5 exp) seeing ally die: -7 morale (reduced by 8)
+- Elite (0.9 exp) seeing ally die: -3 morale (reduced by 12)
+
+### Unit Status Effects
+
+1. Stamina Impact:
+
+   ```ts
+   if (stamina < 50) morale -= 10
+   if (stamina < 25) morale -= 20
+   ```
+
+   - Above 50%: No effect
+   - 25-50%: -10 morale
+   - Below 25%: -20 morale
+   - Updates dynamically as stamina changes
+
+2. Injury Effects:
+
+   ```ts
+   // Per injury
+   moraleLoss = Math.min(-5, -20 * injurySeverity)
+   moraleLoss += stressResistance // Reduced by experience
+   ```
+
+   - Minor (0.25): -5 morale
+   - Moderate (0.5): -10 morale
+   - Severe (0.75): -15 morale
+   - Critical (1.0): -20 morale
+   - Multiple injuries stack
+   - Experience reduces impact
+
+3. Pain Integration:
+
+   ```ts
+   if (pain > 50) {
+     moralePenalty = Math.floor((pain - 50) * 0.5)
+     morale -= moralePenalty
+   }
+   ```
+
+   - No effect below 50 pain
+   - Each 2 points of pain above 50 = -1 morale
+   - Example: 70 pain = -10 morale
+   - Updates continuously with pain level
+   - Experience reduces impact as above
