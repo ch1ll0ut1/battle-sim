@@ -172,9 +172,54 @@ Example Calculations:
    - Final walking: 0.9 m/s
    - Final running: 1.8 m/s
 
-### Stamina System
+## Experience System
 
-Maximum Stamina Calculation:
+Experience represents a unit's training and combat exposure, ranging from 0.0 (untrained) to 1.0 (legendary).
+
+### Effects
+1. Combat:
+   - Improved accuracy
+   - Better damage control
+   - Faster action execution
+
+2. Resistance:
+   - Pain and shock reduced by up to 50%
+   - Stamina drain reduced by up to 30%
+   - Morale stress resistance (see Morale System)
+     * Reduces negative morale effects by up to 20 points
+     * Higher base morale (+30 at maximum experience)
+
+## Pain System
+
+Pain represents accumulated trauma and its impact on performance.
+
+### Effects
+1. Physical Impact:
+   - Reduces action speed
+   - Increases stamina costs
+   - May cause unconsciousness
+
+2. Mental Impact:
+   - Above 50 pain reduces morale
+   - Each 2 points above 50 = -1 morale
+   - Experience reduces this morale penalty
+
+## Stamina System
+
+Stamina represents a unit's current energy level and ability to perform actions.
+
+### Effects
+1. Physical Performance:
+   - Action execution speed
+   - Damage output
+   - Movement speed
+
+2. Mental State:
+   - Below 50%: -10 morale
+   - Below 25%: -20 morale
+   - Affects decision making through morale system
+
+### Maximum Stamina Calculation
 
 ```ts
 baseStamina = (weight * 0.8) + (strength * 0.6)
@@ -183,7 +228,7 @@ conditioningBonus = min(strength/weight * 10, 20)
 maxStamina = baseStamina + experienceBonus + conditioningBonus
 ```
 
-Action Costs (% of max stamina):
+### Action Costs (% of max stamina)
 
 - Light Attack: 3%
 - Heavy Attack: 6%
@@ -191,12 +236,60 @@ Action Costs (% of max stamina):
 - Dodge: 4%
 - Running: 1% per second
 
-Recovery Rates (% of max stamina per second):
+### Recovery Rates (% of max stamina per second)
 
 - Resting: 20%
 - Walking: 10%
 - Combat: 3%
 - Exhausted (<10% stamina): 0%
+
+### Stamina Modifiers
+
+1. Experience Impact:
+   - Reduces action costs by up to 30%
+   - Improves recovery rates by up to 20%
+   - Example: Veteran (0.5 exp)
+     * Action costs reduced by 15%
+     * Recovery improved by 10%
+
+2. Pain Effects:
+   - Each 10 points of pain:
+     * +10% stamina costs
+     * -5% recovery rate
+
+3. Weight Impact:
+   - Heavy armor/weapons increase costs
+   - Base cost multiplier = weight/strength
+   - Minimum multiplier = 1.0
+   - Example: 80kg unit, 60 strength
+     * Multiplier = 1.33
+     * Light attack: 4% (3% * 1.33)
+
+### Performance Thresholds
+
+1. Above 75% stamina:
+   - Full performance
+   - Maximum recovery
+
+2. 50-75% stamina:
+   - 90% action speed
+   - Normal recovery
+
+3. 25-50% stamina:
+   - 75% action speed
+   - -10 morale
+   - Reduced recovery
+
+4. Below 25% stamina:
+   - 50% action speed
+   - -20 morale
+   - Minimal recovery
+   - May skip non-essential actions
+
+5. Below 10% stamina:
+   - 25% action speed
+   - No natural recovery
+   - Essential actions only
 
 ## Injury System
 
