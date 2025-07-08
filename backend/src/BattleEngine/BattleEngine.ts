@@ -25,6 +25,7 @@ type State = 'initialized' | 'paused' | 'running' | 'finished';
 
 /**
  * BattleEngine class responsible for simulating battles and generating events
+ * Simulation flow is handled by SimulationController (for controllable server) & runBattle() (for CLI)
  */
 export class BattleEngine {
     state: State = 'initialized';
@@ -42,12 +43,14 @@ export class BattleEngine {
     constructor(units: Unit[], logger: Logger) {
         this.units = units;
         this.logger = logger;
+
+        this.reset();
     }
 
     /**
      * Starts a new battle simulation
      */
-    start(): void {
+    reset() {
         this.state = 'initialized';
         this.currentTime = 0;
         this.logger.clear();
@@ -101,6 +104,9 @@ export class BattleEngine {
         this.checkBattleEnd();
     }
 
+    /**
+     * Pauses the battle (just sets the state to paused)
+     */
     pause() {
         this.state = 'paused';
     }
@@ -110,8 +116,6 @@ export class BattleEngine {
      * @returns Battle result including winner and duration
      */
     runBattle(): BattleResult {
-        this.start();
-
         // Run battle until it ends
         while (this.state !== 'finished') {
             this.update();

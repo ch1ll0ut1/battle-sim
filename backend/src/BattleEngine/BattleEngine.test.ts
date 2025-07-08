@@ -46,8 +46,7 @@ describe('BattleEngine', () => {
     const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
     const engine = new BattleEngine(units, logger);
 
-    // Act
-    engine.start();
+    // Act - engine is already initialized after construction
     expect(engine.state).toBe('initialized');
     expect(engine.getState().time).toBe(0);
 
@@ -76,12 +75,11 @@ describe('BattleEngine', () => {
   });
 
   /**
-   * Edge case: No units provided. The battle should throw an error during start().
+   * Edge case: No units provided. The battle should throw an error during construction.
    */
   it('should throw error when no units provided', () => {
     const logger = new Logger();
-    const engine = new BattleEngine([], logger);
-    expect(() => engine.start()).toThrow('Battle must have at least 2 units');
+    expect(() => new BattleEngine([], logger)).toThrow('Battle must have at least 2 units');
   });
 
   /**
@@ -95,14 +93,14 @@ describe('BattleEngine', () => {
     ];
     const engine = new BattleEngine(units, logger);
     const result = engine.runBattle();
-    // Since start() resets health to 100, both units will be alive and battle will proceed normally
+    // Since constructor calls reset() which resets health to 100, both units will be alive and battle will proceed normally
     expect(result.winner).toMatch(/Team (1|2)/);
     expect(result.duration).toBeGreaterThan(0);
     expect(result.events[0]).toMatch(/Battle started/);
   });
 
   /**
-   * Edge case: All units on the same team. The battle should throw an error during start().
+   * Edge case: All units on the same team. The battle should throw an error during construction.
    */
   it('should throw error when all units on same team', () => {
     const logger = new Logger();
@@ -110,8 +108,7 @@ describe('BattleEngine', () => {
       { id: 1, name: 'A', health: 100, attack: 10, defense: 5, team: 1 },
       { id: 2, name: 'B', health: 100, attack: 10, defense: 5, team: 1 }
     ];
-    const engine = new BattleEngine(units, logger);
-    expect(() => engine.start()).toThrow('Battle must have at least 2 teams');
+    expect(() => new BattleEngine(units, logger)).toThrow('Battle must have at least 2 teams');
   });
 
   /**
@@ -133,12 +130,12 @@ describe('BattleEngine', () => {
     const logger = new Logger();
     const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
     const engine = new BattleEngine(units, logger);
-    engine.start();
+    engine.reset();
     engine.pause();
     const prevTime = engine.getState().time;
     engine.update(); // update() will set state to running, so this is not a true pause
     // Instead, simulate pause after some updates
-    engine.start();
+    engine.reset();
     for (let i = 0; i < 3; i++) engine.update();
     engine.pause();
     const pausedTime = engine.getState().time;
@@ -154,9 +151,9 @@ describe('BattleEngine', () => {
   });
 
   /**
-   * Edge case: Units with negative health should be reset to 100 health during start().
+   * Edge case: Units with negative health should be reset to 100 health during construction.
    */
-  it('should reset units with negative health to 100 during start', () => {
+  it('should reset units with negative health to 100 during construction', () => {
     const logger = new Logger();
     const units: Unit[] = [
       { id: 1, name: 'Neg', health: -10, attack: 10, defense: 5, team: 1 },
@@ -164,7 +161,7 @@ describe('BattleEngine', () => {
     ];
     const engine = new BattleEngine(units, logger);
     const result = engine.runBattle();
-    // Since start() resets health to 100, both units will be alive and battle will proceed normally
+    // Since constructor calls reset() which resets health to 100, both units will be alive and battle will proceed normally
     expect(result.winner).toMatch(/Team (1|2)/);
     expect(result.duration).toBeGreaterThan(0);
   });
