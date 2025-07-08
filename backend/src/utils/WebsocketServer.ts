@@ -1,46 +1,35 @@
+import { EventEmitter } from 'node:stream';
 import { WebSocketServer, WebSocket } from 'ws';
 
 /**
  * Message structure for WebSocket communication
  */
-export interface WebSocketMessage<T = any> {
+interface WebSocketMessage<T = any> {
     type: string;
     data: T;
+}
+
+type EventMessage = {
+    'connect': [WebSocket],
+    'message': [WebSocket, WebSocketMessage],
 }
 
 /**
  * Generic WebSocket server that broadcasts messages to connected clients
  */
-export class WebsocketServer {
+export class WebsocketServer extends EventEmitter<EventMessage> {
     private wss: WebSocketServer;
     private clients: WebSocket[] = [];
-    private onClientConnectCallback?: (ws: WebSocket) => void;
-    private onMessageCallback?: (ws: WebSocket, message: WebSocketMessage) => void;
 
     /**
      * Creates a new WebSocket server instance
      * @param port - Port number to listen on
      */
     constructor(port: number) {
+        super();
         this.wss = new WebSocketServer({ port });
         this.wss.on('connection', this.handleConnection.bind(this));
         this.wss.on('error', this.handleServerError.bind(this));
-    }
-
-    /**
-     * Registers a callback to be called when a new client connects
-     * @param callback - Function to be called with the new WebSocket client
-     */
-    onClientConnect(callback: (ws: WebSocket) => void): void {
-        this.onClientConnectCallback = callback;
-    }
-
-    /**
-     * Registers a callback to be called when a message is received from a client
-     * @param callback - Function to be called with the WebSocket client and message
-     */
-    onMessage(callback: (ws: WebSocket, message: WebSocketMessage) => void): void {
-        this.onMessageCallback = callback;
     }
 
     /**
@@ -123,6 +112,7 @@ export class WebsocketServer {
      * Sets up event handlers for a connected client
      */
     private setupClient(ws: WebSocket): void {
+        console.log('New client connected');
         this.clients.push(ws);
 
         ws.on('error', (error) => {
@@ -137,8 +127,9 @@ export class WebsocketServer {
         ws.on('message', (data: string) => {
             try {
                 const message = JSON.parse(data) as WebSocketMessage;
-                if (this.validateMessage(message) && this.onMessageCallback) {
-                    this.onMessageCallback(ws, message);
+                console.log('Received message:', message);
+                if (this.validateMessage(message)) {
+                    this.emit('message', ws, message);
                 }
             } catch (error) {
                 console.error('Error parsing message from client:', error);
@@ -146,15 +137,14 @@ export class WebsocketServer {
         });
 
         // Notify consumer of new connection
-        if (this.onClientConnectCallback) {
-            this.onClientConnectCallback(ws);
-        }
+        this.emit('connect', ws);
     }
 
     /**
      * Validates a WebSocket message
      */
     private validateMessage(message: any): message is WebSocketMessage {
+        console.log('Validating message:', message);
         return (
             message &&
             typeof message === 'object' &&
