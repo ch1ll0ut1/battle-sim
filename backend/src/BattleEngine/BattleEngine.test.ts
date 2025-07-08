@@ -165,4 +165,88 @@ describe('BattleEngine', () => {
     expect(result.winner).toMatch(/Team (1|2)/);
     expect(result.duration).toBeGreaterThan(0);
   });
+
+  /**
+   * Tests that BattleEngine emits 'initialized' event when reset() is called
+   * Verifies that the event system works for external listeners like BattleServer
+   */
+  it('should emit updated event when reset', () => {
+    // Arrange
+    const logger = new Logger();
+    const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
+    const engine = new BattleEngine(units, logger);
+    const updatedSpy = jest.fn();
+    engine.on('updated', updatedSpy);
+
+    // Act
+    engine.reset();
+
+    // Assert
+    expect(updatedSpy).toHaveBeenCalled();
+  });
+
+  /**
+   * Tests that BattleEngine emits 'updated' event during each update
+   * Verifies that the event system provides real-time battle updates
+   */
+  it('should emit updated event during battle updates', () => {
+    // Arrange
+    const logger = new Logger();
+    const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
+    const engine = new BattleEngine(units, logger);
+    const updatedSpy = jest.fn();
+    engine.on('updated', updatedSpy);
+
+    // Act - perform several updates
+    engine.update();
+    engine.update();
+    engine.update();
+
+    // Assert
+    expect(updatedSpy).toHaveBeenCalledTimes(3);
+  });
+
+  /**
+   * Tests that BattleEngine emits 'finished' event when battle ends
+   * Verifies that external listeners can detect when battle concludes
+   */
+  it('should emit finished event when battle ends', () => {
+    // Arrange
+    const logger = new Logger();
+    const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
+    const engine = new BattleEngine(units, logger);
+    const finishedSpy = jest.fn();
+    engine.on('finished', finishedSpy);
+
+    // Act - run the complete battle
+    engine.runBattle();
+
+    // Assert
+    expect(finishedSpy).toHaveBeenCalled();
+    expect(engine.state).toBe('finished');
+  });
+
+  /**
+   * Tests that BattleEngine emits correct sequence of events during full battle
+   * Verifies the complete event lifecycle from initialization to completion
+   */
+  it('should emit events in correct sequence during full battle', () => {
+    // Arrange
+    const logger = new Logger();
+    const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
+    const engine = new BattleEngine(units, logger);
+    const eventSequence: string[] = [];
+    
+    engine.on('updated', () => eventSequence.push('updated'));
+    engine.on('finished', () => eventSequence.push('finished'));
+
+    // Act - reset to trigger initialized event, then run battle
+    engine.reset();
+    const result = engine.runBattle();
+
+    // Assert
+    expect(eventSequence.filter(e => e === 'updated').length).toBeGreaterThan(0);
+    expect(eventSequence[eventSequence.length - 1]).toBe('finished');
+    expect(result.winner).toMatch(/Team (1|2)/);
+  });
 }); 

@@ -18,7 +18,7 @@ export class Logger extends EventEmitter {
   }
 
   debug(message: string): void {
-    this.log(`[DEBUG] ${message}`);
+    this.log(message);
   }
 
   /**

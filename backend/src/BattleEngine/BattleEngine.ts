@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { Logger } from '../utils/Logger.js';
 
 /**
@@ -23,11 +24,15 @@ export interface BattleResult {
 
 type State = 'initialized' | 'paused' | 'running' | 'finished';
 
+type EventEmitterMessage = {
+    'updated': [],
+    'finished': [],
+}
 /**
  * BattleEngine class responsible for simulating battles and generating events
  * Simulation flow is handled by SimulationController (for controllable server) & runBattle() (for CLI)
  */
-export class BattleEngine {
+export class BattleEngine extends EventEmitter<EventEmitterMessage> {
     state: State = 'initialized';
     private units: Unit[];
     private logger: Logger;
@@ -41,6 +46,8 @@ export class BattleEngine {
      * @param logger - Logger instance to record battle events
      */
     constructor(units: Unit[], logger: Logger) {
+        super();
+
         this.units = units;
         this.logger = logger;
 
@@ -72,18 +79,24 @@ export class BattleEngine {
         });
 
         this.validateTeams();
+        this.emit('updated');
     }
 
     /**
      * Updates the battle state by one turn (used for server)
+     * @param setToPause - If true, state will be set to "paused"
      */
-    update() {
+    update(setToPause: boolean = false) {
         if (this.state === 'finished') {
             throw new Error('Battle is finished');
         }
 
         if (this.state !== 'running') {
             this.state = 'running';
+        }
+
+        if (setToPause) {
+            this.state = 'paused';
         }
 
         this.currentTime += this.TURN_INTERVAL;
@@ -100,6 +113,8 @@ export class BattleEngine {
             }
         });
 
+        this.emit('updated');
+
         // Check if battle should end
         this.checkBattleEnd();
     }
@@ -109,6 +124,7 @@ export class BattleEngine {
      */
     pause() {
         this.state = 'paused';
+        this.emit('updated');
     }
 
     /**
@@ -197,6 +213,8 @@ export class BattleEngine {
 
         if (!team1Alive || !team2Alive) {
             this.state = 'finished';
+            this.logger.log(`${team1Alive ? 'Team 1' : 'Team 2'} wins the battle!`);
+            this.emit('finished');
         }
     }
 
