@@ -20,46 +20,23 @@ export class BattleBroadcaster {
     this.logger = logger;
 
     // Register connection callback
-    this.wsServer.onClientConnect(this.handleNewClient.bind(this));
+    this.wsServer.on('connect', this.handleNewClient.bind(this));
   }
 
   /**
    * Handles new client connections
    */
   private handleNewClient(ws: WebSocket): void {
-    // Send initial state to new client
-    const state = this.getBattleState();
-    this.wsServer.send(ws, 'battleState', state);
+    console.log('Sending initial state to client');
+    this.wsServer.send(ws, 'battleState', this.engine.getState());
     this.wsServer.send(ws, 'battleLog', this.logger.getEvents());
-  }
-
-  /**
-   * Gets current battle state
-   */
-  private getBattleState(): any {
-    return {
-      units: this.engine['units'].map(unit => ({
-        id: unit.id,
-        name: unit.name,
-        health: unit.health,
-        team: unit.team
-      }))
-    };
   }
 
   /**
    * Broadcasts current battle state to all clients
    */
   broadcastState() {
-    this.wsServer.broadcast('battleState', this.getBattleState());
-  }
-
-  /**
-   * Broadcasts battle log to all clients
-   */
-  broadcastLog() {
-    // TODO: dont send full log but only what has not been sent yet
-    this.wsServer.broadcast('battleLog', this.logger.getEvents());
+    this.wsServer.broadcast('battleState', this.engine.getState());
   }
 
   /**
@@ -67,6 +44,5 @@ export class BattleBroadcaster {
    */
   broadcastUpdates() {
     this.broadcastState();
-    this.broadcastLog();
   }
 } 
