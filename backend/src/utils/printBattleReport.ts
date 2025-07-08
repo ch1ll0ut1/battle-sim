@@ -1,17 +1,15 @@
-import { BattleEvent } from "./Logger";
-
-export function printBattleReport(events: BattleEvent[], duration: number, winner?: string) {
-    displaySummary(events, duration, winner);
+export function printBattleReport(events: string[], duration: number, winner?: string) {
     displayEvents(events);
+    displaySummary(events, duration, winner);
 }
 
 /**
  * Displays all events in chronological order
  */
-function displayEvents(events: BattleEvent[]): void {
+function displayEvents(events: string[]): void {
     console.log('\n=== Battle Events ===');
     events.forEach(event => {
-        console.log(event.message);
+        console.log(event);
     });
 }
 
@@ -20,7 +18,7 @@ function displayEvents(events: BattleEvent[]): void {
  * @param duration - Total battle duration in seconds
  * @param winner - Name of the winning unit/team (if any)
  */
-function displaySummary(events: BattleEvent[], duration: number, winner?: string): void {
+function displaySummary(events: string[], duration: number, winner?: string): void {
     const stats = calculateStatistics(events);
 
     console.log('\n=== Battle Summary ===');
@@ -34,10 +32,10 @@ function displaySummary(events: BattleEvent[], duration: number, winner?: string
     console.log(`- Hit rate: ${stats.hitRate.toFixed(1)}%`);
 }
 
-function calculateStatistics(events: BattleEvent[]) {
+function calculateStatistics(events: string[]) {
     const totalEvents = events.length;
-    const attackEvents = events.filter(e => e.message.includes('attacks')).length;
-    const hitEvents = events.filter(e => e.message.includes('hits')).length;
+    const attackEvents = events.filter(e => e.includes('attacks')).length;
+    const hitEvents = events.filter(e => e.includes('hits')).length;
     const hitRate = attackEvents > 0 ? (hitEvents / attackEvents) * 100 : 0;
 
     return { totalEvents, attackEvents, hitEvents, hitRate };

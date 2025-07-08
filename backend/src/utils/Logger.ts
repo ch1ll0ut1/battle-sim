@@ -1,16 +1,10 @@
-/**
- * Represents a battle event with timestamp and message
- */
-export interface BattleEvent {
-  timestamp: number;
-  message: string;
-}
+import EventEmitter from "node:events";
 
 /**
  * Logger class responsible for recording and displaying battle events
  */
-export class Logger {
-  private events: BattleEvent[] = [];
+export class Logger extends EventEmitter {
+  private events: string[] = [];
   private currentTime: number = 0;
 
   /**
@@ -18,11 +12,13 @@ export class Logger {
    * @param message - The event message to log
    */
   log(message: string): void {
-    const event: BattleEvent = {
-      timestamp: this.currentTime,
-      message: `[${this.currentTime.toFixed(1)}s] ${message}`
-    };
-    this.events.push(event);
+    const messageWithTimestamp = `[${this.currentTime.toFixed(1)}s] ${message}`;
+    this.events.push(messageWithTimestamp);
+    this.emit('log', messageWithTimestamp);
+  }
+
+  debug(message: string): void {
+    this.log(`[DEBUG] ${message}`);
   }
 
   /**
@@ -36,7 +32,7 @@ export class Logger {
   /**
    * Returns all recorded events
    */
-  getEvents(): BattleEvent[] {
+  getEvents(): string[] {
     return this.events;
   }
 

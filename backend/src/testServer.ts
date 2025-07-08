@@ -2,50 +2,15 @@ import { Logger } from './utils/Logger.js';
 import { BattleEngine, Unit } from './BattleEngine/BattleEngine.js';
 import { WebsocketServer } from './utils/WebsocketServer.js';
 import { BattleBroadcaster } from './BattleEngine/BattleBroadcaster.js';
-
-// Create test units
-const units: Unit[] = [
-  // Team 1
-  {
-    id: 1,
-    name: 'Knight',
-    health: 100,
-    attack: 15,
-    defense: 10,
-    team: 1
-  },
-  {
-    id: 2,
-    name: 'Archer',
-    health: 80,
-    attack: 20,
-    defense: 5,
-    team: 1
-  },
-  // Team 2
-  {
-    id: 3,
-    name: 'Warrior',
-    health: 90,
-    attack: 18,
-    defense: 8,
-    team: 2
-  },
-  {
-    id: 4,
-    name: 'Mage',
-    health: 70,
-    attack: 25,
-    defense: 3,
-    team: 2
-  }
-];
+import { units1v1 } from './testData.js';
 
 // Create components
 const logger = new Logger();
-const engine = new BattleEngine(units, logger);
+const engine = new BattleEngine(units1v1, logger);
 const wsServer = new WebsocketServer(8080);
 const broadcaster = new BattleBroadcaster(wsServer, engine, logger);
+
+logger.on('log', (message) => wsServer.broadcast('log', message));
 
 // Simulation loop
 let isRunning = false;
