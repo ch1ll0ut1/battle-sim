@@ -10,7 +10,13 @@ export const PlaybackControls = (props: PlaybackControlsProps) => {
   return (
     <div class="playback-controls">
       <button 
-        onClick={props.isPlaying ? props.onPause : props.onPlay}
+        onClick={() => {
+          if (props.isPlaying) {
+            props.onPause();
+          } else {
+            props.onPlay();
+          }
+        }}
         class="control-btn"
       >
         {props.isPlaying ? '⏸️ Pause' : '▶️ Play'}

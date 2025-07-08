@@ -32,8 +32,8 @@ export const BattleMap = (props: BattleMapProps) => {
     const context = ctx();
     if (!context) return;
 
-    const x = unit.position.x;
-    const y = unit.position.y;
+    const x = unit.position?.x ?? 0;
+    const y = unit.position?.y ?? 0;
     const radius = 8;
 
     // Draw unit circle

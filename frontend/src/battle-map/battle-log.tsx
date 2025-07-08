@@ -1,12 +1,7 @@
 import { For } from 'solid-js';
 
-type BattleLogEntry = {
-  time: number;
-  message: string;
-};
-
 type BattleLogProps = {
-  entries: BattleLogEntry[];
+  entries: string[];
 };
 
 export const BattleLog = (props: BattleLogProps) => {
@@ -17,8 +12,8 @@ export const BattleLog = (props: BattleLogProps) => {
         <For each={props.entries}>
           {(entry) => (
             <div class="log-entry">
-              <span class="log-time">[{entry.time.toFixed(1)}s]</span>
-              <span class="log-message">{entry.message}</span>
+              <span class="log-time">123s</span>
+              <span class="log-message">{entry}</span>
             </div>
           )}
         </For>

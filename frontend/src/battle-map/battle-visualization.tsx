@@ -2,152 +2,127 @@ import { createSignal, onMount, onCleanup } from 'solid-js';
 import { BattleMap } from './battle-map.js';
 import { BattleLog } from './battle-log.js';
 import { PlaybackControls } from './playback-controls.js';
+import { BattleWebSocket } from './BattleWebSocket.js';
 import './battle-map.css';
 
 type Unit = {
-  id: number;
-  name: string;
-  position: { x: number; y: number };
-  direction: number;
-  experience: number;
-  armorLevel: number;
-  weapon: string | null;
-  isAlive: boolean;
-};
-
-type BattleLogEntry = {
-  time: number;
-  message: string;
+    id: number;
+    name: string;
+    position: { x: number; y: number };
+    direction: number;
+    experience: number;
+    armorLevel: number;
+    weapon: string | null;
+    isAlive: boolean;
 };
 
 type BattleState = {
-  time: number;
-  units: Unit[];
-  isActive: boolean;
+    time: number;
+    units: Unit[];
+    state: 'initialized' | 'paused' | 'running' | 'finished';
 };
 
 export const BattleVisualization = () => {
-  const [battleState, setBattleState] = createSignal<BattleState>({
-    time: 0,
-    units: [],
-    isActive: false
-  });
-  const [battleLog, setBattleLog] = createSignal<BattleLogEntry[]>([]);
-  const [isConnected, setIsConnected] = createSignal(false);
-  const [isPlaying, setIsPlaying] = createSignal(false);
+    const [battleState, setBattleState] = createSignal<BattleState>({
+        time: 0,
+        units: [],
+        state: 'initialized'
+    });
+    const [battleLog, setBattleLog] = createSignal<string[]>([]);
+    const [isConnected, setIsConnected] = createSignal(false);
+    let battleWebSocket: BattleWebSocket;
 
-  let ws: WebSocket | null = null;
-
-  const connectWebSocket = () => {
-    ws = new WebSocket('ws://localhost:8080');
-
-    ws.onopen = () => {
-      setIsConnected(true);
-      console.log('Connected to battle simulation server');
+    const handleConnectionChange = (connected: boolean) => {
+        console.log('Connection changed:', connected);
+        setIsConnected(connected);
     };
 
-    ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      
-      switch (message.type) {
-        case 'battleState':
-          setBattleState(message.data);
-          break;
-        case 'battleLog':
-          if (Array.isArray(message.data)) {
-            // Initial log entries
-            setBattleLog(message.data);
-          } else {
-            // Single new entry
-            setBattleLog(prev => [...prev, message.data]);
-          }
-          break;
-      }
+    const handleBattleStateChange = (newBattleState: BattleState) => {
+        console.log('Battle state changed:', newBattleState);
+        setBattleState(newBattleState);
     };
 
-    ws.onclose = () => {
-      setIsConnected(false);
-      console.log('Disconnected from battle simulation server');
+    const handleBattleLogChange = (logData: string | string[]) => {
+        console.log('Battle log changed:', logData);
+        if (Array.isArray(logData)) {
+            setBattleLog(logData);
+        } else {
+            setBattleLog(prev => [...prev, logData]);
+        }
     };
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setIsConnected(false);
+    const handlePlay = () => {
+        setBattleState(prev => ({ ...prev, state: 'running' }));
+        battleWebSocket.sendCommand('start');
     };
-  };
 
-  const sendCommand = (command: string) => {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'command', command }));
-    }
-  };
+    const handlePause = () => {
+        setBattleState(prev => ({ ...prev, state: 'paused' }));
+        battleWebSocket.sendCommand('stop');
+    };
 
-  const handlePlay = () => {
-    setIsPlaying(true);
-    sendCommand('start');
-  };
+    const handleNextTick = () => {
+        battleWebSocket.sendCommand('nextTick');
+    };
 
-  const handlePause = () => {
-    setIsPlaying(false);
-    sendCommand('stop');
-  };
+    const handleReset = () => {
+        setBattleState(prev => ({ ...prev, state: 'initialized' }));
+        battleWebSocket.sendCommand('reset');
+    };
 
-  const handleNextTick = () => {
-    sendCommand('nextTick');
-  };
+    onMount(() => {
+        battleWebSocket = new BattleWebSocket();
+        battleWebSocket.setEventHandlers(
+            handleConnectionChange,
+            handleBattleStateChange,
+            handleBattleLogChange
+        );
+        battleWebSocket.connect();
+    });
 
-  const handleReset = () => {
-    setIsPlaying(false);
-    sendCommand('reset');
-  };
+    onCleanup(() => {
+        if (battleWebSocket) {
+            battleWebSocket.disconnect();
+        }
+    });
 
-  onMount(() => {
-    connectWebSocket();
-  });
+    return (
+        <div class="battle-visualization">
+            <h1>Battle Simulation Visualization</h1>
 
-  onCleanup(() => {
-    if (ws) {
-      ws.close();
-    }
-  });
+            <div class="connection-status">
+                Status: {isConnected() ? '🟢 Connected' : '🔴 Disconnected'}
+            </div>
 
-  return (
-    <div class="battle-visualization">
-      <h1>Battle Simulation Visualization</h1>
-      
-      <div class="connection-status">
-        Status: {isConnected() ? '🟢 Connected' : '🔴 Disconnected'}
-      </div>
+            <div class="battle-layout">
+                <div class="map-section">
+                    <BattleMap
+                        units={battleState().units}
+                        width={500}
+                        height={500}
+                    />
+                </div>
 
-      <div class="battle-layout">
-        <div class="map-section">
-          <BattleMap 
-            units={battleState().units}
-            width={500}
-            height={500}
-          />
+                <div class="controls-section">
+                    <PlaybackControls
+                        isPlaying={battleState().state === 'running'}
+                        onPlay={handlePlay}
+                        onPause={handlePause}
+                        onNextTick={handleNextTick}
+                        onReset={handleReset}
+                    />
+
+                    <div class="battle-info">
+                        <p>Time: {battleState().time.toFixed(1)}s</p>
+                        <p>Units: {battleState().units.length}</p>
+                        <p>Status: {battleState().state}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="log-section">
+                <BattleLog entries={battleLog()} />
+            </div>
         </div>
-        
-        <div class="controls-section">
-          <PlaybackControls
-            isPlaying={isPlaying()}
-            onPlay={handlePlay}
-            onPause={handlePause}
-            onNextTick={handleNextTick}
-            onReset={handleReset}
-          />
-          
-          <div class="battle-info">
-            <p>Time: {battleState().time.toFixed(1)}s</p>
-            <p>Units: {battleState().units.length}</p>
-            <p>Status: {battleState().isActive ? 'Active' : 'Ended'}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="log-section">
-        <BattleLog entries={battleLog()} />
-      </div>
-    </div>
-  );
+    );
 }; 
