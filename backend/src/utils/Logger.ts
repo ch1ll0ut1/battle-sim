@@ -1,4 +1,5 @@
 import EventEmitter from "node:events";
+import { serverConfig } from "../config/server";
 
 /**
  * Logger class responsible for recording and displaying battle events
@@ -18,7 +19,9 @@ export class Logger extends EventEmitter {
   }
 
   debug(message: string): void {
-    this.log(message);
+    if (serverConfig.debug) {
+      this.log(message);
+    }
   }
 
   /**
