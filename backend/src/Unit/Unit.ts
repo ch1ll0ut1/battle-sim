@@ -61,7 +61,7 @@ export class Unit {
         this.name = name;
         this.team = team;
         this.attributes = new UnitAttributes(attributes);
-        this.movement = new UnitMovement(position, direction);
+        this.movement = new UnitMovement(this, position, direction);
     }
 
     /**
