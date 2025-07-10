@@ -235,35 +235,186 @@ Formula: `finalReactionTime = baseTime * (1 - experienceBonus) * (1 + fatiguePen
 
 ### Movement
 
-Base walking speed: 1.4 m/s
+Movement uses realistic momentum-based physics with acceleration, deceleration, and turning mechanics.
 
-- Running multiplier: 2x (2.8 m/s)
+#### Movement States
 
-Speed Modifiers:
-- Strength bonus: +0.5% per point above 50 (capped at +25% maximum)
-- Weight penalty: -0.5% per kg above 70kg
-- Stamina below 50%: Linear reduction to 70% of normal speed
-- Leg injuries: Direct percentage reduction based on injury severity
+Movement states represent the unit's linear motion only. Turning happens simultaneously and continuously:
 
-Example Calculations:
+- **Stationary**: Unit is not moving (velocity = 0)
+- **Accelerating**: Unit is building up speed from stationary or slower state
+- **Moving**: Unit is at steady-state movement (walking or running speed)
+- **Decelerating**: Unit is slowing down to stop or change to slower movement
 
-1. Healthy Unit (80 strength, 70kg):
-   - Base speed: 1.4 m/s
-   - Strength bonus: +15% (30 points × 0.5%)
-   - Final walking: 1.61 m/s
-   - Final running: 3.22 m/s
+Note: Turning is not a separate state - units can rotate while in any movement state.
 
-2. Elite Unit (100 strength, 70kg):
-   - Base speed: 1.4 m/s  
-   - Strength bonus: +25% (capped maximum)
-   - Final walking: 1.75 m/s
-   - Final running: 3.5 m/s
+#### Base Movement Parameters
 
-3. Fatigued Unit (30% stamina):
-   - Base speed: 1.4 m/s
-   - Stamina penalty: -40%
-   - Final walking: 0.84 m/s
-   - Final running: 1.68 m/s
+- **Base Walking Speed**: 1.4 m/s (maximum sustainable speed)
+- **Base Running Speed**: 2.8 m/s (2x walking, high stamina cost)
+- **Base Acceleration**: 3.0 m/s² (modified by strength/weight ratio)
+- **Base Deceleration**: 6.0 m/s² (typically faster than acceleration)
+- **Base Turn Speed**: 360°/second (2π radians/second, modified by momentum and weight)
+
+#### Total Weight Calculation
+
+```ts
+totalWeight = bodyWeight + equipmentWeight
+// Equipment weight includes armor, weapons, and carried items
+// Examples:
+// - Light infantry: 70kg body + 15kg equipment = 85kg total
+// - Heavy knight: 80kg body + 35kg equipment = 115kg total
+// - Scout: 65kg body + 8kg equipment = 73kg total
+```
+
+#### Maximum Speed Modifiers
+
+```ts
+// Base speed calculation
+baseSpeed = isRunning ? 2.8 : 1.4 // m/s
+
+// Strength bonus: Muscle power for acceleration and sustained speed
+strengthBonus = min(0.25, (strength - 50) * 0.005) // +0.5% per point above 50, max +25%
+
+// Total weight penalty: Affects both acceleration and max speed
+optimalWeight = 70 // kg (unencumbered adult)
+weightPenalty = max(0, (totalWeight - optimalWeight) * 0.003) // -0.3% per kg above optimal
+
+// Stamina effect: Exponential degradation below 50%
+staminaEffect = stamina > 50 ? 1.0 : 0.4 + (stamina / 50) * 0.6 // Linear from 40% to 100%
+
+// Leg injury effect: Minimum of both legs
+legEffect = min(leftLegFunctionality, rightLegFunctionality) / 100
+
+// Final calculation
+maxSpeed = baseSpeed * (1 + strengthBonus) * (1 - weightPenalty) * staminaEffect * legEffect
+```
+
+#### Acceleration Mechanics
+
+```ts
+// Acceleration affected by strength-to-weight ratio and stamina
+baseAcceleration = 3.0 // m/s²
+strengthFactor = strength / 50 // Muscle power
+massInertiaFactor = 70 / totalWeight // Heavier = harder to accelerate
+staminaFactor = stamina > 25 ? 1.0 : 25 / stamina // Penalty factor when low stamina
+
+acceleration = baseAcceleration * strengthFactor * massInertiaFactor * staminaFactor * legEffect
+
+// Deceleration is typically higher but still affected by mass
+deceleration = acceleration * 2.0 // Can brake harder than accelerate
+```
+
+#### Turning Mechanics
+
+Turning happens continuously and simultaneously with linear movement. Turn rate is limited by momentum and weight:
+
+- **Base Turn Rate**: 360°/second (2π radians/second when stationary)
+- **Continuous Process**: No discrete execution/recovery time
+- **Speed-Dependent**: Turn rate decreases with current movement speed
+
+```ts
+// Turn rate calculation - continuous and speed-dependent
+baseTurnRate = 2 * Math.PI // radians per second when stationary
+
+// Mass inertia: Heavier units have more rotational inertia
+massInertiaPenalty = totalWeight / 70
+
+// Linear momentum: Faster movement reduces turn rate significantly  
+speedRatio = currentSpeed / maxSpeed
+linearMomentumPenalty = 1 + (speedRatio * speedRatio) * 2 // Quadratic penalty
+
+// Equipment momentum: Heavy equipment adds rotational inertia beyond just weight
+equipmentWeight = totalWeight - bodyWeight
+equipmentMomentumPenalty = 1 + (equipmentWeight / 30) * 0.5 // Additional penalty for gear
+
+// Stamina penalty: Low stamina affects coordination
+staminaPenalty = stamina > 25 ? 1.0 : 25 / stamina // Penalty factor when low
+
+// Final turn rate  
+currentTurnRate = baseTurnRate / (massInertiaPenalty * linearMomentumPenalty * equipmentMomentumPenalty * staminaPenalty)
+
+// Sharp turns naturally reduce speed due to physics
+// Units automatically slow down when attempting tight turns at speed
+```
+
+#### Stamina Costs
+
+Stamina costs vary by movement state and are affected by total weight:
+
+```ts
+weightMultiplier = totalWeight / 70 // Base cost multiplier
+
+// Per-second stamina costs (% of max stamina)
+staminaCosts = {
+    stationary: 0,
+    accelerating: 1.2 * weightMultiplier, // High cost to start moving
+    walking: 0.4 * weightMultiplier,
+    running: 1.8 * weightMultiplier, // Exponentially higher
+    decelerating: 0.2 * weightMultiplier, // Lower cost to slow down
+}
+
+// Turning cost is added to movement cost when turning
+turningCostModifier = 1 + (currentTurnRate / baseTurnRate) * 0.5 // Up to +50% cost when turning at max rate
+finalStaminaCost = baseCost * turningCostModifier
+```
+
+#### Example Calculations
+
+1. **Light Scout** (65kg body + 8kg equipment = 73kg total, 70 strength, 75% stamina):
+   - Max walking: 1.4 * 1.1 * 0.991 * 1.0 * 1.0 = 1.53 m/s
+   - Acceleration: 3.0 * 1.4 * 0.96 * 1.0 * 1.0 = 4.03 m/s²
+   - Mass inertia: 73/70 = 1.04, Equipment momentum: 1 + (8/30)*0.5 = 1.13  
+   - Turn rate (stationary): 2π / (1.04 * 1.0 * 1.13 * 1.0) = 5.35 rad/s (307°/s)
+   - Turn rate (full speed): 2π / (1.04 * 3.0 * 1.13 * 1.0) = 1.78 rad/s (102°/s)
+   - Walking stamina: 0.4 * 1.04 = 0.42%/s (base), up to 0.63%/s when turning
+
+2. **Heavy Knight** (80kg body + 35kg equipment = 115kg total, 85 strength, 60% stamina):
+   - Max walking: 1.4 * 1.175 * 0.865 * 1.0 * 1.0 = 1.42 m/s
+   - Acceleration: 3.0 * 1.7 * 0.61 * 1.0 * 1.0 = 3.11 m/s²
+   - Mass inertia: 115/70 = 1.64, Equipment momentum: 1 + (35/30)*0.5 = 1.58
+   - Turn rate (stationary): 2π / (1.64 * 1.0 * 1.58 * 1.0) = 2.42 rad/s (139°/s)
+   - Turn rate (full speed): 2π / (1.64 * 3.0 * 1.58 * 1.0) = 0.81 rad/s (46°/s)
+   - Walking stamina: 0.4 * 1.64 = 0.66%/s (base), up to 0.99%/s when turning
+
+3. **Injured Veteran** (75kg body + 12kg equipment = 87kg total, 60 strength, 20% stamina, 60% leg):
+   - Max walking: 1.4 * 1.05 * 0.949 * 0.48 * 0.6 = 0.40 m/s
+   - Acceleration: 3.0 * 1.2 * 0.80 * 1.25 * 0.6 = 2.16 m/s² (stamina penalty: 25/20 = 1.25)
+   - Mass inertia: 87/70 = 1.24, Equipment momentum: 1 + (12/30)*0.5 = 1.20, Stamina penalty: 25/20 = 1.25
+   - Turn rate (stationary): 2π / (1.24 * 1.0 * 1.20 * 1.25) = 3.36 rad/s (193°/s)
+   - Turn rate (full speed): 2π / (1.24 * 3.0 * 1.20 * 1.25) = 1.12 rad/s (64°/s)
+   - Walking stamina: 0.4 * 1.24 = 0.50%/s (base), up to 0.75%/s when turning
+
+#### Movement State Transitions
+
+```
+Stationary ◄──► Accelerating ◄──► Moving ◄──► Decelerating ◄──► Stationary
+    │                │              │              │              │
+    └── Turning can happen during any state (continuous) ──────────┘
+
+Rules:
+- Turning is continuous and can happen during any movement state
+- Turn rate automatically limited by current speed and momentum
+- Sharp turns naturally cause speed reduction through physics
+- Emergency stops: instant deceleration at 2x normal rate, high stamina cost
+```
+
+#### Realistic Movement Behavior
+
+1. **Starting Movement**: Units take time to reach full speed based on acceleration
+2. **Stopping**: Units cannot stop instantly, momentum carries them forward  
+3. **Simultaneous Movement**: Units can walk/run and turn at the same time like real humans
+4. **Speed-Dependent Turning**: Turn rate automatically decreases with movement speed
+5. **Natural Physics**: Sharp turns at speed naturally reduce forward velocity
+6. **Equipment Impact**: Heavy equipment significantly affects acceleration and turning
+7. **Stamina Integration**: Realistic costs with turning adding to movement costs
+8. **Injury Effects**: Leg injuries dramatically impact all movement capabilities
+
+Examples of realistic behavior:
+- **Gentle Curve**: Walking while turning slightly = no speed penalty
+- **Sharp Corner**: Running + sharp turn = automatic speed reduction to ~40%
+- **Combat Maneuver**: Full-speed movement + maximum turn rate = very slow turning
+- **Formation Movement**: Group can maintain formation while all gradually turning
 
 ## Experience System
 
