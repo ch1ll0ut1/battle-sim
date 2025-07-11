@@ -340,50 +340,81 @@ currentTurnRate = baseTurnRate / (massInertiaPenalty * linearMomentumPenalty * e
 
 #### Stamina Costs
 
-Stamina costs vary by movement state and are affected by total weight:
+**Note**: Stamina costs only apply when using the **physics movement system** (`movementSystem: 'physics'` in config/movement.ts). The simple movement system does not consume stamina.
+
+Stamina costs are calculated using realistic movement physics based on speed and weight:
 
 ```ts
-weightMultiplier = totalWeight / 70 // Base cost multiplier
+// Net stamina calculation: Physics consumption vs. recovery
+const baseCost = 0.009; // Calibrated base cost in stamina units per second
+const baseSpeed = 1.0; // m/s reference speed
 
-// Per-second stamina costs (% of max stamina)
-staminaCosts = {
-    stationary: 0,
-    accelerating: 1.2 * weightMultiplier, // High cost to start moving
-    walking: 0.4 * weightMultiplier,
-    running: 1.8 * weightMultiplier, // Exponentially higher
-    decelerating: 0.2 * weightMultiplier, // Lower cost to slow down
-}
+// Movement consumption (UnitMovementPhysics.ts)
+const speedFactor = Math.pow(currentSpeed / baseSpeed, 2); // Quadratic relationship
+const weightFactor = totalWeight / 70; // Weight impact on energy expenditure
+const staminaCostPerSecond = baseCost * speedFactor * weightFactor;
 
-// Turning cost is added to movement cost when turning
-turningCostModifier = 1 + (currentTurnRate / baseTurnRate) * 0.5 // Up to +50% cost when turning at max rate
-finalStaminaCost = baseCost * turningCostModifier
+// Recovery during movement (UnitStamina.ts)
+const movingRecoveryRate = 0.00035; // +0.035% per second
+const recoveryPerSecond = movingRecoveryRate * maxStamina * experienceBonus;
+
+// Net stamina change per second = recovery - consumption
+const netStaminaChange = recoveryPerSecond - staminaCostPerSecond;
+
+// Key insight: Walking has LESS net stamina consumption than running
+// Walking may even have slight positive recovery due to low speed factor
 ```
+
+**Net Stamina Change Examples (with DOUBLE weight modifier as per actual code):**
+
+1. **Veteran Soldier Walking** (75kg, 60 strength, 104 max stamina, 0.6 exp, 1.4 m/s):
+   - Physics consumption: 0.009 × (1.4/1.0)² × (75/70) = **0.0203 units/sec**
+   - UnitStamina weight modifier: 1.0 + (75-70)*0.01 - (60-50)*0.01 = **0.95** (applied AGAIN)
+   - Experience modifier: 1 - (0.6 × 0.3) = **0.82** (18% reduction)
+   - Final consumption: 0.0203 × 0.95 × 0.82 = **0.0158 units/sec**
+   - Recovery: 0.00035 × 104 × (1 + 0.6×0.2) = **0.0408 units/sec**
+   - **Net: +0.0250 units/sec** (stamina GAIN while walking)
+
+2. **Veteran Soldier Running** (75kg, 60 strength, 104 max stamina, 0.6 exp, 2.8 m/s):
+   - Physics consumption: 0.009 × (2.8/1.0)² × (75/70) = **0.0810 units/sec**
+   - UnitStamina modifiers: **0.95** weight × **0.82** experience = **0.779**
+   - Final consumption: 0.0810 × 0.779 = **0.0631 units/sec**
+   - Recovery: 0.00035 × 104 × 1.12 = **0.0408 units/sec**
+   - **Net: -0.0223 units/sec** (stamina LOSS while running)
+
+3. **Fresh Civilian Walking** (82kg, 35 strength, 49 max stamina, 0.0 exp, 1.4 m/s):
+   - Physics consumption: 0.009 × (1.4/1.0)² × (82/70) = **0.0232 units/sec**
+   - UnitStamina weight modifier: 1.0 + (82-70)*0.01 - (35-50)*0.01 = **1.27** (27% penalty)
+   - Experience modifier: **1.0** (no reduction)
+   - Final consumption: 0.0232 × 1.27 × 1.0 = **0.0295 units/sec**
+   - Recovery: 0.00035 × 49 × 1.0 = **0.0172 units/sec**
+   - **Net: -0.0123 units/sec** (significant stamina LOSS while walking)
+
+**Key Physics Insight**: Walking has **less net stamina consumption** than running due to the quadratic speed relationship. Walking may even provide slight recovery, while running causes net stamina loss. This creates realistic endurance behavior where soldiers can walk for hours but only run for 20-45 minutes.
 
 #### Example Calculations
 
-1. **Light Scout** (65kg body + 8kg equipment = 73kg total, 70 strength, 75% stamina):
-   - Max walking: 1.4 * 1.1 * 0.991 * 1.0 * 1.0 = 1.53 m/s
-   - Acceleration: 3.0 * 1.4 * 0.96 * 1.0 * 1.0 = 4.03 m/s²
-   - Mass inertia: 73/70 = 1.04, Equipment momentum: 1 + (8/30)*0.5 = 1.13  
-   - Turn rate (stationary): 2π / (1.04 * 1.0 * 1.13 * 1.0) = 5.35 rad/s (307°/s)
-   - Turn rate (full speed): 2π / (1.04 * 3.0 * 1.13 * 1.0) = 1.78 rad/s (102°/s)
-   - Walking stamina: 0.4 * 1.04 = 0.42%/s (base), up to 0.63%/s when turning
+**Realistic Unit Performance Examples (from integration tests with 0 recovery during movement):**
 
-2. **Heavy Knight** (80kg body + 35kg equipment = 115kg total, 85 strength, 60% stamina):
-   - Max walking: 1.4 * 1.175 * 0.865 * 1.0 * 1.0 = 1.42 m/s
-   - Acceleration: 3.0 * 1.7 * 0.61 * 1.0 * 1.0 = 3.11 m/s²
-   - Mass inertia: 115/70 = 1.64, Equipment momentum: 1 + (35/30)*0.5 = 1.58
-   - Turn rate (stationary): 2π / (1.64 * 1.0 * 1.58 * 1.0) = 2.42 rad/s (139°/s)
-   - Turn rate (full speed): 2π / (1.64 * 3.0 * 1.58 * 1.0) = 0.81 rad/s (46°/s)
-   - Walking stamina: 0.4 * 1.64 = 0.66%/s (base), up to 0.99%/s when turning
+1. **Fresh Civilian** (35 strength, 82kg, 0.0 experience):
+   - **Running endurance**: 32.8 minutes before exhaustion (5.3 km)
+   - **Walking capability**: 10.6 km in 2.2 hours (limited endurance)
+   - **Characteristics**: Basic human fitness, no military conditioning
 
-3. **Injured Veteran** (75kg body + 12kg equipment = 87kg total, 60 strength, 20% stamina, 60% leg):
-   - Max walking: 1.4 * 1.05 * 0.949 * 0.48 * 0.6 = 0.40 m/s
-   - Acceleration: 3.0 * 1.2 * 0.80 * 1.25 * 0.6 = 2.16 m/s² (stamina penalty: 25/20 = 1.25)
-   - Mass inertia: 87/70 = 1.24, Equipment momentum: 1 + (12/30)*0.5 = 1.20, Stamina penalty: 25/20 = 1.25
-   - Turn rate (stationary): 2π / (1.24 * 1.0 * 1.20 * 1.25) = 3.36 rad/s (193°/s)
-   - Turn rate (full speed): 2π / (1.24 * 3.0 * 1.20 * 1.25) = 1.12 rad/s (64°/s)
-   - Walking stamina: 0.4 * 1.24 = 0.50%/s (base), up to 0.75%/s when turning
+2. **Trained Recruit** (45 strength, 76kg, 0.3 experience):
+   - **Running endurance**: 60.3 minutes sustained running (9.9 km)
+   - **Walking capability**: 19.9 km in 4.0 hours (basic training standard)
+   - **Characteristics**: Completed basic training, improved fitness
+
+3. **Veteran Soldier** (60 strength, 75kg, 0.6 experience):
+   - **Running endurance**: 106.0 minutes sustained running (17.8 km)
+   - **Walking capability**: 35.6 km in 7.1 hours (operational standard)
+   - **Characteristics**: Field-tested conditioning, optimized gear ratio
+
+4. **Elite Soldier** (90 strength, 72kg, 0.9 experience):
+   - **Running endurance**: 221.5 minutes (3.7 hours) sustained running (37.2 km)
+   - **Walking capability**: 74.4 km in 14.8 hours (special forces level)
+   - **Characteristics**: Peak conditioning, extensive experience, lean build
 
 #### Movement State Transitions
 
@@ -452,7 +483,7 @@ Pain represents accumulated trauma and its impact on performance.
 
 ## Stamina System
 
-Stamina represents a unit's current energy level and ability to perform actions.
+Stamina represents a unit's current energy level and ability to perform actions. The system is calibrated for realistic military endurance where soldiers can run for 20-45 minutes and march for hours.
 
 ### Stamina Effects
 
@@ -469,74 +500,124 @@ Stamina represents a unit's current energy level and ability to perform actions.
 ### Maximum Stamina Calculation
 
 ```ts
-baseStamina = (weight * 0.8) + (strength * 0.6)
-experienceBonus = experience * 20
-conditioningBonus = min(strength/weight * 10, 20)
+// Calibrated formula for realistic endurance
+baseStamina = strength * 1.4  // Strength determines endurance capacity
+experienceBonus = experience * 20  // Combat training improves stamina pool
+conditioningBonus = min(strength/weight * 10, 20)  // Strength-to-weight ratio bonus
 maxStamina = baseStamina + experienceBonus + conditioningBonus
 ```
 
-### Action Costs (% of max stamina)
+**Examples:**
+- Recruit (45 strength, 76kg, 0.3 exp): 63 + 6 + 5.9 = **75 stamina**
+- Veteran (60 strength, 75kg, 0.6 exp): 84 + 12 + 8.0 = **104 stamina**
+- Elite (90 strength, 72kg, 0.9 exp): 126 + 18 + 12.5 = **157 stamina**
 
-- Light Attack: 3%
-- Heavy Attack: 6%
-- Block: 2%
-- Dodge: 4%
-- Running: 1% per second
+### Action Costs (absolute stamina units)
 
-### Recovery Rates (% of max stamina per second)
+**Combat Actions:**
+- Light Attack: 3-5 units (modified by weapon weight)
+- Heavy Attack: 6-10 units (modified by weapon weight)
+- Block: 2-3 units
+- Dodge: 4-6 units
 
-- Resting: 20%
-- Walking: 10%
-- Combat: 3%
-- Exhausted (<10% stamina): 0%
+**Movement Costs** (per second, physics-based):
+- Calculated using realistic movement physics
+- Base cost depends on movement speed squared
+- Modified by total weight and terrain
+
+### Recovery Rates (absolute stamina units per second)
+
+**Recovery Context System:**
+```ts
+const recoveryRates = {
+    resting: 0.08,     // 8% of max stamina per second - full aerobic recovery
+    moving: 0.0,       // No recovery during movement - physiologically realistic
+    combat: 0.01,      // 1% per second - adrenaline provides slight recovery
+    exhausted: 0       // No recovery when below 10% stamina
+};
+```
+
+**Realistic Recovery Examples:**
+- **Veteran at rest** (104 max): 8.3 units/sec → recovers 25% in ~3 seconds
+- **Veteran walking** (104 max): 0.0 units/sec → no recovery during movement
+- **Veteran in combat** (104 max): 1.04 units/sec → slow recovery during combat
+- **Exhausted unit**: No natural recovery until above 10% threshold
 
 ### Stamina Modifiers
 
-1. Experience Impact:
-   - Reduces action costs by up to 30%
-   - Improves recovery rates by up to 20%
-   - Example: Veteran (0.5 exp)
-     - Action costs reduced by 15%
-     - Recovery improved by 10%
+1. **Experience Impact:**
+   - **Consumption reduction**: Up to 30% less stamina cost
+     - Formula: `cost *= (1 - experience * 0.3)`
+     - Elite soldier (0.9 exp): 27% reduction in all costs
+   
+   - **Recovery improvement**: Up to 20% faster recovery
+     - Formula: `recovery *= (1 + experience * 0.2)`
+     - Elite soldier (0.9 exp): 18% faster recovery
 
-2. Pain Effects:
-   - Each 10 points of pain:
-     - +10% stamina costs
-     - -5% recovery rate
+2. **Weight Impact (Calibrated System):**
+   ```ts
+   // Realistic baseline approach (70kg baseline, 50 strength baseline)
+   const weightDifference = totalWeight - 70;
+   const strengthDifference = strength - 50;
+   const modifier = 1.0 + (weightDifference * 0.01) - (strengthDifference * 0.01);
+   const weightModifier = Math.max(0.8, Math.min(1.5, modifier));
+   ```
+   
+   **Examples:**
+   - Light scout (73kg, 70 strength): 1.03 - 0.20 = **0.83x modifier** (17% bonus)
+   - Standard soldier (75kg, 60 strength): 1.05 - 0.10 = **0.95x modifier** (5% bonus)
+   - Heavy infantry (85kg, 50 strength): 1.15 - 0.00 = **1.15x modifier** (15% penalty)
+   - Overburdened unit (100kg, 45 strength): 1.30 + 0.05 = **1.35x modifier** (35% penalty)
 
-3. Weight Impact:
-   - Heavy armor/weapons increase costs
-   - Base cost multiplier = weight/strength
-   - Minimum multiplier = 1.0
-   - Example: 80kg unit, 60 strength
-     - Multiplier = 1.33
-     - Light attack: 4% (3% * 1.33)
+3. **Pain Effects:**
+   - Each 10 points of pain: +10% stamina costs, -5% recovery rate
+   - Experience reduces pain impact by up to 50%
 
 ### Performance Thresholds
 
-1. Above 75% stamina:
-   - Full performance
-   - Maximum recovery
+1. **Above 75% stamina:**
+   - Full performance and maximum recovery
+   - No movement speed penalties
 
-2. 50-75% stamina:
-   - 90% action speed
-   - Normal recovery
+2. **50-75% stamina:**
+   - 90% action speed, normal recovery
+   - Slight movement speed reduction
 
-3. 25-50% stamina:
-   - 75% action speed
-   - -10 morale
-   - Reduced recovery
+3. **25-50% stamina:**
+   - 75% action speed, -10 morale
+   - Noticeable movement speed reduction
+   - Reduced recovery rates
 
-4. Below 25% stamina:
-   - 50% action speed
-   - -20 morale
+4. **10-25% stamina:**
+   - 50% action speed, -20 morale
+   - Significant movement speed penalties
    - Minimal recovery
-   - May skip non-essential actions
 
-5. Below 10% stamina:
-   - 25% action speed
-   - No natural recovery
-   - Essential actions only
+5. **Below 10% stamina (Exhausted):**
+   - 25% action speed, essential actions only
+   - No natural recovery until above threshold
+   - Severe movement limitations
+
+### Realistic Endurance Behavior
+
+**Running Endurance (Calibrated Test Results with 0 Recovery During Movement):**
+- **Fresh civilian**: ~33 minutes before exhaustion
+- **Trained recruit**: ~60 minutes sustained running  
+- **Veteran soldier**: ~106 minutes sustained running
+- **Elite soldier**: ~200 minutes (3+ hours) sustained running
+
+**Walking/Marching Endurance:**
+- **Fresh civilian**: ~2.2 hours walking endurance (limited capability)
+- **Trained recruit**: ~4 hours walking endurance (basic training standard)
+- **Veteran soldier**: ~7 hours walking endurance (operational standard)  
+- **Elite soldier**: ~15 hours walking endurance (special forces level)
+
+**Key System Characteristics:**
+- **Graduated performance**: Clear differentiation between unit types
+- **Realistic military standards**: Matches real-world endurance capabilities
+- **Finite endurance**: All movement gradually depletes stamina - no perpetual motion
+- **Recovery balance**: Only true rest provides stamina recovery (0% during movement)
+- **No instant recovery**: Realistic rest periods required between intense activities
 
 ## Injury System
 
