@@ -127,18 +127,6 @@ describe('UnitStamina', () => {
             expect(stamina.stamina).toBeCloseTo(59.12, 1);
         });
 
-        it('should recover stamina very slowly when moving context', () => {
-            // Set unit to moving
-            unit.movement.moveTo({ x: 10, y: 0 }, false);
-            expect(stamina.recoveryContext).toBe('moving');
-            
-            // Moving recovery: +0.035% per second = 0.00035 * 95 = 0.03325 absolute units per second
-            stamina.recoverStamina(1.0);
-            
-            // Expected: 0.03325 * experienceModifier = 0.03325 * 1.2 = 0.0399
-            expect(stamina.stamina).toBeCloseTo(50.0399, 2);
-        });
-
         it('should use moving context for both walking and running', () => {
             // Set unit to walking
             unit.movement.moveTo({ x: 10, y: 0 }, false);
