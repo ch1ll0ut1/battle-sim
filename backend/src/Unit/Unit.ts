@@ -1,5 +1,9 @@
+import { movementConfig } from '../config/movement.js';
+import { Position } from './Position.js';
 import { UnitAttributes, UnitAttributesData } from './UnitAttributes.js';
-import { UnitMovement, Position } from './UnitMovement.js';
+import { UnitMovement } from './UnitMovement.js';
+import { UnitMovementPhysics } from './UnitMovementPhysics.js';
+import { UnitStamina } from './UnitStamina.js';
 
 /**
  * Core unit class that represents a combatant in the battle simulation.
@@ -32,12 +36,25 @@ export class Unit {
     /**
      * Location component handles position and facing direction
      */
-    readonly movement: UnitMovement;
+    readonly movement: UnitMovement | UnitMovementPhysics;
+
+    /**
+     * Stamina component handles energy levels, consumption, and recovery
+     * Manages recovery context automatically based on unit state
+     */
+    readonly stamina: UnitStamina;
+
+    /**
+     * Equipment weight in kg (armor, weapons, carried items)
+     * TODO: Refactor to proper Equipment/Inventory system later
+     */
+    readonly equipment = {
+        weight: 0,
+    };
 
     // Placeholder for future components - these will be added as we build the system
-    // readonly combat: CombatComponent;     // Will handle stamina, actions, combat state
+    // readonly combat: CombatComponent;     // Will handle actions, combat state, pain
     // readonly body: BodyComponent;         // Will handle injuries, health, body parts  
-    // readonly movement: MovementComponent; // Will handle pathfinding, speed calculations, spatial queries
     // readonly work: WorkComponent;         // Will handle non-combat activities
 
     /**
@@ -61,7 +78,22 @@ export class Unit {
         this.name = name;
         this.team = team;
         this.attributes = new UnitAttributes(attributes);
-        this.movement = new UnitMovement(this, position, direction);
+
+        if (movementConfig.movementSystem === 'simple') {
+            this.movement = new UnitMovement(this, position, direction);
+        } else {
+            this.movement = new UnitMovementPhysics(this, position, direction);
+        }
+
+        // Initialize stamina component with full stamina
+        this.stamina = new UnitStamina(this, 100);
+    }
+
+    /**
+     * Gets the total weight of the unit including body weight and equipment
+     */
+    get weight(): number {
+        return this.attributes.weight + this.equipment.weight;
     }
 
     /**
@@ -74,22 +106,25 @@ export class Unit {
             name: this.name,
             team: this.team,
             attributes: this.attributes.getSummary(),
-            location: this.movement.getSummary()
+            movement: this.movement.getSummary(),
+            stamina: this.stamina.getSummary()
         };
     }
 
     /**
-     * Updates the unit's state (placeholder for component updates)
+     * Updates the unit's state and all component systems
      * @param deltaTime - Time elapsed since last update in seconds
      */
     update(deltaTime: number): void {
-        // Update all components
+        // Update movement component first
         this.movement.update(deltaTime);
+        
+        // Update stamina (it will derive recovery context automatically)
+        this.stamina.update(deltaTime);
         
         // TODO: When other components are implemented, call their update methods here
         // this.combat.update(deltaTime);
         // this.body.update(deltaTime);
-        // this.movement.update(deltaTime);
         // this.work.update(deltaTime);
     }
 } 

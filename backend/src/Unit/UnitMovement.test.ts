@@ -1,4 +1,5 @@
-import { UnitMovement, Position } from './UnitMovement';
+import { UnitMovement } from './UnitMovement';
+import { Position } from "./Position";
 
 describe('UnitMovement', () => {
     let mockUnit: any;
@@ -8,6 +9,9 @@ describe('UnitMovement', () => {
         mockUnit = {
             id: 1,
             name: 'Test Unit',
+            equipment: {
+                weight: 0,
+            },
             attributes: {
                 weight: 75,
                 strength: 60

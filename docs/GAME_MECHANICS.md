@@ -355,14 +355,14 @@ const weightFactor = totalWeight / 70; // Weight impact on energy expenditure
 const staminaCostPerSecond = baseCost * speedFactor * weightFactor;
 
 // Recovery during movement (UnitStamina.ts)
-const movingRecoveryRate = 0.00035; // +0.035% per second
+const movingRecoveryRate = 0.0; // No recovery during movement - physiologically realistic
 const recoveryPerSecond = movingRecoveryRate * maxStamina * experienceBonus;
 
 // Net stamina change per second = recovery - consumption
 const netStaminaChange = recoveryPerSecond - staminaCostPerSecond;
 
 // Key insight: Walking has LESS net stamina consumption than running
-// Walking may even have slight positive recovery due to low speed factor
+// All movement now causes net stamina loss, but walking drains much slower than running
 ```
 
 **Net Stamina Change Examples (with DOUBLE weight modifier as per actual code):**
@@ -372,25 +372,25 @@ const netStaminaChange = recoveryPerSecond - staminaCostPerSecond;
    - UnitStamina weight modifier: 1.0 + (75-70)*0.01 - (60-50)*0.01 = **0.95** (applied AGAIN)
    - Experience modifier: 1 - (0.6 × 0.3) = **0.82** (18% reduction)
    - Final consumption: 0.0203 × 0.95 × 0.82 = **0.0158 units/sec**
-   - Recovery: 0.00035 × 104 × (1 + 0.6×0.2) = **0.0408 units/sec**
-   - **Net: +0.0250 units/sec** (stamina GAIN while walking)
+   - Recovery: 0.0 × 104 × (1 + 0.6×0.2) = **0.0 units/sec**
+   - **Net: -0.0158 units/sec** (stamina LOSS while walking)
 
 2. **Veteran Soldier Running** (75kg, 60 strength, 104 max stamina, 0.6 exp, 2.8 m/s):
    - Physics consumption: 0.009 × (2.8/1.0)² × (75/70) = **0.0810 units/sec**
    - UnitStamina modifiers: **0.95** weight × **0.82** experience = **0.779**
    - Final consumption: 0.0810 × 0.779 = **0.0631 units/sec**
-   - Recovery: 0.00035 × 104 × 1.12 = **0.0408 units/sec**
-   - **Net: -0.0223 units/sec** (stamina LOSS while running)
+   - Recovery: 0.0 × 104 = **0.0 units/sec**
+   - **Net: -0.0631 units/sec** (stamina LOSS while running)
 
 3. **Fresh Civilian Walking** (82kg, 35 strength, 49 max stamina, 0.0 exp, 1.4 m/s):
    - Physics consumption: 0.009 × (1.4/1.0)² × (82/70) = **0.0232 units/sec**
    - UnitStamina weight modifier: 1.0 + (82-70)*0.01 - (35-50)*0.01 = **1.27** (27% penalty)
    - Experience modifier: **1.0** (no reduction)
    - Final consumption: 0.0232 × 1.27 × 1.0 = **0.0295 units/sec**
-   - Recovery: 0.00035 × 49 × 1.0 = **0.0172 units/sec**
-   - **Net: -0.0123 units/sec** (significant stamina LOSS while walking)
+   - Recovery: 0.0 × 49 = **0.0 units/sec**
+   - **Net: -0.0295 units/sec** (significant stamina LOSS while walking)
 
-**Key Physics Insight**: Walking has **less net stamina consumption** than running due to the quadratic speed relationship. Walking may even provide slight recovery, while running causes net stamina loss. This creates realistic endurance behavior where soldiers can walk for hours but only run for 20-45 minutes.
+**Key Physics Insight**: Walking has **much less net stamina consumption** than running due to the quadratic speed relationship. With 0 recovery during movement, all movement causes stamina loss, but walking drains ~5x slower than running. This creates realistic endurance behavior where soldiers can walk for hours but only run for 30-200 minutes depending on fitness level.
 
 #### Example Calculations
 

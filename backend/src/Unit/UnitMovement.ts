@@ -1,22 +1,16 @@
+import { Position } from "./Position";
 import { Unit } from "./Unit";
 
 /**
- * Position interface for unit location on the battlefield
+ * Movement state for simple movement system
  */
-export interface Position {
-    x: number;
-    y: number;
-}
+type MovementState = 'stationary' | 'walking' | 'running';
 
 /**
- * Movement states that affect stamina drain and speed calculations
- */
-export type MovementState = 'stationary' | 'walking' | 'running';
-
-/**
- * UnitMovement handles spatial positioning, orientation, and movement actions for units.
+ * Simple UnitMovement handles spatial positioning, orientation, and movement actions for units.
  * This component manages where a unit is located, which direction it's facing,
  * and processes movement over time based on unit attributes and physical state.
+ * Uses simple instant movement with basic speed calculations.
  */
 export class UnitMovement {
     /**
