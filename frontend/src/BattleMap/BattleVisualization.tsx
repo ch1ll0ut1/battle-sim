@@ -1,9 +1,9 @@
 import { createSignal, onMount, onCleanup } from 'solid-js';
-import { BattleMap } from './battle-map.js';
-import { BattleLog } from './battle-log.js';
-import { PlaybackControls } from './playback-controls.js';
-import { BattleWebSocket } from './BattleWebSocket.js';
-import './battle-map.css';
+import { BattleMap } from './BattleMap.jsx';
+import { BattleLog } from './BattleLog.jsx';
+import { PlaybackControls } from './PlaybackControls.jsx';
+import { WebSocketClient } from './WebSocketClient.js';
+import './BattleMap.css';
 
 type Unit = {
     id: number;
@@ -30,7 +30,7 @@ export const BattleVisualization = () => {
     });
     const [battleLog, setBattleLog] = createSignal<string[]>([]);
     const [isConnected, setIsConnected] = createSignal(false);
-    let battleWebSocket: BattleWebSocket;
+    let battleWebSocket: WebSocketClient;
 
     const handleConnectionChange = (connected: boolean) => {
         console.log('Connection changed:', connected);
@@ -71,7 +71,7 @@ export const BattleVisualization = () => {
     };
 
     onMount(() => {
-        battleWebSocket = new BattleWebSocket();
+        battleWebSocket = new WebSocketClient();
         battleWebSocket.setEventHandlers(
             handleConnectionChange,
             handleBattleStateChange,

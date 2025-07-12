@@ -1,7 +1,7 @@
 /**
  * Handles WebSocket communication with the battle simulation server
  */
-export class BattleWebSocket {
+export class WebSocketClient {
     private ws: WebSocket | null = null;
     private reconnectAttempts = 0;
     private readonly maxReconnectAttempts = 5;

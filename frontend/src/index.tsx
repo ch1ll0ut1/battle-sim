@@ -1,6 +1,6 @@
 import { render } from 'solid-js/web';
 
-import { BattleVisualization } from './battle-map/battle-visualization.js';
+import { BattleVisualization } from './BattleMap/BattleVisualization.jsx';
 
 const root = document.getElementById('root');
 
