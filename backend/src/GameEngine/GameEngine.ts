@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import { Logger } from '../utils/Logger.js';
 
 /**
- * Represents a unit in the battle
+ * Represents a unit in the game
  */
 export interface Unit {
     id: number;
@@ -14,9 +14,9 @@ export interface Unit {
 }
 
 /**
- * Result of a battle simulation
+ * Result of a game simulation
  */
-export interface BattleResult {
+export interface GameResult {
     winner?: string;
     duration: number;
     events: string[];
@@ -29,10 +29,10 @@ type EventEmitterMessage = {
     'finished': [],
 }
 /**
- * BattleEngine class responsible for simulating battles and generating events
- * Simulation flow is handled by SimulationController (for controllable server) & runBattle() (for CLI)
+ * GameEngine class responsible for simulating games and generating events
+ * Simulation flow is handled by SimulationController (for controllable server) & runGame() (for CLI)
  */
-export class BattleEngine extends EventEmitter<EventEmitterMessage> {
+export class GameEngine extends EventEmitter<EventEmitterMessage> {
     state: State = 'initialized';
     private units: Unit[];
     private logger: Logger;
@@ -41,9 +41,9 @@ export class BattleEngine extends EventEmitter<EventEmitterMessage> {
     private teams: Record<number, Unit[]> = {};
 
     /**
-     * Creates a new BattleEngine instance
-     * @param units - Array of units participating in the battle
-     * @param logger - Logger instance to record battle events
+     * Creates a new GameEngine instance
+     * @param units - Array of units participating in the game
+     * @param logger - Logger instance to record game events
      */
     constructor(units: Unit[], logger: Logger) {
         super();
@@ -55,13 +55,13 @@ export class BattleEngine extends EventEmitter<EventEmitterMessage> {
     }
 
     /**
-     * Starts a new battle simulation
+     * Starts a new game simulation
      */
     reset() {
         this.state = 'initialized';
         this.currentTime = 0;
         this.logger.clear();
-        this.logger.log('Battle started');
+        this.logger.log('Game started');
         this.teams = {};
 
         this.units.forEach(unit => {
@@ -69,7 +69,7 @@ export class BattleEngine extends EventEmitter<EventEmitterMessage> {
             unit.health = 100;
             
             // Log initial unit status
-            this.logger.log(`${unit.name} enters the battle with ${unit.health} health`);
+            this.logger.log(`${unit.name} enters the game with ${unit.health} health`);
 
             // Track teams
             if (this.teams[unit.team] === undefined) {
@@ -83,12 +83,12 @@ export class BattleEngine extends EventEmitter<EventEmitterMessage> {
     }
 
     /**
-     * Updates the battle state by one turn (used for server)
+     * Updates the game state by one turn (used for server)
      * @param setToPause - If true, state will be set to "paused"
      */
     update(setToPause: boolean = false) {
         if (this.state === 'finished') {
-            throw new Error('Battle is finished');
+            throw new Error('Game is finished');
         }
 
         if (this.state !== 'running') {
@@ -115,12 +115,12 @@ export class BattleEngine extends EventEmitter<EventEmitterMessage> {
 
         this.emit('updated');
 
-        // Check if battle should end
-        this.checkBattleEnd();
+        // Check if game should end
+        this.checkGameEnd();
     }
 
     /**
-     * Pauses the battle (just sets the state to paused)
+     * Pauses the game (just sets the state to paused)
      */
     pause() {
         this.state = 'paused';
@@ -128,21 +128,21 @@ export class BattleEngine extends EventEmitter<EventEmitterMessage> {
     }
 
     /**
-     * Runs the complete battle simulation (used for CLI)
-     * @returns Battle result including winner and duration
+     * Runs the complete game simulation (used for CLI)
+     * @returns Game result including winner and duration
      */
-    runBattle(): BattleResult {
-        // Run battle until it ends
+    runGame(): GameResult {
+        // Run game until it ends
         while (this.state !== 'finished') {
             this.update();
-            this.checkBattleEnd();
+            this.checkGameEnd();
         }
 
         const winner = this.determineWinner();
         if (winner) {
-            this.logger.log(`${winner} wins the battle!`);
+            this.logger.log(`${winner} wins the game!`);
         } else {
-            this.logger.log('Battle ends in a draw!');
+            this.logger.log('Game ends in a draw!');
         }
 
         return {
@@ -158,12 +158,12 @@ export class BattleEngine extends EventEmitter<EventEmitterMessage> {
 
     private validateTeams() {
         if (this.units.length < 2) {
-            throw new Error('Battle must have at least 2 units');
+            throw new Error('Game must have at least 2 units');
         }
 
         const teams = Object.values(this.teams)
         if (teams.length <= 1) {
-            throw new Error('Battle must have at least 2 teams');
+            throw new Error('Game must have at least 2 teams');
         }
 
         teams.forEach(team => {
@@ -205,21 +205,21 @@ export class BattleEngine extends EventEmitter<EventEmitterMessage> {
     }
 
     /**
-     * Checks if the battle should end
+     * Checks if the game should end
      */
-    private checkBattleEnd() {
+    private checkGameEnd() {
         const team1Alive = this.units.some(u => u.team === 1 && u.health > 0);
         const team2Alive = this.units.some(u => u.team === 2 && u.health > 0);
 
         if (!team1Alive || !team2Alive) {
             this.state = 'finished';
-            this.logger.log(`${team1Alive ? 'Team 1' : 'Team 2'} wins the battle!`);
+            this.logger.log(`${team1Alive ? 'Team 1' : 'Team 2'} wins the game!`);
             this.emit('finished');
         }
     }
 
     /**
-     * Determines the winner of the battle
+     * Determines the winner of the game
      */
     private determineWinner(): string | undefined {
         const team1Alive = this.units.filter(u => u.team === 1 && u.health > 0);

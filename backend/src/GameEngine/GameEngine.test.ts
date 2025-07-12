@@ -1,26 +1,26 @@
-import { BattleEngine, Unit } from './BattleEngine';
+import { GameEngine, Unit } from './GameEngine';
 import { Logger } from '../utils/Logger';
 import { units1v1 } from '../testData';
 
 /**
- * Tests for BattleEngine
- * Covers both full run (runBattle) and controlled run (start, update, pause)
+ * Tests for GameEngine
+ * Covers both full run (runGame) and controlled run (start, update, pause)
  * using realistic test data and only public API.
  */
-describe('BattleEngine', () => {
+describe('GameEngine', () => {
   /**
-   * Simulates a complete battle using runBattle (like testBattle.ts)
+   * Simulates a complete game using runGame (like testGame.ts)
    * Asserts on winner, duration, and event log.
    */
-  it('should run a full battle and produce a winner', () => {
+  it('should run a full game and produce a winner', () => {
     // Arrange
     const logger = new Logger();
     // Deep clone units to avoid mutation between tests
     const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
-    const engine = new BattleEngine(units, logger);
+    const engine = new GameEngine(units, logger);
 
     // Act
-    const result = engine.runBattle();
+    const result = engine.runGame();
 
     // Assert
     expect(result.winner).toMatch(/Team (1|2)/);
@@ -37,14 +37,14 @@ describe('BattleEngine', () => {
   });
 
   /**
-   * Simulates a controlled battle using start, update, and pause (like testServer.ts)
-   * Steps through the battle, checks state transitions, and ensures correct results.
+   * Simulates a controlled game using start, update, and pause (like testServer.ts)
+   * Steps through the game, checks state transitions, and ensures correct results.
    */
-  it('should allow controlled step-by-step battle progression', () => {
+  it('should allow controlled step-by-step game progression', () => {
     // Arrange
     const logger = new Logger();
     const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
-    const engine = new BattleEngine(units, logger);
+    const engine = new GameEngine(units, logger);
 
     // Act - engine is already initialized after construction
     expect(engine.state).toBe('initialized');
@@ -56,7 +56,7 @@ describe('BattleEngine', () => {
       expect(engine.state).toBe('running');
     }
 
-    // Pause the battle
+    // Pause the game
     engine.pause();
     expect(engine.state).toBe('paused');
 
@@ -75,15 +75,15 @@ describe('BattleEngine', () => {
   });
 
   /**
-   * Edge case: No units provided. The battle should throw an error during construction.
+   * Edge case: No units provided. The game should throw an error during construction.
    */
   it('should throw error when no units provided', () => {
     const logger = new Logger();
-    expect(() => new BattleEngine([], logger)).toThrow('Battle must have at least 2 units');
+    expect(() => new GameEngine([], logger)).toThrow('Game must have at least 2 units');
   });
 
   /**
-   * Edge case: All units dead at start. The battle should immediately finish with no winner after units are reset to 100 health.
+   * Edge case: All units dead at start. The game should immediately finish with no winner after units are reset to 100 health.
    */
   it('should handle all units dead at start', () => {
     const logger = new Logger();
@@ -91,16 +91,16 @@ describe('BattleEngine', () => {
       { id: 1, name: 'Dead1', health: 0, attack: 10, defense: 5, team: 1 },
       { id: 2, name: 'Dead2', health: 0, attack: 10, defense: 5, team: 2 }
     ];
-    const engine = new BattleEngine(units, logger);
-    const result = engine.runBattle();
-    // Since constructor calls reset() which resets health to 100, both units will be alive and battle will proceed normally
+    const engine = new GameEngine(units, logger);
+    const result = engine.runGame();
+    // Since constructor calls reset() which resets health to 100, both units will be alive and game will proceed normally
     expect(result.winner).toMatch(/Team (1|2)/);
     expect(result.duration).toBeGreaterThan(0);
-    expect(result.events[0]).toMatch(/Battle started/);
+    expect(result.events[0]).toMatch(/Game started/);
   });
 
   /**
-   * Edge case: All units on the same team. The battle should throw an error during construction.
+   * Edge case: All units on the same team. The game should throw an error during construction.
    */
   it('should throw error when all units on same team', () => {
     const logger = new Logger();
@@ -108,28 +108,28 @@ describe('BattleEngine', () => {
       { id: 1, name: 'A', health: 100, attack: 10, defense: 5, team: 1 },
       { id: 2, name: 'B', health: 100, attack: 10, defense: 5, team: 1 }
     ];
-    expect(() => new BattleEngine(units, logger)).toThrow('Battle must have at least 2 teams');
+    expect(() => new GameEngine(units, logger)).toThrow('Game must have at least 2 teams');
   });
 
   /**
-   * Edge case: update() after battle is finished should throw an error.
+   * Edge case: update() after game is finished should throw an error.
    */
   it('should throw if update is called after finished', () => {
     const logger = new Logger();
     const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
-    const engine = new BattleEngine(units, logger);
-    engine.runBattle();
+    const engine = new GameEngine(units, logger);
+    engine.runGame();
     expect(engine.state).toBe('finished');
-    expect(() => engine.update()).toThrow('Battle is finished');
+    expect(() => engine.update()).toThrow('Game is finished');
   });
 
   /**
-   * Edge case: Pausing the battle should prevent further updates from progressing the state.
+   * Edge case: Pausing the game should prevent further updates from progressing the state.
    */
   it('should not progress when paused', () => {
     const logger = new Logger();
     const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
-    const engine = new BattleEngine(units, logger);
+    const engine = new GameEngine(units, logger);
     engine.reset();
     engine.pause();
     const prevTime = engine.getState().time;
@@ -159,22 +159,22 @@ describe('BattleEngine', () => {
       { id: 1, name: 'Neg', health: -10, attack: 10, defense: 5, team: 1 },
       { id: 2, name: 'Alive', health: 100, attack: 10, defense: 5, team: 2 }
     ];
-    const engine = new BattleEngine(units, logger);
-    const result = engine.runBattle();
-    // Since constructor calls reset() which resets health to 100, both units will be alive and battle will proceed normally
+    const engine = new GameEngine(units, logger);
+    const result = engine.runGame();
+    // Since constructor calls reset() which resets health to 100, both units will be alive and game will proceed normally
     expect(result.winner).toMatch(/Team (1|2)/);
     expect(result.duration).toBeGreaterThan(0);
   });
 
   /**
-   * Tests that BattleEngine emits 'initialized' event when reset() is called
-   * Verifies that the event system works for external listeners like BattleServer
+   * Tests that GameEngine emits 'initialized' event when reset() is called
+   * Verifies that the event system works for external listeners like GameServer
    */
   it('should emit updated event when reset', () => {
     // Arrange
     const logger = new Logger();
     const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
-    const engine = new BattleEngine(units, logger);
+    const engine = new GameEngine(units, logger);
     const updatedSpy = jest.fn();
     engine.on('updated', updatedSpy);
 
@@ -186,14 +186,14 @@ describe('BattleEngine', () => {
   });
 
   /**
-   * Tests that BattleEngine emits 'updated' event during each update
-   * Verifies that the event system provides real-time battle updates
+   * Tests that GameEngine emits 'updated' event during each update
+   * Verifies that the event system provides real-time game updates
    */
-  it('should emit updated event during battle updates', () => {
+  it('should emit updated event during game updates', () => {
     // Arrange
     const logger = new Logger();
     const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
-    const engine = new BattleEngine(units, logger);
+    const engine = new GameEngine(units, logger);
     const updatedSpy = jest.fn();
     engine.on('updated', updatedSpy);
 
@@ -207,19 +207,19 @@ describe('BattleEngine', () => {
   });
 
   /**
-   * Tests that BattleEngine emits 'finished' event when battle ends
-   * Verifies that external listeners can detect when battle concludes
+   * Tests that GameEngine emits 'finished' event when game ends
+   * Verifies that external listeners can detect when game concludes
    */
-  it('should emit finished event when battle ends', () => {
+  it('should emit finished event when game ends', () => {
     // Arrange
     const logger = new Logger();
     const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
-    const engine = new BattleEngine(units, logger);
+    const engine = new GameEngine(units, logger);
     const finishedSpy = jest.fn();
     engine.on('finished', finishedSpy);
 
-    // Act - run the complete battle
-    engine.runBattle();
+    // Act - run the complete game
+    engine.runGame();
 
     // Assert
     expect(finishedSpy).toHaveBeenCalled();
@@ -227,22 +227,22 @@ describe('BattleEngine', () => {
   });
 
   /**
-   * Tests that BattleEngine emits correct sequence of events during full battle
+   * Tests that GameEngine emits correct sequence of events during full game
    * Verifies the complete event lifecycle from initialization to completion
    */
-  it('should emit events in correct sequence during full battle', () => {
+  it('should emit events in correct sequence during full game', () => {
     // Arrange
     const logger = new Logger();
     const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
-    const engine = new BattleEngine(units, logger);
+    const engine = new GameEngine(units, logger);
     const eventSequence: string[] = [];
     
     engine.on('updated', () => eventSequence.push('updated'));
     engine.on('finished', () => eventSequence.push('finished'));
 
-    // Act - reset to trigger initialized event, then run battle
+    // Act - reset to trigger initialized event, then run game
     engine.reset();
-    const result = engine.runBattle();
+    const result = engine.runGame();
 
     // Assert
     expect(eventSequence.filter(e => e === 'updated').length).toBeGreaterThan(0);
