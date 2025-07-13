@@ -12,15 +12,23 @@ export class Logger extends EventEmitter {
    * Records a battle event with the current timestamp
    * @param message - The event message to log
    */
-  log(message: string): void {
-    const messageWithTimestamp = `[${this.currentTime.toFixed(1)}s] ${message}`;
-    this.events.push(messageWithTimestamp);
-    this.emit('log', messageWithTimestamp);
+  log(message: string) {
+    const formattedMsg = `[${this.currentTime.toFixed(1)}s] ${message}`;
+    this.events.push(formattedMsg);
+    this.emit('log', formattedMsg);
   }
 
-  debug(message: string): void {
+  error(message: string) {
+    const formattedMsg = `[${this.currentTime.toFixed(1)}s] ERROR: ${message}`;
+    this.events.push(formattedMsg);
+    this.emit('log', formattedMsg);
+  }
+
+  debug(message: string) {
     if (serverConfig.debug) {
-      this.log(message);
+      const formattedMsg = `[${this.currentTime.toFixed(1)}s] DEBUG: ${message}`;
+      this.events.push(formattedMsg);
+      this.emit('log', formattedMsg);
     }
   }
 
@@ -28,7 +36,7 @@ export class Logger extends EventEmitter {
    * Updates the current time of the logger
    * @param time - The new current time in seconds
    */
-  setTime(time: number): void {
+  setTime(time: number) {
     this.currentTime = time;
   }
 
@@ -42,7 +50,7 @@ export class Logger extends EventEmitter {
   /**
    * Clears all recorded events and resets time
    */
-  clear(): void {
+  clear() {
     this.events = [];
     this.currentTime = 0;
   }
