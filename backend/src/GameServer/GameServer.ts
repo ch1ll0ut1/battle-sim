@@ -1,6 +1,6 @@
 import { WebsocketServer } from '../utils/WebsocketServer.js';
 import { SimulationController } from './SimulationController.js';
-import { GameEngine, Unit } from '../GameEngine/GameEngine.js';
+import { GameEngine } from '../GameEngine/GameEngine.js';
 import { Logger } from '../utils/Logger.js';
 import { WebSocket } from 'ws';
 
@@ -19,10 +19,10 @@ export class GameServer {
      * @param port - The port number to run the WebSocket server on
      * @param units - Array of units participating in the game
      */
-    constructor(port: number, units: Unit[]) {
+    constructor(port: number) {
         this.wsServer = new WebsocketServer(port);
         this.logger = new Logger();
-        this.gameEngine = new GameEngine(units, this.logger);
+        this.gameEngine = new GameEngine(this.logger, 'movement-sandbox');
         this.simulationController = new SimulationController(this.gameEngine, this.logger);
         
         this.setupEventHandlers();

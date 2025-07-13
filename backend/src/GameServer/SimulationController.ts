@@ -62,7 +62,7 @@ export class SimulationController {
             throw new Error('Game is finished');
         }
         this.logger.debug('Simulation tick');
-        this.engine.update(true);
+        this.engine.update(this.engine.TURN_INTERVAL, true);
     }
 
     /**
@@ -100,7 +100,7 @@ export class SimulationController {
      */
     private startInterval(): void {
         this.simulationInterval = setInterval(() => {
-            this.engine.update();
+            this.engine.update(this.engine.TURN_INTERVAL);
             
             if (this.engine.state === 'finished') {
                 this.stopInterval();
