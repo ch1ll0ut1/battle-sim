@@ -1,6 +1,7 @@
 import { Position } from './Position.js';
 import { Unit } from './Unit.js';
 import { movementConfig } from '../config/movement.js';
+import { TickUpdate } from '../utils/TickUpdate.js';
 
 type MovementState = 'stationary' | 'accelerating' | 'moving' | 'decelerating';
 
@@ -10,7 +11,7 @@ type MovementState = 'stationary' | 'accelerating' | 'moving' | 'decelerating';
  * This component manages where a unit is located, which direction it's facing,
  * and processes movement over time with realistic physics constraints.
  */
-export class UnitMovementPhysics {
+export class UnitMovementPhysics implements TickUpdate {
     /**
      * Current position on the battlefield
      * Coordinates are in battlefield units (meters)
@@ -462,7 +463,7 @@ export class UnitMovementPhysics {
     /**
      * Creates a summary object for serialization/display
      */
-    getSummary() {
+    getState() {
         return {
             position: { x: this._position.x, y: this._position.y },
             direction: this._direction,

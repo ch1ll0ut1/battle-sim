@@ -1,3 +1,4 @@
+import { TickUpdate } from "../utils/TickUpdate";
 import { Unit } from "./Unit";
 
 /**
@@ -17,7 +18,7 @@ const staminaRecoveryRates: Record<StaminaRecoveryContext, number> = {
  * Handles stamina calculation, consumption, and recovery using absolute stamina units.
  * Implements the core stamina system from GAME_MECHANICS.md.
  */
-export class UnitStamina {
+export class UnitStamina implements TickUpdate {
     /**
      * Current stamina level (0 to maxStamina) in absolute units
      */
@@ -243,7 +244,7 @@ export class UnitStamina {
     /**
      * Creates a summary object for serialization/display
      */
-    getSummary() {
+    getState() {
         return {
             stamina: this._stamina,
             maxStamina: this._maxStamina,

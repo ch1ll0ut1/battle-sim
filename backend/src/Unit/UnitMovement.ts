@@ -1,3 +1,4 @@
+import { TickUpdate } from "../utils/TickUpdate";
 import { Position } from "./Position";
 import { Unit } from "./Unit";
 
@@ -12,7 +13,7 @@ type MovementState = 'stationary' | 'walking' | 'running';
  * and processes movement over time based on unit attributes and physical state.
  * Uses simple instant movement with basic speed calculations.
  */
-export class UnitMovement {
+export class UnitMovement implements TickUpdate {
     /**
      * Current position on the battlefield
      * Coordinates are in battlefield units (meters)
@@ -204,7 +205,7 @@ export class UnitMovement {
      * Creates a summary object for serialization/display
      * @returns Object containing position, direction, and movement state information
      */
-    getSummary() {
+    getState() {
         return {
             position: this._position,
             direction: this._direction,

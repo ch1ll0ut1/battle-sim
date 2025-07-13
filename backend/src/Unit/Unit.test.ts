@@ -53,7 +53,7 @@ describe('Unit', () => {
                 Math.PI / 2
             );
 
-            const summary = unit.getSummary();
+            const summary = unit.getState();
 
             expect(summary.id).toBe(7);
             expect(summary.name).toBe('Summary Test');

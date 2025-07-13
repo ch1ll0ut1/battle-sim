@@ -1,3 +1,5 @@
+import { TickUpdate } from "../utils/TickUpdate";
+
 /**
  * Type that represents the data structure for unit attributes
  */
@@ -70,7 +72,7 @@ const ATTRIBUTE_CONFIG: Record<keyof UnitAttributesData, AttributeConfig> = {
  * Manager class that handles unit attributes validation, calculations, and utility methods.
  * Uses static getters/setters with a private data object for optimal performance.
  */
-export class UnitAttributes {
+export class UnitAttributes implements TickUpdate {
     private data: UnitAttributesData;
 
     /**
@@ -221,8 +223,12 @@ export class UnitAttributes {
      * Creates a summary object for serialization/display
      * @returns Object containing all attributes
      */
-    getSummary(): UnitAttributesData {
+    getState(): UnitAttributesData {
         return this.data;
+    }
+
+    update(deltaTime: number): void {
+        // noop
     }
 }
 

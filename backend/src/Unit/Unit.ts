@@ -1,4 +1,5 @@
 import { movementConfig } from '../config/movement.js';
+import { TickUpdate } from '../utils/TickUpdate.js';
 import { Position } from './Position.js';
 import { UnitAttributes, UnitAttributesData } from './UnitAttributes.js';
 import { UnitMovement } from './UnitMovement.js';
@@ -10,7 +11,7 @@ import { UnitStamina } from './UnitStamina.js';
  * Uses component-based architecture for modularity and extensibility.
  * This is the main entity that other systems interact with.
  */
-export class Unit {
+export class Unit implements TickUpdate {
     /**
      * Unique identifier for this unit
      */
@@ -100,14 +101,14 @@ export class Unit {
      * Gets a comprehensive summary of this unit for display/serialization
      * @returns Object containing all unit information
      */
-    getSummary() {
+    getState() {
         return {
             id: this.id,
             name: this.name,
             team: this.team,
-            attributes: this.attributes.getSummary(),
-            movement: this.movement.getSummary(),
-            stamina: this.stamina.getSummary()
+            attributes: this.attributes.getState(),
+            movement: this.movement.getState(),
+            stamina: this.stamina.getState()
         };
     }
 
