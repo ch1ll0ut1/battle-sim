@@ -1,15 +1,6 @@
 import { createSignal, createEffect, onMount, onCleanup } from 'solid-js';
+import { Unit } from './Unit';
 
-type Unit = {
-  id: number;
-  name: string;
-  position: { x: number; y: number };
-  direction: number;
-  experience: number;
-  armorLevel: number;
-  weapon: string | null;
-  isAlive: boolean;
-};
 
 type BattleMapProps = {
   units: Unit[];
@@ -32,8 +23,9 @@ export const BattleMap = (props: BattleMapProps) => {
     const context = ctx();
     if (!context) return;
 
-    const x = unit.position?.x ?? 0;
-    const y = unit.position?.y ?? 0;
+    const x = unit.movement.position?.x ?? 0;
+    const y = unit.movement.position?.y ?? 0;
+    console.log('draw', x, y)
     const radius = 8;
 
     // Draw unit circle
@@ -53,8 +45,8 @@ export const BattleMap = (props: BattleMapProps) => {
 
     // Draw direction line
     const lineLength = 12;
-    const endX = x + Math.cos(unit.direction) * lineLength;
-    const endY = y + Math.sin(unit.direction) * lineLength;
+    const endX = x + Math.cos(unit.movement.direction) * lineLength;
+    const endY = y + Math.sin(unit.movement.direction) * lineLength;
     
     context.beginPath();
     context.moveTo(x, y);
@@ -85,8 +77,8 @@ export const BattleMap = (props: BattleMapProps) => {
 
     // Draw weapon indicator (small dot)
     if (unit.weapon) {
-      const weaponX = x + Math.cos(unit.direction + Math.PI/4) * (radius + 5);
-      const weaponY = y + Math.sin(unit.direction + Math.PI/4) * (radius + 5);
+      const weaponX = x + Math.cos(unit.movement.direction + Math.PI/4) * (radius + 5);
+      const weaponY = y + Math.sin(unit.movement.direction + Math.PI/4) * (radius + 5);
       
       context.beginPath();
       context.arc(weaponX, weaponY, 3, 0, 2 * Math.PI);
@@ -130,6 +122,7 @@ export const BattleMap = (props: BattleMapProps) => {
   const render = () => {
     clearCanvas();
     drawGrid();
+    console.log('render', props.units)
     props.units.forEach(drawUnit);
   };
 

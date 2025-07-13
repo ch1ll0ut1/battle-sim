@@ -4,29 +4,23 @@ import { BattleLog } from './BattleLog.jsx';
 import { PlaybackControls } from './PlaybackControls.jsx';
 import { WebSocketClient } from './WebSocketClient.js';
 import './BattleMap.css';
-
-type Unit = {
-    id: number;
-    name: string;
-    position: { x: number; y: number };
-    direction: number;
-    experience: number;
-    armorLevel: number;
-    weapon: string | null;
-    isAlive: boolean;
-};
+import { Unit } from './Unit.jsx';
 
 type BattleState = {
     time: number;
-    units: Unit[];
-    state: 'initialized' | 'paused' | 'running' | 'finished';
+    phase: 'initialized' | 'paused' | 'running' | 'finished';
+    gameMode: {
+        units: Unit[];
+    };
 };
 
 export const BattleVisualization = () => {
     const [battleState, setBattleState] = createSignal<BattleState>({
         time: 0,
-        units: [],
-        state: 'initialized'
+        phase: 'initialized',
+        gameMode: {
+            units: [],
+        },
     });
     const [battleLog, setBattleLog] = createSignal<string[]>([]);
     const [isConnected, setIsConnected] = createSignal(false);
@@ -38,7 +32,7 @@ export const BattleVisualization = () => {
     };
 
     const handleBattleStateChange = (newBattleState: BattleState) => {
-        console.log('Battle state changed:', newBattleState);
+        console.log('Battle phase changed:', newBattleState);
         setBattleState(newBattleState);
     };
 
@@ -52,12 +46,12 @@ export const BattleVisualization = () => {
     };
 
     const handlePlay = () => {
-        setBattleState(prev => ({ ...prev, state: 'running' }));
+        setBattleState(prev => ({ ...prev, phase: 'running' }));
         battleWebSocket.sendCommand('start');
     };
 
     const handlePause = () => {
-        setBattleState(prev => ({ ...prev, state: 'paused' }));
+        setBattleState(prev => ({ ...prev, phase: 'paused' }));
         battleWebSocket.sendCommand('stop');
     };
 
@@ -66,7 +60,7 @@ export const BattleVisualization = () => {
     };
 
     const handleReset = () => {
-        setBattleState(prev => ({ ...prev, state: 'initialized' }));
+        setBattleState(prev => ({ ...prev, phase: 'initialized' }));
         battleWebSocket.sendCommand('reset');
     };
 
@@ -97,7 +91,7 @@ export const BattleVisualization = () => {
             <div class="battle-layout">
                 <div class="map-section">
                     <BattleMap
-                        units={battleState().units}
+                        units={battleState().gameMode.units}
                         width={500}
                         height={500}
                     />
@@ -105,7 +99,7 @@ export const BattleVisualization = () => {
 
                 <div class="controls-section">
                     <PlaybackControls
-                        isPlaying={battleState().state === 'running'}
+                        isPlaying={battleState().phase === 'running'}
                         onPlay={handlePlay}
                         onPause={handlePause}
                         onNextTick={handleNextTick}
@@ -114,8 +108,8 @@ export const BattleVisualization = () => {
 
                     <div class="battle-info">
                         <p>Time: {battleState().time.toFixed(1)}s</p>
-                        <p>Units: {battleState().units.length}</p>
-                        <p>Status: {battleState().state}</p>
+                        <p>Units: {battleState().gameMode.units.length}</p>
+                        <p>Status: {battleState().phase}</p>
                     </div>
                 </div>
             </div>

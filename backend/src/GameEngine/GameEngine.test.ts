@@ -47,21 +47,21 @@ describe('GameEngine', () => {
     const engine = new GameEngine(units, logger);
 
     // Act - engine is already initialized after construction
-    expect(engine.state).toBe('initialized');
+    expect(engine.phase).toBe('initialized');
     expect(engine.getState().time).toBe(0);
 
     // Step through a few updates
     for (let i = 0; i < 5; i++) {
       engine.update();
-      expect(engine.state).toBe('running');
+      expect(engine.phase).toBe('running');
     }
 
     // Pause the game
     engine.pause();
-    expect(engine.state).toBe('paused');
+    expect(engine.phase).toBe('paused');
 
     // Resume and finish
-    while (engine.state !== 'finished') {
+    while (engine.phase !== 'finished') {
       engine.update();
     }
 
@@ -70,7 +70,7 @@ describe('GameEngine', () => {
       ? 'Team 1'
       : 'Team 2';
     expect(['Team 1', 'Team 2']).toContain(winner);
-    expect(engine.state).toBe('finished');
+    expect(engine.phase).toBe('finished');
     expect(logger.getEvents().length).toBeGreaterThan(0);
   });
 
@@ -119,7 +119,7 @@ describe('GameEngine', () => {
     const units: Unit[] = JSON.parse(JSON.stringify(units1v1));
     const engine = new GameEngine(units, logger);
     engine.runGame();
-    expect(engine.state).toBe('finished');
+    expect(engine.phase).toBe('finished');
     expect(() => engine.update()).toThrow('Game is finished');
   });
 
@@ -140,13 +140,13 @@ describe('GameEngine', () => {
     engine.pause();
     const pausedTime = engine.getState().time;
     engine.pause(); // call pause again (should be idempotent)
-    expect(engine.state).toBe('paused');
+    expect(engine.phase).toBe('paused');
     // Try to update while paused
     engine.pause();
-    expect(engine.state).toBe('paused');
+    expect(engine.phase).toBe('paused');
     // The next update will set state to running and progress time
     engine.update();
-    expect(engine.state).toBe('running');
+    expect(engine.phase).toBe('running');
     expect(engine.getState().time).toBeGreaterThan(pausedTime);
   });
 
@@ -223,7 +223,7 @@ describe('GameEngine', () => {
 
     // Assert
     expect(finishedSpy).toHaveBeenCalled();
-    expect(engine.state).toBe('finished');
+    expect(engine.phase).toBe('finished');
   });
 
   /**

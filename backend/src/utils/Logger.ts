@@ -24,9 +24,9 @@ export class Logger extends EventEmitter {
     this.emit('log', formattedMsg);
   }
 
-  debug(message: string) {
+  debug(message: string, ...args: any[]) {
     if (serverConfig.debug) {
-      const formattedMsg = `[${this.currentTime.toFixed(1)}s] DEBUG: ${message}`;
+      const formattedMsg = `[${this.currentTime.toFixed(1)}s] DEBUG: ${message} ${args.map(arg => JSON.stringify(arg)).join(' ')}`;
       this.events.push(formattedMsg);
       this.emit('log', formattedMsg);
     }

@@ -102,7 +102,7 @@ export class WebSocketClient {
         const message = JSON.parse(event.data);
         console.log('Received message:', message);
         switch (message.type) {
-            case 'battleState':
+            case 'gameState':
                 this.onBattleStateChange?.(message.data);
                 break;
             case 'log':

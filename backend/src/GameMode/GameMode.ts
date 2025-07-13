@@ -1,12 +1,10 @@
 import { GameEngine } from "../GameEngine/GameEngine";
 import { Logger } from "../utils/Logger";
 import { TickUpdate } from "../utils/TickUpdate";
-import { MovementSandbox } from "./MovementSandbox/MovementSandbox";
 
 export abstract class GameMode implements TickUpdate {
     protected logger: Logger;
     protected engine: GameEngine;
-
 
     constructor(logger: Logger, engine: GameEngine) {
         this.logger = logger;
@@ -21,8 +19,5 @@ export abstract class GameMode implements TickUpdate {
     abstract getState(): any;
 }
 
-type GameModeConstructor = new (logger: Logger, engine: GameEngine) => GameMode;
+export type GameModeConstructor = new (logger: Logger, engine: GameEngine) => GameMode;
 
-export const GameModeType = {
-    'movement-sandbox': MovementSandbox,
-} as const satisfies Record<string, GameModeConstructor>;

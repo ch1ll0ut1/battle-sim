@@ -27,7 +27,7 @@ export class SimulationController {
      * Otherwise, starts a new simulation
      */
     start(): void {
-        switch (this.engine.state) {
+        switch (this.engine.phase) {
             case 'initialized':
             case 'paused':
                 this.continueSimulation();
@@ -38,7 +38,7 @@ export class SimulationController {
             case 'running':
                 throw new Error('GameEngine is already running');
             default:
-                throw new Error(`Invalid state: ${this.engine.state}`);
+                throw new Error(`Invalid state: ${this.engine.phase}`);
         }
     }
 
@@ -58,7 +58,7 @@ export class SimulationController {
      * Used for step-by-step simulation control
      */
     nextTick(): void {
-        if (this.engine.state === 'finished') {
+        if (this.engine.phase === 'finished') {
             throw new Error('Game is finished');
         }
         this.logger.debug('Simulation tick');
@@ -102,7 +102,7 @@ export class SimulationController {
         this.simulationInterval = setInterval(() => {
             this.engine.update(this.engine.TURN_INTERVAL);
             
-            if (this.engine.state === 'finished') {
+            if (this.engine.phase === 'finished') {
                 this.stopInterval();
             }
         }, 100);

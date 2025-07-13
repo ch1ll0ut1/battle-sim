@@ -1,9 +1,8 @@
 import { GameServer } from './GameServer/GameServer.js';
 import { serverConfig } from './config/server.js';
-import { units1v1 } from './testData.js';
 
 // Create and start the battle server
-const gameServer = new GameServer(serverConfig.port, units1v1);
+const gameServer = new GameServer(serverConfig.port);
 
 // Handle process termination
 process.on('SIGINT', () => {

@@ -1,16 +1,16 @@
 import { EventEmitter } from 'events';
 import { Logger } from '../utils/Logger.js';
-import { GameMode, GameModeType } from '../GameMode/GameMode.js';
+import { GameMode } from '../GameMode/GameMode.js';
+import { GameModeType } from "../GameMode/GameModeType.js";
 import { TickUpdate } from '../utils/TickUpdate.js';
 import { MovementSandbox } from '../GameMode/MovementSandbox/MovementSandbox.js';
 
-type State = 'initialized' | 'paused' | 'running' | 'finished';
+type EnginePhase = 'initialized' | 'paused' | 'running' | 'finished';
 
 type EventEmitterMessage = {
     'updated': [],
     'finished': [],
 }
-
 
 /**
  * GameEngine class responsible for simulating games and generating events
@@ -19,7 +19,7 @@ type EventEmitterMessage = {
 export class GameEngine extends EventEmitter<EventEmitterMessage> implements TickUpdate {
     public readonly TURN_INTERVAL = 0.1; // 100ms per turn
 
-    private _state: State = 'initialized';
+    private _phase: EnginePhase = 'initialized';
     private logger: Logger;
     private currentTime: number = 0;
     private gameMode: GameMode;
@@ -40,18 +40,18 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
         this.reset();
     }
 
-    get state() {
-        return this._state;
+    get phase() {
+        return this._phase;
     }
 
-    set state(state: State) {
-        this.logger.debug(`GameEngine: state changed from ${this._state} to ${state}`);
+    set phase(state: EnginePhase) {
+        this.logger.debug(`GameEngine: state changed from ${this._phase} to ${state}`);
 
-        if (state === this._state) {
+        if (state === this._phase) {
             throw new Error(`GameEngine: state cannot be set to the same value`);
         }
 
-        this._state = state;
+        this._phase = state;
 
         if (state === 'finished') {
             this.emit('finished');
@@ -62,13 +62,12 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
      * Starts a new game simulation
      */
     reset() {
-        this._state = 'initialized';
+        this._phase = 'initialized';
         this.currentTime = 0;
         this.logger.clear();
         this.logger.log('Game started');
 
-        // TODO:
-        // gameMode.reset()
+        this.gameMode.reset()
 
         this.emit('updated');
     }
@@ -78,23 +77,22 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
      * @param setToPause - If true, state will be set to "paused"
      */
     update(delayTime: number, setToPause: boolean = false) {
-        if (this._state === 'finished') {
+        if (this._phase === 'finished') {
             throw new Error('Game is finished');
         }
 
-        if (this._state !== 'running') {
-            this._state = 'running';
+        if (this._phase !== 'running') {
+            this._phase = 'running';
         }
 
         if (setToPause) {
-            this._state = 'paused';
+            this._phase = 'paused';
         }
 
         this.currentTime += delayTime;
         this.logger.setTime(this.currentTime);
 
-        // TODO: 
-        // gameMode.update()
+        this.gameMode.update(delayTime);
 
         this.emit('updated');
     }
@@ -103,7 +101,7 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
      * Pauses the game (just sets the state to paused)
      */
     pause() {
-        this._state = 'paused';
+        this._phase = 'paused';
         this.emit('updated');
     }
 
@@ -113,7 +111,7 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
      */
     runGame() {
         // Run game until it ends
-        while (this._state !== 'finished') {
+        while (this._phase !== 'finished') {
             this.update(this.TURN_INTERVAL);
         }
 
@@ -134,6 +132,10 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
     }
 
     getState() {
-        return { time: this.currentTime, state: this._state };
+        return {
+            time: this.currentTime,
+            phase: this._phase,
+            gameMode: this.gameMode.getState(),
+        };
     }
 } 

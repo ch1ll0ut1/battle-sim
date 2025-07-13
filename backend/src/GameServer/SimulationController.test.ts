@@ -33,7 +33,7 @@ describe('SimulationController', () => {
         controller.start();
 
         // Assert
-        expect(gameEngine.state).toBe('initialized');
+        expect(gameEngine.phase).toBe('initialized');
         // No "Game started" event since continueSimulation() is called, not startSimulation()
     });
 
@@ -68,7 +68,7 @@ describe('SimulationController', () => {
         // Assert
         const newTime = gameEngine.getState().time;
         expect(newTime).toBeGreaterThan(initialTime);
-        expect(gameEngine.state).toBe('paused');
+        expect(gameEngine.phase).toBe('paused');
     });
 
     /**
@@ -77,10 +77,10 @@ describe('SimulationController', () => {
      */
     it('should throw error when calling nextTick on finished game', () => {
         // Arrange - run game to completion
-        while (gameEngine.state !== 'finished') {
+        while (gameEngine.phase !== 'finished') {
             gameEngine.update();
         }
-        expect(gameEngine.state).toBe('finished');
+        expect(gameEngine.phase).toBe('finished');
 
         // Act & Assert
         expect(() => controller.nextTick()).toThrow('Game is finished');
@@ -100,7 +100,7 @@ describe('SimulationController', () => {
         controller.reset();
 
         // Assert
-        expect(gameEngine.state).toBe('initialized');
+        expect(gameEngine.phase).toBe('initialized');
         const events = logger.getEvents();
         expect(events.some(event => event.includes('Game started'))).toBe(true);
     });
@@ -118,7 +118,7 @@ describe('SimulationController', () => {
         controller.start(); // Should continue since state is not 'running'
 
         // Assert
-        expect(gameEngine.state).toBe('paused'); // Still paused after start
+        expect(gameEngine.phase).toBe('paused'); // Still paused after start
     });
 
     /**
@@ -134,7 +134,7 @@ describe('SimulationController', () => {
         controller.stop(); // Second stop call
 
         // Assert
-        expect(gameEngine.state).toBe('paused');
+        expect(gameEngine.phase).toBe('paused');
         const events = logger.getEvents();
         expect(events.filter(event => event.includes('Simulation paused')).length).toBe(2);
     });
@@ -148,12 +148,12 @@ describe('SimulationController', () => {
         controller.start();
 
         // Act - run game to completion
-        while (gameEngine.state !== 'finished') {
+        while (gameEngine.phase !== 'finished') {
             gameEngine.update();
         }
 
         // Assert
-        expect(gameEngine.state).toBe('finished');
+        expect(gameEngine.phase).toBe('finished');
         // Note: stopInterval() is called when game finishes, but no "Simulation paused" log
         // since stop() is not called, only stopInterval()
     });
