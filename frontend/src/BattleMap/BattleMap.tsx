@@ -1,6 +1,6 @@
 import { createSignal, createEffect, onMount, onCleanup } from 'solid-js';
 import { Unit } from './Unit';
-
+import { generateTerrain, drawTerrain, type TerrainData } from './Terrain';
 
 type BattleMapProps = {
   units: Unit[];
@@ -11,11 +11,17 @@ type BattleMapProps = {
 export const BattleMap = (props: BattleMapProps) => {
   let canvasRef: HTMLCanvasElement | undefined;
   const [ctx, setCtx] = createSignal<CanvasRenderingContext2D | null>(null);
+  const [terrain, setTerrain] = createSignal<TerrainData | null>(null);
 
   onMount(() => {
     if (canvasRef) {
       const context = canvasRef.getContext('2d');
       setCtx(context);
+      
+      // Generate terrain once on mount
+      const width = props.width || 400;
+      const height = props.height || 400;
+      setTerrain(generateTerrain(width, height));
     }
   });
 
@@ -26,7 +32,10 @@ export const BattleMap = (props: BattleMapProps) => {
     const x = unit.movement.position?.x ?? 0;
     const y = unit.movement.position?.y ?? 0;
     console.log('draw', x, y)
-    const radius = 8;
+    
+    // Scale: 1 pixel = 1cm, so a person is roughly 170cm tall
+    // Unit radius should be about 15-20cm (15-20 pixels)
+    const radius = 18;
 
     // Draw unit circle
     context.beginPath();
@@ -43,8 +52,8 @@ export const BattleMap = (props: BattleMapProps) => {
     context.lineWidth = 2;
     context.stroke();
 
-    // Draw direction line
-    const lineLength = 12;
+    // Draw direction line (shorter for smaller units)
+    const lineLength = 25; // 25cm direction indicator
     const endX = x + Math.cos(unit.movement.direction) * lineLength;
     const endY = y + Math.sin(unit.movement.direction) * lineLength;
     
@@ -56,7 +65,7 @@ export const BattleMap = (props: BattleMapProps) => {
     context.stroke();
 
     // Draw experience indicator (outer ring)
-    const experienceRadius = radius + 3;
+    const experienceRadius = radius + 4; // 4cm outer ring
     context.beginPath();
     context.arc(x, y, experienceRadius, 0, 2 * Math.PI);
     context.strokeStyle = '#fbbf24'; // Yellow for experience
@@ -67,7 +76,7 @@ export const BattleMap = (props: BattleMapProps) => {
 
     // Draw armor indicator (inner ring)
     if (unit.armorLevel > 0) {
-      const armorRadius = radius - 2;
+      const armorRadius = radius - 3; // 3cm inner ring
       context.beginPath();
       context.arc(x, y, armorRadius, 0, 2 * Math.PI);
       context.strokeStyle = '#3b82f6'; // Blue for armor
@@ -77,11 +86,11 @@ export const BattleMap = (props: BattleMapProps) => {
 
     // Draw weapon indicator (small dot)
     if (unit.weapon) {
-      const weaponX = x + Math.cos(unit.movement.direction + Math.PI/4) * (radius + 5);
-      const weaponY = y + Math.sin(unit.movement.direction + Math.PI/4) * (radius + 5);
+      const weaponX = x + Math.cos(unit.movement.direction + Math.PI/4) * (radius + 8);
+      const weaponY = y + Math.sin(unit.movement.direction + Math.PI/4) * (radius + 8);
       
       context.beginPath();
-      context.arc(weaponX, weaponY, 3, 0, 2 * Math.PI);
+      context.arc(weaponX, weaponY, 4, 0, 2 * Math.PI); // 4cm weapon indicator
       context.fillStyle = '#dc2626'; // Red for weapon
       context.fill();
     }
@@ -94,34 +103,17 @@ export const BattleMap = (props: BattleMapProps) => {
     context.clearRect(0, 0, canvasRef.width, canvasRef.height);
   };
 
-  const drawGrid = () => {
-    const context = ctx();
-    if (!context || !canvasRef) return;
-
-    const gridSize = 20;
-    context.strokeStyle = '#e5e7eb';
-    context.lineWidth = 1;
-
-    // Vertical lines
-    for (let x = 0; x <= canvasRef.width; x += gridSize) {
-      context.beginPath();
-      context.moveTo(x, 0);
-      context.lineTo(x, canvasRef.height);
-      context.stroke();
-    }
-
-    // Horizontal lines
-    for (let y = 0; y <= canvasRef.height; y += gridSize) {
-      context.beginPath();
-      context.moveTo(0, y);
-      context.lineTo(canvasRef.width, y);
-      context.stroke();
-    }
-  };
-
   const render = () => {
+    const context = ctx();
+    const terrainData = terrain();
+    if (!context || !canvasRef || !terrainData) return;
+    
     clearCanvas();
-    drawGrid();
+    
+    // Draw terrain (grass and trees)
+    drawTerrain(context, terrainData, canvasRef.width, canvasRef.height);
+    
+    // Draw units on top
     console.log('render', props.units)
     props.units.forEach(drawUnit);
   };
@@ -139,7 +131,7 @@ export const BattleMap = (props: BattleMapProps) => {
         height={props.height || 400}
         style={{
           border: '2px solid #374151',
-          'background-color': '#f9fafb'
+          'background-color': '#8B7355' // Fallback grass color
         }}
       />
     </div>

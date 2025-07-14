@@ -5,6 +5,8 @@ import { TickUpdate } from '../utils/TickUpdate.js';
 
 type MovementState = 'stationary' | 'accelerating' | 'moving' | 'decelerating';
 
+const METERS_TO_PIXELS = 100;
+
 /**
  * Physics-based UnitMovement with realistic momentum, acceleration, and turning.
  * Implements the same public interface as UnitMovement for drop-in replacement.
@@ -369,8 +371,8 @@ export class UnitMovementPhysics implements TickUpdate {
         // Update position based on current speed
         if (this._currentSpeed > 0) {
             const directionVector = this.getDirectionVector();
-            this._position.x += directionVector.x * this._currentSpeed * deltaTime;
-            this._position.y += directionVector.y * this._currentSpeed * deltaTime;
+            this._position.x += directionVector.x * this._currentSpeed * deltaTime * METERS_TO_PIXELS;
+            this._position.y += directionVector.y * this._currentSpeed * deltaTime * METERS_TO_PIXELS;
         }
     }
 
