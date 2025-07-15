@@ -20,7 +20,7 @@ export default tseslint.config(
             indent: ['off'], // handled by vsc formatter on save
 
             // Developer Experience
-            '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
+            '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true, allowNever: true, allowNullish: true, allowAny: true }],
 
             // Rules that are already checked by TypeScript
             '@typescript-eslint/no-undef': 'off', // TS catches undefined variables
@@ -36,5 +36,13 @@ export default tseslint.config(
             '@typescript-eslint/getter-return': 'off', // TS checks getter return
             '@typescript-eslint/valid-typeof': 'off', // TS checks typeof comparisons
         }
-    }
+    },
+    {
+        files: ['**/*.test.ts', '**/*.spec.ts'],
+        rules: {
+            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-confusing-void-expression': 'off',
+            '@typescript-eslint/no-unsafe-member-access': 'off',
+        },
+    },
 );
