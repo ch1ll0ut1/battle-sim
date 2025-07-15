@@ -1,6 +1,6 @@
 import { Unit } from './Unit';
 import { UnitAttributesData } from './UnitAttributes';
-import { UnitMovementPhysics } from './UnitMovementPhysics';
+import { METERS_TO_PIXELS, UnitMovementPhysics } from './UnitMovementPhysics';
 import { movementConfig } from '../config/movement';
 
 describe('Unit', () => {
@@ -430,8 +430,8 @@ describe('Unit', () => {
                 Math.pow(soldier.movement.x - initialPosition.x, 2) + 
                 Math.pow(soldier.movement.y - initialPosition.y, 2)
             );
-            expect(distanceMoved).toBeGreaterThan(0.5); // Should move reasonable distance in 1 second
-            expect(distanceMoved).toBeLessThan(5); // But not teleport due to physics breaking
+            expect(distanceMoved).toBeGreaterThan(0.5 * METERS_TO_PIXELS); // Should move reasonable distance in 1 second
+            expect(distanceMoved).toBeLessThan(5 * METERS_TO_PIXELS); // But not teleport due to physics breaking
             
             // Verify current speed is reasonable (not infinite due to physics breakdown)
             if (soldier.movement instanceof UnitMovementPhysics) {
@@ -477,7 +477,7 @@ describe('Unit', () => {
                 Math.pow(soldier1.movement.x - soldier2.movement.x, 2) + 
                 Math.pow(soldier1.movement.y - soldier2.movement.y, 2)
             );
-            expect(positionDifference).toBeLessThan(1.0); // Within 1 meter position difference (acceptable for battle sim)
+            expect(positionDifference).toBeLessThan(1.0 * METERS_TO_PIXELS); // Within 1 meter position difference (acceptable for battle sim)
         });
     });
 

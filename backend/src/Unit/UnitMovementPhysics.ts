@@ -5,7 +5,7 @@ import { TickUpdate } from '../utils/TickUpdate.js';
 
 type MovementState = 'stationary' | 'accelerating' | 'moving' | 'decelerating';
 
-const METERS_TO_PIXELS = 100;
+export const METERS_TO_PIXELS = 100;
 
 /**
  * Physics-based UnitMovement with realistic momentum, acceleration, and turning.
