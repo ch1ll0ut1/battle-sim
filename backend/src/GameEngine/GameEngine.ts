@@ -37,8 +37,6 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
 
         this.gameMode = new GameModeType[gameMode](logger, this);
         this.logger = logger;
-
-        this.reset();
     }
 
     get phase() {
