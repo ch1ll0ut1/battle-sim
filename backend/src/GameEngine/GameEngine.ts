@@ -30,7 +30,8 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
      * @param logger - Logger instance to record game events
      */
     constructor(
-        logger: Logger, gameMode: keyof typeof GameModeType
+        logger: Logger, 
+        gameMode: keyof typeof GameModeType
     ) {
         super();
 
@@ -44,16 +45,16 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
         return this._phase;
     }
 
-    set phase(state: EnginePhase) {
-        this.logger.debug(`GameEngine: state changed from ${this._phase} to ${state}`);
+    set phase(phase: EnginePhase) {
+        this.logger.debug(`GameEngine: state changed from ${this._phase} to ${phase}`);
 
-        if (state === this._phase) {
+        if (phase === this._phase) {
             throw new Error(`GameEngine: state cannot be set to the same value`);
         }
 
-        this._phase = state;
+        this._phase = phase;
 
-        if (state === 'finished') {
+        if (phase === 'finished') {
             this.emit('finished');
         }
     }
@@ -62,7 +63,8 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
      * Starts a new game simulation
      */
     reset() {
-        this._phase = 'initialized';
+        this.logger.debug('GameEngine: reset');
+        this.phase = 'initialized';
         this.currentTime = 0;
         this.logger.clear();
         this.logger.log('Game started');
@@ -77,16 +79,18 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
      * @param setToPause - If true, state will be set to "paused"
      */
     update(delayTime: number, setToPause: boolean = false) {
-        if (this._phase === 'finished') {
+        this.logger.debug('GameEngine: update', delayTime, setToPause);
+        
+        if (this.phase === 'finished') {
             throw new Error('Game is finished');
         }
 
-        if (this._phase !== 'running') {
-            this._phase = 'running';
+        if (this.phase !== 'running') {
+            this.phase = 'running';
         }
 
         if (setToPause) {
-            this._phase = 'paused';
+            this.phase = 'paused';
         }
 
         this.currentTime += delayTime;
@@ -101,7 +105,7 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
      * Pauses the game (just sets the state to paused)
      */
     pause() {
-        this._phase = 'paused';
+        this.phase = 'paused';
         this.emit('updated');
     }
 
@@ -111,7 +115,7 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
      */
     runGame() {
         // Run game until it ends
-        while (this._phase !== 'finished') {
+        while (this.phase !== 'finished') {
             this.update(this.TURN_INTERVAL);
         }
 
@@ -134,7 +138,7 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
     getState() {
         return {
             time: this.currentTime,
-            phase: this._phase,
+            phase: this.phase,
             gameMode: this.gameMode.getState(),
         };
     }

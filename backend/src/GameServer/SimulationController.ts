@@ -52,6 +52,10 @@ export class SimulationController {
         this.logger.debug('Simulation paused');
     }
 
+    isRunning(): boolean {
+        return this.engine.phase === 'running';
+    }
+
     /**
      * Executes a single simulation tick
      * If game is finished, restarts it before updating
@@ -99,12 +103,19 @@ export class SimulationController {
      * Updates the game engine every 100ms until the game finishes
      */
     private startInterval(): void {
+        if (this.simulationInterval) {
+            throw new Error('Simulation already running');
+        }
+
+        this.engine.update(this.engine.TURN_INTERVAL);
+
         this.simulationInterval = setInterval(() => {
-            this.engine.update(this.engine.TURN_INTERVAL);
-            
-            if (this.engine.phase === 'finished') {
+            if (this.engine.phase !== 'running') {
                 this.stopInterval();
+                return;
             }
+
+            this.engine.update(this.engine.TURN_INTERVAL);
         }, 100);
     }
 
@@ -116,6 +127,8 @@ export class SimulationController {
         if (this.simulationInterval) {
             clearInterval(this.simulationInterval);
             this.simulationInterval = null;
+        } else {
+            throw new Error('Simulation not running');
         }
     }
 } 

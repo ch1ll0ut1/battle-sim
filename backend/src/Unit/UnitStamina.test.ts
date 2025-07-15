@@ -236,7 +236,7 @@ describe('UnitStamina', () => {
     describe('utility methods', () => {
         it('should provide accurate summary with calibrated weight modifier', () => {
             stamina.setStamina(47.5);
-            const summary = stamina.getSummary();
+            const summary = stamina.getState();
             
             expect(summary.stamina).toBe(47.5);
             expect(summary.maxStamina).toBe(95);

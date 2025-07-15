@@ -3,16 +3,13 @@ import { UnitAttributesData } from "../../Unit/UnitAttributes";
 import { GameMode } from "../GameMode";
 
 export class MovementSandbox extends GameMode {
-    private units: Unit[] = [];
-    private nextUnitId = 2; // Start from 2 since we already have Unit 1
+    private nextUnitId = 0; // Start from 2 since we already have Unit 1
+    private units: Unit[] = [this.createRandomUnit()];
 
     reset() {
-        this.logger.log('MovementSandbox started');
-        this.units = [];
-        this.nextUnitId = 2;
-
-        this.units.push(this.createRandomUnit());
-
+        this.logger.log('MovementSandbox reset');
+        this.nextUnitId = 0;
+        this.units = [this.createRandomUnit()];
     }
 
     update(deltaTime: number) {
@@ -87,7 +84,6 @@ export class MovementSandbox extends GameMode {
             position
         );
 
-        this.units.push(unit);
         this.nextUnitId++;
 
         this.logger.log(`Created random unit: ${name} (ID: ${unit.id}, Team: ${team})`);

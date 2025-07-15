@@ -9,8 +9,6 @@ export abstract class GameMode implements TickUpdate {
     constructor(logger: Logger, engine: GameEngine) {
         this.logger = logger;
         this.engine = engine;
-
-        this.reset();
     }
 
     abstract reset(): void;

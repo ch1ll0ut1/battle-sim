@@ -224,7 +224,7 @@ describe('UnitMovement', () => {
         it('should provide comprehensive summary', () => {
             movement.moveTo({ x: 15, y: 20 });
             
-            const summary = movement.getSummary();
+            const summary = movement.getState();
             
             expect(summary.position).toEqual({ x: 5, y: 10 });
             expect(summary.direction).toBeCloseTo(Math.PI / 4, 5);
@@ -234,7 +234,7 @@ describe('UnitMovement', () => {
         });
 
         it('should show stationary state when not moving', () => {
-            const summary = movement.getSummary();
+            const summary = movement.getState();
             
             expect(summary.state).toBe('stationary');
             expect(summary.targetPosition).toBeNull();

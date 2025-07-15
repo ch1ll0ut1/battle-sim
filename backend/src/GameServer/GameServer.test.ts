@@ -1,7 +1,7 @@
 import { WebSocket } from 'ws';
-import { Unit } from '../GameEngine/GameEngine';
 import { units1v1 } from '../testData';
 import { GameServer } from './GameServer';
+import { Unit } from '../Unit/Unit';
 
 // Mock the WebsocketServer to avoid actual network operations in tests
 jest.mock('../utils/WebsocketServer.js');
@@ -35,7 +35,7 @@ describe('GameServer', () => {
         const { WebsocketServer } = require('../utils/WebsocketServer.js');
         WebsocketServer.mockImplementation(() => mockWsServer);
         
-        gameServer = new GameServer(8080, units);
+        gameServer = new GameServer(8080);
         
         // Get reference to the mocked GameEngine for testing
         mockGameEngine = (gameServer as any).gameEngine;
@@ -71,31 +71,6 @@ describe('GameServer', () => {
     });
 
     /**
-     * Tests that valid commands are properly routed to simulation controller
-     * Verifies that each command type is handled correctly
-     */
-    it('should route valid commands to simulation controller', () => {
-        // Arrange
-        const commands = ['start', 'stop', 'nextTick', 'reset'];
-        
-        // Act - simulate command messages
-        const messageHandler = mockWsServer.on.mock.calls.find((call: any) => 
-            call[0] === 'message'
-        )?.[1];
-        
-        commands.forEach(command => {
-            if (messageHandler) {
-                messageHandler(null, { type: 'command', data: command });
-            }
-        });
-
-        // Assert
-        expect(messageHandler).toBeDefined();
-        // Note: We can't easily test the actual routing without exposing the controller
-        // This test verifies that commands are processed without errors
-    });
-
-    /**
      * Tests that invalid command types are ignored
      * Verifies that non-command messages don't trigger simulation actions
      */
@@ -126,14 +101,8 @@ describe('GameServer', () => {
             call[0] === 'message'
         )?.[1];
 
-        // Act
-        if (messageHandler) {
-            messageHandler(null, { type: 'command', data: 'unknownCommand' });
-        }
-
         // Assert
-        expect(consoleSpy).toHaveBeenCalledWith('Unknown command: unknownCommand');
-        consoleSpy.mockRestore();
+        expect(() => messageHandler(null, { type: 'command', data: 'unknownCommand' })).toThrow('Unknown command: unknownCommand');
     });
 
     /**

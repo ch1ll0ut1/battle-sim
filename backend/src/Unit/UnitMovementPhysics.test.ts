@@ -106,8 +106,8 @@ describe('UnitMovementPhysics', () => {
             lightMovement.update(0.1);
             heavyMovement.update(0.1);
             
-            const lightSummary = lightMovement.getSummary();
-            const heavySummary = heavyMovement.getSummary();
+            const lightSummary = lightMovement.getState();
+            const heavySummary = heavyMovement.getState();
             
             // Lighter unit should have higher max speed
             expect(lightSummary.maxSpeed).toBeGreaterThan(heavySummary.maxSpeed);
@@ -129,8 +129,8 @@ describe('UnitMovementPhysics', () => {
             weakMovement.update(0.1);
             strongMovement.update(0.1);
             
-            const weakSummary = weakMovement.getSummary();
-            const strongSummary = strongMovement.getSummary();
+            const weakSummary = weakMovement.getState();
+            const strongSummary = strongMovement.getState();
             
             // Stronger unit should have better acceleration and max speed
             expect(strongSummary.acceleration).toBeGreaterThan(weakSummary.acceleration);
@@ -150,8 +150,8 @@ describe('UnitMovementPhysics', () => {
             walkingMovement.update(0.1);
             runningMovement.update(0.1);
             
-            const walkingSummary = walkingMovement.getSummary();
-            const runningSummary = runningMovement.getSummary();
+            const walkingSummary = walkingMovement.getState();
+            const runningSummary = runningMovement.getState();
             
             // Running should be approximately 2x walking speed
             expect(runningSummary.maxSpeed).toBeCloseTo(walkingSummary.maxSpeed * 2, 1);
@@ -373,7 +373,7 @@ describe('UnitMovementPhysics', () => {
             for (let i = 0; i < 30; i++) {
                 standardMovement.update(0.1);
             }
-            const walkingMaxSpeed = standardMovement.getSummary().maxSpeed;
+            const walkingMaxSpeed = standardMovement.getState().maxSpeed;
             expect(walkingMaxSpeed).toBeCloseTo(1.4, 1);
             
             // Running speed should be close to 2.8 m/s base  
@@ -383,7 +383,7 @@ describe('UnitMovementPhysics', () => {
             for (let i = 0; i < 30; i++) {
                 standardMovement.update(0.1);
             }
-            const runningMaxSpeed = standardMovement.getSummary().maxSpeed;
+            const runningMaxSpeed = standardMovement.getState().maxSpeed;
             expect(runningMaxSpeed).toBeCloseTo(2.8, 1);
         });
 
@@ -398,7 +398,7 @@ describe('UnitMovementPhysics', () => {
             superStrongMovement.moveTo({ x: 10, y: 0 }, false);
             superStrongMovement.update(0.1);
             
-            const maxSpeed = superStrongMovement.getSummary().maxSpeed;
+            const maxSpeed = superStrongMovement.getState().maxSpeed;
             // Should be base speed (1.4) * 1.25 = 1.75 m/s max
             expect(maxSpeed).toBeLessThanOrEqual(1.75);
             expect(maxSpeed).toBeGreaterThan(1.4);
@@ -417,7 +417,7 @@ describe('UnitMovementPhysics', () => {
             heavyMovement.moveTo({ x: 10, y: 0 }, false);
             heavyMovement.update(0.1);
             
-            const maxSpeed = heavyMovement.getSummary().maxSpeed;
+            const maxSpeed = heavyMovement.getState().maxSpeed;
             const expectedSpeed = 1.4 * (1 - 0.09); // 9% penalty
             expect(maxSpeed).toBeCloseTo(expectedSpeed, 1);
         });
@@ -437,11 +437,11 @@ describe('UnitMovementPhysics', () => {
         /**
          * Tests summary provides complete information
          */
-        test('getSummary provides complete movement information', () => {
+        test('getState provides complete movement information', () => {
             movement.moveTo({ x: 10, y: 0 }, false);
             movement.update(0.1);
             
-            const summary = movement.getSummary();
+            const summary = movement.getState();
             
             expect(summary).toHaveProperty('position');
             expect(summary).toHaveProperty('direction');

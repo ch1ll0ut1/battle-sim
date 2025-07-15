@@ -1,160 +1,146 @@
 import { SimulationController } from './SimulationController';
-import { GameEngine, Unit } from '../GameEngine/GameEngine';
+import { GameEngine } from '../GameEngine/GameEngine';
 import { Logger } from '../utils/Logger';
-import { units1v1 } from '../testData';
 
-/**
- * Tests for SimulationController
- * Covers simulation lifecycle, state transitions, and control methods
- * Tests behavior and observable outcomes, not implementation details
- */
 describe('SimulationController', () => {
     let logger: Logger;
-    let units: Unit[];
-    let gameEngine: GameEngine;
+    let engine: GameEngine;
     let controller: SimulationController;
 
-    /**
-     * Sets up fresh instances for each test to ensure test independence
-     */
     beforeEach(() => {
         logger = new Logger();
-        units = JSON.parse(JSON.stringify(units1v1));
-        gameEngine = new GameEngine(units, logger);
-        controller = new SimulationController(gameEngine, logger);
+        engine = new GameEngine(logger, 'movement-sandbox');
+        controller = new SimulationController(engine, logger);
     });
 
-    /**
-     * Tests that starting a simulation when engine is not running just continues simulation loop
-     * Verifies that the start method handles initial state correctly
-     */
-    it('should continue simulation when not running', () => {
+    afterEach(() => {
+        if (engine.phase === 'running') {
+            controller.stop();
+        }
+    });
+
+    it('starts the simulation from initialized state and sets phase to running', () => {
+        // Arrange
+        expect(engine.phase).toBe('initialized');
+        
         // Act
         controller.start();
 
         // Assert
-        expect(gameEngine.phase).toBe('initialized');
-        // No "Game started" event since continueSimulation() is called, not startSimulation()
+        expect(engine.phase).toBe('running');
+        expect(engine.getState().time).toBe(0.1);
     });
 
-    /**
-     * Tests that stopping a simulation stops the loop and logs the pause event
-     * Verifies that the simulation can be stopped regardless of game state
-     */
-    it('should stop simulation loop and log pause event', () => {
+    it('pauses the simulation and sets phase to paused', () => {
         // Arrange
         controller.start();
-
+        
         // Act
         controller.stop();
-
+        
         // Assert
-        const events = logger.getEvents();
-        expect(events.some(event => event.includes('Simulation paused'))).toBe(true);
-        // Note: game engine state may remain 'running' since we only stop the loop
+        expect(engine.phase).toBe('paused');
     });
 
-    /**
-     * Tests that nextTick executes a single simulation step
-     * Verifies that the game progresses by one tick and state changes appropriately
-     */
-    it('should execute single simulation tick', () => {
+    it('executes a single simulation tick and advances time', () => {
         // Arrange
-        const initialTime = gameEngine.getState().time;
-
+        const initialTime = engine.getState().time;
+        
         // Act
         controller.nextTick();
-
+        const newTime = engine.getState().time;
+        
         // Assert
-        const newTime = gameEngine.getState().time;
         expect(newTime).toBeGreaterThan(initialTime);
-        expect(gameEngine.phase).toBe('paused');
+        expect(engine.phase).toBe('paused');
     });
 
-    /**
-     * Tests that nextTick throws error when game is finished
-     * Verifies that finished games cannot be continued with nextTick
-     */
-    it('should throw error when calling nextTick on finished game', () => {
-        // Arrange - run game to completion
-        while (gameEngine.phase !== 'finished') {
-            gameEngine.update();
-        }
-        expect(gameEngine.phase).toBe('finished');
+    it('resets the simulation to initial state and clears time', () => {
+        // Arrange
+        controller.start();
+        
+        // Act
+        controller.reset();
+        
+        // Assert
+        expect(engine.phase).toBe('initialized');
+        expect(engine.getState().time).toBe(0);
+    });
 
+    it('throws if start is called when already running', () => {
+        // Arrange
+        controller.start();
+
+        // Act & Assert
+        expect(() => controller.start()).toThrow('GameEngine is already running');
+    });
+
+    it('throws if nextTick is called when game is finished', () => {
+        // Arrange
+        (engine as any)._phase = 'finished';
+        
         // Act & Assert
         expect(() => controller.nextTick()).toThrow('Game is finished');
     });
 
-    /**
-     * Tests that reset stops current simulation and restarts game engine
-     * Verifies that the simulation can be completely reset to initial state
-     */
-    it('should reset simulation to initial state', () => {
+    it('can start, pause, and resume the simulation', () => {
         // Arrange
         controller.start();
+        
+        // Act
         controller.stop();
-        // Note: stop() only stops the loop, doesn't change game state
+        
+        // Assert
+        expect(engine.phase).toBe('paused');
+        
+        // Act again
+        controller.start();
+        
+        // Assert again
+        expect(engine.phase).toBe('running');
+    });
 
+    it('stops the interval when stop is called', () => {
+        // Arrange
+        controller.start();
+        
+        // Act
+        controller.stop();
+        
+        // Assert
+        // should not throw because its not running
+        expect(() => controller.start()).not.toThrow();
+    });
+
+    it('after reset ready to start again', () => {
+        // Arrange
+        controller.start();
+        
         // Act
         controller.reset();
-
+        
         // Assert
-        expect(gameEngine.phase).toBe('initialized');
-        const events = logger.getEvents();
-        expect(events.some(event => event.includes('Game started'))).toBe(true);
+        expect(() => controller.start()).not.toThrow();
     });
 
     /**
-     * Tests that starting a paused simulation continues the simulation loop
-     * Verifies that the simulation can be paused and resumed
+     * Tests that starting the simulation triggers exactly two update() calls:
+     * one immediately on start, and one by the interval after 100ms.
+     * Uses Jest fake timers to simulate time passage and checks update call count and engine time.
      */
-    it('should continue paused simulation when start is called again', () => {
-        // Arrange
-        controller.start();
-        controller.stop(); // This pauses the game engine
-
-        // Act
-        controller.start(); // Should continue since state is not 'running'
-
-        // Assert
-        expect(gameEngine.phase).toBe('paused'); // Still paused after start
-    });
-
-    /**
-     * Tests that multiple stop calls are handled gracefully
-     * Verifies that the controller is robust against repeated stop operations
-     */
-    it('should handle multiple stop calls gracefully', () => {
-        // Arrange
+    it('starts interval and calls update exactly twice (immediate and after 100ms)', () => {
+        jest.useFakeTimers();
+        const updateSpy = jest.spyOn(engine, 'update');
         controller.start();
 
-        // Act
+        // Fast-forward time by 100ms (should trigger one interval update after the immediate one)
+        jest.advanceTimersByTime(engine.TURN_INTERVAL * 1000);
+
+        // The first update is called immediately, the second by the interval
+        expect(updateSpy).toHaveBeenCalledTimes(2);
+        expect(engine.getState().time).toBeCloseTo(engine.TURN_INTERVAL * 2);
+
         controller.stop();
-        controller.stop(); // Second stop call
-
-        // Assert
-        expect(gameEngine.phase).toBe('paused');
-        const events = logger.getEvents();
-        expect(events.filter(event => event.includes('Simulation paused')).length).toBe(2);
-    });
-
-    /**
-     * Tests that simulation automatically stops interval when game finishes
-     * Verifies that the controller properly handles game completion
-     */
-    it('should automatically stop interval when game finishes', () => {
-        // Arrange
-        controller.start();
-
-        // Act - run game to completion
-        while (gameEngine.phase !== 'finished') {
-            gameEngine.update();
-        }
-
-        // Assert
-        expect(gameEngine.phase).toBe('finished');
-        // Note: stopInterval() is called when game finishes, but no "Simulation paused" log
-        // since stop() is not called, only stopInterval()
+        jest.useRealTimers();
     });
 }); 

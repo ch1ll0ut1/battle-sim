@@ -33,7 +33,10 @@ export class GameServer {
      * Stops the simulation and closes the WebSocket server
      */
     shutdown(): void {
-        this.simulationController.stop();
+        if (this.simulationController.isRunning()) {
+            this.simulationController.stop();
+        }
+
         this.wsServer.close();
     }
 
@@ -81,7 +84,7 @@ export class GameServer {
                 this.simulationController.reset();
                 break;
             default:
-                console.warn(`Unknown command: ${message.data}`);
+                throw new Error(`Unknown command: ${message.data}`);
         }
     }
 

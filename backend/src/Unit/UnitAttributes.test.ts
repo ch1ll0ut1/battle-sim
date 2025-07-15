@@ -178,7 +178,7 @@ describe('UnitAttributes', () => {
             };
             const manager = new UnitAttributes(attributesData);
 
-            const summary = manager.getSummary();
+            const summary = manager.getState();
 
             expect(summary.weight).toBe(75);
             expect(summary.strength).toBe(80);
