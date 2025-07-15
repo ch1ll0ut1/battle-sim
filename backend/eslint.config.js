@@ -1,9 +1,11 @@
+import stylistic from '@stylistic/eslint-plugin';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-    { ignores: ["dist", "node_modules", "eslint.config.js", "**/_OLD/**"] },
+    { ignores: ["dist", "node_modules", "eslint.config.js", "jest.config.js", "**/_OLD/**"] },
     tseslint.configs.strictTypeChecked,
     tseslint.configs.stylisticTypeChecked,
+    stylistic.configs.recommended,
     {
         languageOptions: {
             parserOptions: {
@@ -13,11 +15,15 @@ export default tseslint.config(
         },
     },
     {
+        plugins: {
+            '@stylistic': stylistic
+        },
         rules: {
             // Stylistic rules
-            quotes: ['error', 'single'],
-            semi: ['error', 'always'],
-            indent: ['off'], // handled by vsc formatter on save
+            '@stylistic/quotes': ['error', 'single'],
+            '@stylistic/semi': ['error', 'always'],
+            '@stylistic/indent': ['error', 4],
+            '@typescript-eslint/naming-convention': 'error',
 
             // Developer Experience
             '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true, allowNever: true, allowNullish: true, allowAny: true }],
@@ -43,6 +49,10 @@ export default tseslint.config(
             '@typescript-eslint/no-explicit-any': 'off',
             '@typescript-eslint/no-confusing-void-expression': 'off',
             '@typescript-eslint/no-unsafe-member-access': 'off',
+            '@typescript-eslint/no-unsafe-assignment': 'off',
+            '@typescript-eslint/no-unsafe-return': 'off',
+            '@typescript-eslint/no-unsafe-call': 'off',
+            '@typescript-eslint/no-unsafe-argument': 'off',
         },
     },
 );
