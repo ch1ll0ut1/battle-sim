@@ -8,6 +8,10 @@
 			"name": "frontend",
 			"path": "frontend"
 		},
+        {
+            "name": "pixi-ui",
+            "path": "pixi-ui"
+        },
 		{
 			"name": "backend",
 			"path": "backend"
