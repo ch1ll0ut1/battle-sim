@@ -1,7 +1,7 @@
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-    { ignores: ["dist", "node_modules", "eslint.config.js", "_OLD"] },
+    { ignores: ["dist", "node_modules", "eslint.config.js", "**/_OLD/**"] },
     tseslint.configs.strictTypeChecked,
     tseslint.configs.stylisticTypeChecked,
     {
