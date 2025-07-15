@@ -24,6 +24,16 @@ export default tseslint.config(
             '@stylistic/semi': ['error', 'always'],
             '@stylistic/indent': ['error', 4],
             '@typescript-eslint/naming-convention': 'error',
+            '@stylistic/member-delimiter-style': ['error', {
+                multiline: {
+                    delimiter: 'semi',
+                    requireLast: true,
+                },
+                singleline: {
+                    delimiter: 'semi',
+                    requireLast: false,
+                },
+            }],
 
             // Developer Experience
             '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true, allowNever: true, allowNullish: true, allowAny: true }],
