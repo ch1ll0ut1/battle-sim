@@ -1,16 +1,15 @@
 import { EventEmitter } from 'events';
-import { Logger } from '../utils/Logger.js';
-import { GameMode } from '../GameMode/GameMode.js';
-import { GameModeType } from "../GameMode/GameModeType.js";
-import { TickUpdate } from '../utils/TickUpdate.js';
-import { generateForestMap } from '../Map/MapGenerator.js';
+import { GameMode, GameModeConstructor } from '../GameMode/GameMode.js';
 import { Map } from '../Map/Map.js';
+import { generateForestMap } from '../Map/MapGenerator.js';
+import { Logger } from '../utils/Logger.js';
+import { TickUpdate } from '../utils/TickUpdate.js';
 
 type EnginePhase = 'initialized' | 'paused' | 'running' | 'finished';
 
-type EventEmitterMessage = {
-    'updated': [],
-    'finished': [],
+interface EventEmitterMessage {
+    updated: [];
+    finished: [];
 }
 
 /**
@@ -18,11 +17,11 @@ type EventEmitterMessage = {
  * Simulation flow is handled by SimulationController (for controllable server) & runGame() (for CLI)
  */
 export class GameEngine extends EventEmitter<EventEmitterMessage> implements TickUpdate {
-    public readonly TURN_INTERVAL = 0.1; // 100ms per turn
+    public readonly turnInterval = 0.1; // 100ms per turn
 
     private _phase: EnginePhase = 'initialized';
     private logger: Logger;
-    private currentTime: number = 0;
+    private currentTime = 0;
     private gameMode: GameMode;
     private map: Map;
 
@@ -32,18 +31,18 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
      * @param logger - Logger instance to record game events
      */
     constructor(
-        logger: Logger, 
-        gameMode: keyof typeof GameModeType
+        logger: Logger,
+        gameMode: GameModeConstructor,
     ) {
         super();
 
-        this.gameMode = new GameModeType[gameMode](logger, this);
+        this.gameMode = new gameMode(logger, this);
         this.map = generateForestMap(100 * 100, 100 * 100, 1);
         // this.map = new Map(10 * 100, 10 * 100);
         this.logger = logger;
     }
 
-    get phase() {
+    get phase(): EnginePhase {
         return this._phase;
     }
 
@@ -51,7 +50,7 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
         this.logger.debug(`GameEngine: state changed from ${this._phase} to ${phase}`);
 
         if (phase === this._phase) {
-            throw new Error(`GameEngine: state cannot be set to the same value`);
+            throw new Error('GameEngine: state cannot be set to the same value');
         }
 
         this._phase = phase;
@@ -71,7 +70,7 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
         this.logger.clear();
         this.logger.log('Game started');
 
-        this.gameMode.reset()
+        this.gameMode.reset();
 
         this.emit('updated');
     }
@@ -80,9 +79,9 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
      * Updates the game state by one turn (used for server)
      * @param setToPause - If true, state will be set to "paused"
      */
-    update(delayTime: number, setToPause: boolean = false) {
+    update(delayTime: number, setToPause = false) {
         this.logger.debug('GameEngine: update', delayTime, setToPause);
-        
+
         if (this.phase === 'finished') {
             throw new Error('Game is finished');
         }
@@ -118,7 +117,7 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
     runGame() {
         // Run game until it ends
         while (this.phase !== 'finished') {
-            this.update(this.TURN_INTERVAL);
+            this.update(this.turnInterval);
         }
 
         // const winner = this.determineWinner();
@@ -133,7 +132,7 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
         return {
             // winner: winner,
             duration: this.currentTime,
-            events: this.logger.getEvents()
+            events: this.logger.getEvents(),
         };
     }
 
@@ -145,4 +144,4 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
             map: this.map.getState(),
         };
     }
-} 
+}

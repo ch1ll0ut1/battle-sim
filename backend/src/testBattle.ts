@@ -1,13 +1,13 @@
 // Test script to run a simple battle
 
-import { Logger } from './utils/Logger.js';
-import { GameEngine, Unit } from './GameEngine/GameEngine.js';
-import { printBattleReport } from './utils/printBattleReport.js';
+import { GameEngine } from './GameEngine/GameEngine.js';
+import { MovementSandbox } from './GameMode/MovementSandbox/MovementSandbox.js';
 import { units1v1 } from './testData.js';
+import { Logger } from './utils/Logger.js';
 
 // Create logger and battle engine
 const logger = new Logger();
-const engine = new GameEngine(units1v1, logger);
+const engine = new GameEngine(logger, MovementSandbox);
 
 // Run battle simulation
 console.log('=== Battle Simulation ===\n');
@@ -18,5 +18,7 @@ console.log('\nStarting battle...\n');
 
 const result = engine.runGame();
 
+// TODO: Re-implement battle mode
+throw new Error('Not implemented');
 // Display battle summary
-printBattleReport(logger.getEvents(), result.duration, result.winner);
+// printBattleReport(logger.getEvents(), result.duration, result.winner);

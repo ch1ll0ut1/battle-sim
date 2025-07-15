@@ -21,11 +21,11 @@ describe('MapGenerator', () => {
             const map2 = generateForestMap(width, height, seed);
 
             expect(map1.terrain.trees.length).toBe(map2.terrain.trees.length);
-            
+
             // Check that trees are in the same positions
             const trees1 = map1.terrain.trees.map(t => ({ x: t.position.x, y: t.position.y, trunkRadius: t.trunkRadius }));
             const trees2 = map2.terrain.trees.map(t => ({ x: t.position.x, y: t.position.y, trunkRadius: t.trunkRadius }));
-            
+
             expect(trees1).toEqual(trees2);
         });
 
@@ -41,11 +41,11 @@ describe('MapGenerator', () => {
             // Maps should be different (different number of trees or different positions)
             const trees1 = map1.terrain.trees.map(t => ({ x: t.position.x, y: t.position.y }));
             const trees2 = map2.terrain.trees.map(t => ({ x: t.position.x, y: t.position.y }));
-            
+
             // At least one of these should be different
             const differentCount = map1.terrain.trees.length !== map2.terrain.trees.length;
             const differentPositions = JSON.stringify(trees1) !== JSON.stringify(trees2);
-            
+
             expect(differentCount || differentPositions).toBe(true);
         });
 
@@ -95,7 +95,8 @@ describe('MapGenerator', () => {
 
                 if (dist > 0.7) { // Edge area
                     edgeTrees++;
-                } else if (dist < 0.3) { // Center area
+                }
+                else if (dist < 0.3) { // Center area
                     centerTrees++;
                 }
             }
@@ -144,4 +145,4 @@ describe('MapGenerator', () => {
             }
         });
     });
-}); 
+});

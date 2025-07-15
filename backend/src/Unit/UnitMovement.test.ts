@@ -1,22 +1,18 @@
+import { Unit } from './Unit';
 import { UnitMovement } from './UnitMovement';
-import { Position } from "./Position";
 
 describe('UnitMovement', () => {
-    let mockUnit: any;
+    let mockUnit: Unit;
 
     beforeEach(() => {
         // Create a mock unit for testing
-        mockUnit = {
-            id: 1,
-            name: 'Test Unit',
-            equipment: {
-                weight: 0,
-            },
-            attributes: {
-                weight: 75,
-                strength: 60
-            }
-        };
+        mockUnit = new Unit(1, 'Test Unit', 1, {
+            weight: 75,
+            strength: 60,
+            experience: 0,
+            age: 20,
+            gender: 'male',
+        });
     });
 
     /**
@@ -155,9 +151,9 @@ describe('UnitMovement', () => {
             // With strength 60 and weight 75, speed = 1.4 * (1 + 0.05) * (1 - 0.025) = ~1.435 m/s
             const expectedSpeed = 1.4 * (1 + (60 - 50) * 0.005) * (1 - (75 - 70) * 0.005);
             movement.moveTo({ x: expectedSpeed, y: 0 });
-            
+
             movement.update(1.0);
-            
+
             expect(movement.x).toBeCloseTo(expectedSpeed, 2);
             expect(movement.y).toBeCloseTo(0, 5);
             expect(movement.state).toBe('stationary');
@@ -169,9 +165,9 @@ describe('UnitMovement', () => {
             const baseSpeed = 1.4 * (1 + (60 - 50) * 0.005) * (1 - (75 - 70) * 0.005);
             const runningSpeed = baseSpeed * 2;
             movement.moveTo({ x: runningSpeed, y: 0 }, true);
-            
+
             movement.update(1.0);
-            
+
             expect(movement.x).toBeCloseTo(runningSpeed, 2);
             expect(movement.state).toBe('stationary');
         });
@@ -179,9 +175,9 @@ describe('UnitMovement', () => {
         it('should make partial progress towards distant target', () => {
             const expectedSpeed = 1.4 * (1 + (60 - 50) * 0.005) * (1 - (75 - 70) * 0.005);
             movement.moveTo({ x: 10, y: 0 });
-            
+
             movement.update(0.5);
-            
+
             expect(movement.x).toBeCloseTo(expectedSpeed * 0.5, 2);
             expect(movement.y).toBeCloseTo(0, 5);
             expect(movement.state).toBe('walking');
@@ -192,9 +188,9 @@ describe('UnitMovement', () => {
             const expectedSpeed = 1.4 * (1 + (60 - 50) * 0.005) * (1 - (75 - 70) * 0.005);
             movement.moveTo({ x: 1, y: 1 });
             const distance = Math.sqrt(2);
-            
+
             movement.update(distance / expectedSpeed);
-            
+
             expect(movement.x).toBeCloseTo(1, 2);
             expect(movement.y).toBeCloseTo(1, 2);
             expect(movement.isMoving).toBe(false);
@@ -202,9 +198,9 @@ describe('UnitMovement', () => {
 
         it('should snap to target when very close', () => {
             movement.moveTo({ x: 0.005, y: 0 });
-            
+
             movement.update(0.1);
-            
+
             expect(movement.x).toBe(0.005);
             expect(movement.y).toBe(0);
             expect(movement.isMoving).toBe(false);
@@ -223,9 +219,9 @@ describe('UnitMovement', () => {
 
         it('should provide comprehensive summary', () => {
             movement.moveTo({ x: 15, y: 20 });
-            
+
             const summary = movement.getState();
-            
+
             expect(summary.position).toEqual({ x: 5, y: 10 });
             expect(summary.direction).toBeCloseTo(Math.PI / 4, 5);
             expect(summary.directionDegrees).toBeCloseTo(45, 5);
@@ -235,7 +231,7 @@ describe('UnitMovement', () => {
 
         it('should show stationary state when not moving', () => {
             const summary = movement.getState();
-            
+
             expect(summary.state).toBe('stationary');
             expect(summary.targetPosition).toBeNull();
         });
@@ -253,9 +249,9 @@ describe('UnitMovement', () => {
 
         it('should handle update when stationary', () => {
             const originalPosition = { x: movement.x, y: movement.y };
-            
+
             movement.update(1.0);
-            
+
             expect(movement.x).toBe(originalPosition.x);
             expect(movement.y).toBe(originalPosition.y);
             expect(movement.state).toBe('stationary');
@@ -263,16 +259,16 @@ describe('UnitMovement', () => {
 
         it('should not crash with zero deltaTime', () => {
             movement.moveTo({ x: 1, y: 1 });
-            
+
             expect(() => movement.update(0)).not.toThrow();
             expect(movement.isMoving).toBe(true);
         });
 
         it('should handle very large deltaTime', () => {
             movement.moveTo({ x: 1, y: 0 });
-            
+
             movement.update(1000);
-            
+
             expect(movement.x).toBe(1);
             expect(movement.isMoving).toBe(false);
         });
@@ -284,47 +280,47 @@ describe('UnitMovement', () => {
     describe('Speed Calculations', () => {
         it('should apply strength bonus correctly', () => {
             const strongUnit = {
-                attributes: { strength: 80, weight: 70 } // +15% strength bonus, no weight penalty
+                attributes: { strength: 80, weight: 70 }, // +15% strength bonus, no weight penalty
             };
-            const movement = new UnitMovement(strongUnit as any, { x: 0, y: 0 });
-            
+            const movement = new UnitMovement(strongUnit as Unit, { x: 0, y: 0 });
+
             // Expected speed: 1.4 * 1.15 = 1.61 m/s
             const expectedDistance = 1.4 * 1.15;
             movement.moveTo({ x: expectedDistance, y: 0 });
             movement.update(1.0);
-            
+
             expect(movement.x).toBeCloseTo(expectedDistance, 2);
             expect(movement.isMoving).toBe(false);
         });
 
         it('should apply weight penalty correctly', () => {
             const heavyUnit = {
-                attributes: { strength: 50, weight: 90 } // no strength bonus, -10% weight penalty
+                attributes: { strength: 50, weight: 90 }, // no strength bonus, -10% weight penalty
             };
-            const movement = new UnitMovement(heavyUnit as any, { x: 0, y: 0 });
-            
+            const movement = new UnitMovement(heavyUnit as Unit, { x: 0, y: 0 });
+
             // Expected speed: 1.4 * 0.9 = 1.26 m/s
             const expectedDistance = 1.4 * 0.9;
             movement.moveTo({ x: expectedDistance, y: 0 });
             movement.update(1.0);
-            
+
             expect(movement.x).toBeCloseTo(expectedDistance, 2);
             expect(movement.isMoving).toBe(false);
         });
 
         it('should combine strength bonus and weight penalty', () => {
             const mixedUnit = {
-                attributes: { strength: 70, weight: 80 } // +10% strength, -5% weight
+                attributes: { strength: 70, weight: 80 }, // +10% strength, -5% weight
             };
-            const movement = new UnitMovement(mixedUnit as any, { x: 0, y: 0 });
-            
+            const movement = new UnitMovement(mixedUnit as Unit, { x: 0, y: 0 });
+
             // Expected speed: 1.4 * 1.1 * 0.95 = 1.463 m/s
             const expectedDistance = 1.4 * 1.1 * 0.95;
             movement.moveTo({ x: expectedDistance, y: 0 });
             movement.update(1.0);
-            
+
             expect(movement.x).toBeCloseTo(expectedDistance, 2);
             expect(movement.isMoving).toBe(false);
         });
     });
-}); 
+});

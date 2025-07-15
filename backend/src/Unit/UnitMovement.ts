@@ -1,6 +1,6 @@
-import { TickUpdate } from "../utils/TickUpdate";
-import { Position } from "./Position";
-import { Unit } from "./Unit";
+import { TickUpdate } from '../utils/TickUpdate';
+import { Position } from './Position';
+import { Unit } from './Unit';
 
 /**
  * Movement state for simple movement system
@@ -46,7 +46,7 @@ export class UnitMovement implements TickUpdate {
     constructor(
         private unit: Unit,
         position: Position = { x: 0, y: 0 },
-        direction: number = 0
+        direction = 0,
     ) {
         this._position = position;
         this._direction = this.normalizeDirection(direction);
@@ -93,10 +93,10 @@ export class UnitMovement implements TickUpdate {
      * @param target - Position to move towards
      * @param urgent - If true, uses running speed; otherwise walking speed
      */
-    moveTo(target: Position, urgent: boolean = false): void {
+    moveTo(target: Position, urgent = false): void {
         this._targetPosition = target;
         this._movementState = urgent ? 'running' : 'walking';
-        
+
         // Face towards the target
         this.faceTowards(target);
     }
@@ -116,7 +116,7 @@ export class UnitMovement implements TickUpdate {
     faceTowards(target: Position): void {
         this._direction = this.normalizeDirection(Math.atan2(
             target.y - this._position.y,
-            target.x - this._position.x
+            target.x - this._position.x,
         ));
     }
 
@@ -128,10 +128,10 @@ export class UnitMovement implements TickUpdate {
     private calculateMovementSpeed(): number {
         // Base walking speed from game mechanics
         const baseWalkingSpeed = 1.4; // m/s
-        
+
         // Running multiplier
         const speedMultiplier = this._movementState === 'running' ? 2.0 : 1.0;
-        
+
         const { strength, weight } = this.unit.attributes;
 
         // TODO: When unit.attributes is implemented, add modifiers:
@@ -141,7 +141,7 @@ export class UnitMovement implements TickUpdate {
         const weightPenalty = weight > 70 ? (weight - 70) * 0.005 : 0;
         // - Stamina penalty: linear reduction to 70% when below 50%
         // - Leg injury penalty: direct percentage reduction
-        
+
         // For now, return base speed with running multiplier
         return baseWalkingSpeed * speedMultiplier * (1 + strengthBonus) * (1 - weightPenalty);
     }
@@ -165,18 +165,18 @@ export class UnitMovement implements TickUpdate {
      */
     private moveTowards(target: Position, maxDistance: number) {
         const distance = this.distanceTo(target);
-        
+
         if (distance <= maxDistance) {
             this._position = target;
             return true;
         }
-        
+
         const ratio = maxDistance / distance;
 
         this._position.x = this._position.x + (target.x - this._position.x) * ratio;
         this._position.y = this._position.y + (target.y - this._position.y) * ratio;
 
-        return false
+        return false;
     }
 
     /**
@@ -211,7 +211,7 @@ export class UnitMovement implements TickUpdate {
             direction: this._direction,
             directionDegrees: this.getDirectionDegrees(),
             state: this._movementState,
-            targetPosition: this._targetPosition
+            targetPosition: this._targetPosition,
         };
     }
 
@@ -228,15 +228,15 @@ export class UnitMovement implements TickUpdate {
 
         // Calculate current movement speed
         const currentSpeed = this.calculateMovementSpeed();
-        
+
         // Calculate maximum distance we can move this frame
         const maxMoveDistance = currentSpeed * deltaTime;
-        
+
         // Move towards target
         const reachedTarget = this.moveTowards(this._targetPosition, maxMoveDistance);
-        
+
         if (reachedTarget) {
             this.stop();
         }
     }
-} 
+}

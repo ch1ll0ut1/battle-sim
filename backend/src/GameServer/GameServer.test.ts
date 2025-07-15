@@ -1,7 +1,8 @@
 import { WebSocket } from 'ws';
 import { units1v1 } from '../testData';
-import { GameServer } from './GameServer';
 import { Unit } from '../Unit/Unit';
+import { WebsocketServer } from '../utils/WebsocketServer';
+import { GameServer } from './GameServer';
 
 // Mock the WebsocketServer to avoid actual network operations in tests
 jest.mock('../utils/WebsocketServer.js');
@@ -22,23 +23,26 @@ describe('GameServer', () => {
      */
     beforeEach(() => {
         units = JSON.parse(JSON.stringify(units1v1));
-        
+
         // Mock WebSocket server
         mockWsServer = {
             on: jest.fn(),
             broadcast: jest.fn(),
             send: jest.fn(),
-            close: jest.fn()
+            close: jest.fn(),
         };
-        
+
         // Mock the WebsocketServer constructor
-        const { WebsocketServer } = require('../utils/WebsocketServer.js');
-        WebsocketServer.mockImplementation(() => mockWsServer);
-        
+        (WebsocketServer as any).mockImplementation(() => mockWsServer);
+
         gameServer = new GameServer(8080);
-        
+
         // Get reference to the mocked GameEngine for testing
         mockGameEngine = (gameServer as any).gameEngine;
+    });
+
+    afterEach(() => {
+        gameServer.shutdown();
     });
 
     /**
@@ -59,7 +63,7 @@ describe('GameServer', () => {
     it('should broadcast logger events to WebSocket clients', () => {
         // Arrange
         const logMessage = 'Test log message';
-        
+
         // Act - trigger a log event through the logger
         // Access the private logger via type assertion for testing
         const logger = (gameServer as any).logger;
@@ -76,8 +80,8 @@ describe('GameServer', () => {
      */
     it('should ignore non-command messages', () => {
         // Arrange
-        const messageHandler = mockWsServer.on.mock.calls.find((call: any) => 
-            call[0] === 'message'
+        const messageHandler = mockWsServer.on.mock.calls.find((call: any) =>
+            call[0] === 'message',
         )?.[1];
 
         // Act
@@ -96,13 +100,12 @@ describe('GameServer', () => {
      */
     it('should log warning for unknown commands', () => {
         // Arrange
-        const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-        const messageHandler = mockWsServer.on.mock.calls.find((call: any) => 
-            call[0] === 'message'
+        const messageHandler = mockWsServer.on.mock.calls.find((call: any) =>
+            call[0] === 'message',
         )?.[1];
 
         // Assert
-        expect(() => messageHandler(null, { type: 'command', data: 'unknownCommand' })).toThrow('Unknown command: unknownCommand');
+        expect(() => messageHandler(null, { type: 'command', data: 'unknownCommand' })).toThrow('Unknown command: \"unknownCommand\"');
     });
 
     /**
@@ -124,8 +127,8 @@ describe('GameServer', () => {
     it('should log received commands to console', () => {
         // Arrange
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-        const messageHandler = mockWsServer.on.mock.calls.find((call: any) => 
-            call[0] === 'message'
+        const messageHandler = mockWsServer.on.mock.calls.find((call: any) =>
+            call[0] === 'message',
         )?.[1];
 
         // Act
@@ -134,7 +137,7 @@ describe('GameServer', () => {
         }
 
         // Assert
-        expect(consoleSpy).toHaveBeenCalledWith('Received command: start');
+        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Received command: {\"type\":\"command\",\"data\":\"start\"}'));
         consoleSpy.mockRestore();
     });
 
@@ -147,17 +150,17 @@ describe('GameServer', () => {
         const mockWebSocket = {} as WebSocket;
         const mockGameState = { time: 0, state: 'initialized', units: units };
         const mockLogEvents = ['[0.0s] Game started'];
-        
+
         // Mock the methods that should be called
         jest.spyOn(mockGameEngine, 'getState').mockReturnValue(mockGameState);
         const logger = (gameServer as any).logger;
         jest.spyOn(logger, 'getEvents').mockReturnValue(mockLogEvents);
 
         // Act - simulate a client connection
-        const connectHandler = mockWsServer.on.mock.calls.find((call: any) => 
-            call[0] === 'connect'
+        const connectHandler = mockWsServer.on.mock.calls.find((call: any) =>
+            call[0] === 'connect',
         )?.[1];
-        
+
         if (connectHandler) {
             connectHandler(mockWebSocket);
         }
@@ -198,4 +201,4 @@ describe('GameServer', () => {
         // Assert
         expect(mockWsServer.broadcast).toHaveBeenCalledWith('gameState', mockGameState);
     });
-}); 
+});

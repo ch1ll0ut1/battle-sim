@@ -1,5 +1,5 @@
-import { TickUpdate } from "../utils/TickUpdate";
-import { Unit } from "./Unit";
+import { TickUpdate } from '../utils/TickUpdate';
+import { Unit } from './Unit';
 
 /**
  * Stamina recovery context affects recovery rates
@@ -7,10 +7,10 @@ import { Unit } from "./Unit";
 type StaminaRecoveryContext = 'resting' | 'moving' | 'combat' | 'exhausted';
 
 const staminaRecoveryRates: Record<StaminaRecoveryContext, number> = {
-    resting: 0.08,    // 8% per second when stationary - full aerobic recovery
-    moving: 0.0,   // +0.01% per second - very minimal recovery while walking (nearly neutral)
-    combat: 0.01,     // 1% per second during combat - adrenaline helps slightly
-    exhausted: 0      // No recovery when exhausted
+    resting: 0.08, // 8% per second when stationary - full aerobic recovery
+    moving: 0.0, // +0.01% per second - very minimal recovery while walking (nearly neutral)
+    combat: 0.01, // 1% per second during combat - adrenaline helps slightly
+    exhausted: 0, // No recovery when exhausted
 };
 
 /**
@@ -37,7 +37,7 @@ export class UnitStamina implements TickUpdate {
      */
     constructor(
         private unit: Unit,
-        startingStaminaPercent: number = 100
+        startingStaminaPercent = 100,
     ) {
         this._maxStamina = this.calculateMaxStamina();
         this._stamina = (this._maxStamina * startingStaminaPercent) / 100;
@@ -78,7 +78,7 @@ export class UnitStamina implements TickUpdate {
      * Gets the current recovery context based on unit state
      * Derives context from movement and combat state automatically
      * 1. Exhausted - no recovery
-     * 2. Combat - low recovery  
+     * 2. Combat - low recovery
      * 3. Walking - medium recovery
      * 4. Resting - highest recovery (default)
      */
@@ -180,15 +180,15 @@ export class UnitStamina implements TickUpdate {
         // Calculate weight excess/deficit from baseline (70kg)
         const baselineWeight = 70;
         const weightDifference = totalWeight - baselineWeight;
-        
+
         // Calculate strength difference from baseline (50)
         const baselineStrength = 50;
         const strengthDifference = strength - baselineStrength;
-        
+
         // Combined effect: +1% cost per kg over baseline, -1% per strength point over baseline
         const weightPenalty = weightDifference * 0.01;
         const strengthBonus = strengthDifference * 0.01;
-        
+
         // Net modifier (minimum 0.8, maximum 1.5 for reasonable bounds)
         const modifier = 1.0 + weightPenalty - strengthBonus;
         return Math.max(0.8, Math.min(1.5, modifier));
@@ -203,7 +203,7 @@ export class UnitStamina implements TickUpdate {
     private getRecoveryRate(): number {
         const percentageRate = staminaRecoveryRates[this.recoveryContext];
         const baseRecoveryRate = percentageRate * this._maxStamina;
-    
+
         // Apply experience bonus (up to 20% improvement)
         const experienceBonus = this.unit.attributes.experience * 0.2;
         const experienceModifier = 1 + experienceBonus;
@@ -213,10 +213,8 @@ export class UnitStamina implements TickUpdate {
         const painModifier = 1.0; // Placeholder
 
         // Calculate final recovery rate (absolute units per second)
-        return baseRecoveryRate * experienceModifier * painModifier; 
+        return baseRecoveryRate * experienceModifier * painModifier;
     }
-
-
 
     /**
      * Forces stamina to a specific value (for testing or special events)
@@ -251,7 +249,7 @@ export class UnitStamina implements TickUpdate {
             staminaPercentage: this.staminaPercentage,
             isExhausted: this.isExhausted,
             weightModifier: this.getWeightModifier(),
-            recoveryContext: this.recoveryContext
+            recoveryContext: this.recoveryContext,
         };
     }
 
@@ -262,4 +260,4 @@ export class UnitStamina implements TickUpdate {
     update(deltaTime: number): void {
         this.recoverStamina(deltaTime);
     }
-} 
+}

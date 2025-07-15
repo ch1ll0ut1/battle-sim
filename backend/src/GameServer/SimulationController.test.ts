@@ -1,6 +1,7 @@
-import { SimulationController } from './SimulationController';
 import { GameEngine } from '../GameEngine/GameEngine';
+import { MovementSandbox } from '../GameMode/MovementSandbox/MovementSandbox';
 import { Logger } from '../utils/Logger';
+import { SimulationController } from './SimulationController';
 
 describe('SimulationController', () => {
     let logger: Logger;
@@ -9,7 +10,7 @@ describe('SimulationController', () => {
 
     beforeEach(() => {
         logger = new Logger();
-        engine = new GameEngine(logger, 'movement-sandbox');
+        engine = new GameEngine(logger, MovementSandbox);
         controller = new SimulationController(engine, logger);
     });
 
@@ -22,7 +23,7 @@ describe('SimulationController', () => {
     it('starts the simulation from initialized state and sets phase to running', () => {
         // Arrange
         expect(engine.phase).toBe('initialized');
-        
+
         // Act
         controller.start();
 
@@ -34,10 +35,10 @@ describe('SimulationController', () => {
     it('pauses the simulation and sets phase to paused', () => {
         // Arrange
         controller.start();
-        
+
         // Act
         controller.stop();
-        
+
         // Assert
         expect(engine.phase).toBe('paused');
     });
@@ -45,11 +46,11 @@ describe('SimulationController', () => {
     it('executes a single simulation tick and advances time', () => {
         // Arrange
         const initialTime = engine.getState().time;
-        
+
         // Act
         controller.nextTick();
         const newTime = engine.getState().time;
-        
+
         // Assert
         expect(newTime).toBeGreaterThan(initialTime);
         expect(engine.phase).toBe('paused');
@@ -58,10 +59,10 @@ describe('SimulationController', () => {
     it('resets the simulation to initial state and clears time', () => {
         // Arrange
         controller.start();
-        
+
         // Act
         controller.reset();
-        
+
         // Assert
         expect(engine.phase).toBe('initialized');
         expect(engine.getState().time).toBe(0);
@@ -78,7 +79,7 @@ describe('SimulationController', () => {
     it('throws if nextTick is called when game is finished', () => {
         // Arrange
         (engine as any)._phase = 'finished';
-        
+
         // Act & Assert
         expect(() => controller.nextTick()).toThrow('Game is finished');
     });
@@ -86,16 +87,16 @@ describe('SimulationController', () => {
     it('can start, pause, and resume the simulation', () => {
         // Arrange
         controller.start();
-        
+
         // Act
         controller.stop();
-        
+
         // Assert
         expect(engine.phase).toBe('paused');
-        
+
         // Act again
         controller.start();
-        
+
         // Assert again
         expect(engine.phase).toBe('running');
     });
@@ -103,10 +104,10 @@ describe('SimulationController', () => {
     it('stops the interval when stop is called', () => {
         // Arrange
         controller.start();
-        
+
         // Act
         controller.stop();
-        
+
         // Assert
         // should not throw because its not running
         expect(() => controller.start()).not.toThrow();
@@ -115,10 +116,10 @@ describe('SimulationController', () => {
     it('after reset ready to start again', () => {
         // Arrange
         controller.start();
-        
+
         // Act
         controller.reset();
-        
+
         // Assert
         expect(() => controller.start()).not.toThrow();
     });
@@ -134,13 +135,13 @@ describe('SimulationController', () => {
         controller.start();
 
         // Fast-forward time by 100ms (should trigger one interval update after the immediate one)
-        jest.advanceTimersByTime(engine.TURN_INTERVAL * 1000);
+        jest.advanceTimersByTime(engine.turnInterval * 1000);
 
         // The first update is called immediately, the second by the interval
         expect(updateSpy).toHaveBeenCalledTimes(2);
-        expect(engine.getState().time).toBeCloseTo(engine.TURN_INTERVAL * 2);
+        expect(engine.getState().time).toBeCloseTo(engine.turnInterval * 2);
 
         controller.stop();
         jest.useRealTimers();
     });
-}); 
+});

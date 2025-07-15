@@ -1,5 +1,5 @@
-import { TickUpdate } from "../utils/TickUpdate";
-import { Terrain } from "./Terrain/Terrain";
+import { TickUpdate } from '../utils/TickUpdate';
+import { Terrain } from './Terrain/Terrain';
 
 /**
  * A map is a 2D world that contains a terrain and a set of units.
@@ -28,9 +28,9 @@ export class Map implements TickUpdate {
         this.height = height;
     }
 
-    public update(deltaTime: number): void {
+    public update(_deltaTime: number): void {
         // noop
-    }   
+    }
 
     public getState() {
         return {

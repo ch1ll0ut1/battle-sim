@@ -55,7 +55,7 @@ export class Unit implements TickUpdate {
 
     // Placeholder for future components - these will be added as we build the system
     // readonly combat: CombatComponent;     // Will handle actions, combat state, pain
-    // readonly body: BodyComponent;         // Will handle injuries, health, body parts  
+    // readonly body: BodyComponent;         // Will handle injuries, health, body parts
     // readonly work: WorkComponent;         // Will handle non-combat activities
 
     /**
@@ -73,7 +73,7 @@ export class Unit implements TickUpdate {
         team: number,
         attributes: UnitAttributesData,
         position: Position = { x: 0, y: 0 },
-        direction: number = 0
+        direction = 0,
     ) {
         this.id = id;
         this.name = name;
@@ -82,7 +82,8 @@ export class Unit implements TickUpdate {
 
         if (movementConfig.movementSystem === 'simple') {
             this.movement = new UnitMovement(this, position, direction);
-        } else {
+        }
+        else {
             this.movement = new UnitMovementPhysics(this, position, direction);
         }
 
@@ -108,7 +109,7 @@ export class Unit implements TickUpdate {
             team: this.team,
             attributes: this.attributes.getState(),
             movement: this.movement.getState(),
-            stamina: this.stamina.getState()
+            stamina: this.stamina.getState(),
         };
     }
 
@@ -119,13 +120,13 @@ export class Unit implements TickUpdate {
     update(deltaTime: number): void {
         // Update movement component first
         this.movement.update(deltaTime);
-        
+
         // Update stamina (it will derive recovery context automatically)
         this.stamina.update(deltaTime);
-        
+
         // TODO: When other components are implemented, call their update methods here
         // this.combat.update(deltaTime);
         // this.body.update(deltaTime);
         // this.work.update(deltaTime);
     }
-} 
+}

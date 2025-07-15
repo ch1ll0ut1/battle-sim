@@ -1,24 +1,24 @@
-import { TickUpdate } from "../utils/TickUpdate";
+import { TickUpdate } from '../utils/TickUpdate';
 
 /**
  * Type that represents the data structure for unit attributes
  */
-export type UnitAttributesData = {
+export interface UnitAttributesData {
     weight: number;
     strength: number;
     experience: number;
     age: number;
     gender: 'male' | 'female';
-};
+}
 
 /**
  * Attribute configuration with validation function
  */
-type AttributeConfig<T = any> = {
+interface AttributeConfig<T = unknown> {
     description: string;
     unit?: string;
     validate: (value: T) => void;
-};
+}
 
 /**
  * Configuration object defining all attributes with their validation rules
@@ -27,45 +27,65 @@ const ATTRIBUTE_CONFIG: Record<keyof UnitAttributesData, AttributeConfig> = {
     weight: {
         description: 'Physical weight',
         unit: 'kg',
-        validate: (value: number) => {
+        validate: (value: unknown) => {
+            if (typeof value !== 'number') {
+                throw new Error(`Physical weight must be a number, got ${typeof value}`);
+            }
+
             if (value < 40 || value > 120) {
                 throw new Error(`Physical weight must be between 40-120 kg, got ${value}`);
             }
-        }
+        },
     },
     strength: {
         description: 'Physical strength',
-        validate: (value: number) => {
+        validate: (value: unknown) => {
+            if (typeof value !== 'number') {
+                throw new Error(`Physical strength must be a number, got ${typeof value}`);
+            }
+
             if (value < 0 || value > 100) {
                 throw new Error(`Physical strength must be between 0-100, got ${value}`);
             }
-        }
+        },
     },
     experience: {
         description: 'Combat experience',
-        validate: (value: number) => {
+        validate: (value: unknown) => {
+            if (typeof value !== 'number') {
+                throw new Error(`Combat experience must be a number, got ${typeof value}`);
+            }
+
             if (value < 0 || value > 1) {
                 throw new Error(`Combat experience must be between 0-1, got ${value}`);
             }
-        }
+        },
     },
     age: {
         description: 'Age',
         unit: 'years',
-        validate: (value: number) => {
+        validate: (value: unknown) => {
+            if (typeof value !== 'number') {
+                throw new Error(`Age must be a number, got ${typeof value}`);
+            }
+
             if (value < 0 || value > 60) {
                 throw new Error(`Age must be between 0-60 years, got ${value}`);
             }
-        }
+        },
     },
     gender: {
         description: 'Unit gender',
-        validate: (value: 'male' | 'female') => {
+        validate: (value: unknown) => {
+            if (typeof value !== 'string') {
+                throw new Error(`Unit gender must be a string, got ${typeof value}`);
+            }
+
             if (!['male', 'female'].includes(value)) {
                 throw new Error(`Unit gender must be one of: male, female, got ${value}`);
             }
-        }
-    }
+        },
+    },
 };
 
 /**
@@ -164,8 +184,6 @@ export class UnitAttributes implements TickUpdate {
         this.data.gender = value;
     }
 
-
-
     /**
      * Logs a change if the value is different
      * @param key - The attribute key
@@ -173,9 +191,9 @@ export class UnitAttributes implements TickUpdate {
      * @param newValue - The new value
      */
     private logChange<K extends keyof UnitAttributesData>(
-        key: K, 
-        oldValue: UnitAttributesData[K], 
-        newValue: UnitAttributesData[K]
+        key: K,
+        oldValue: UnitAttributesData[K],
+        newValue: UnitAttributesData[K],
     ): void {
         if (newValue !== oldValue) {
             console.log(`UnitAttributes updated: ${key}: ${oldValue} → ${newValue}`);
@@ -231,4 +249,3 @@ export class UnitAttributes implements TickUpdate {
         // noop
     }
 }
-

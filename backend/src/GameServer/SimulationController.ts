@@ -66,7 +66,7 @@ export class SimulationController {
             throw new Error('Game is finished');
         }
         this.logger.debug('Simulation tick');
-        this.engine.update(this.engine.TURN_INTERVAL, true);
+        this.engine.update(this.engine.turnInterval, true);
     }
 
     /**
@@ -107,7 +107,7 @@ export class SimulationController {
             throw new Error('Simulation already running');
         }
 
-        this.engine.update(this.engine.TURN_INTERVAL);
+        this.engine.update(this.engine.turnInterval);
 
         this.simulationInterval = setInterval(() => {
             if (this.engine.phase !== 'running') {
@@ -115,7 +115,7 @@ export class SimulationController {
                 return;
             }
 
-            this.engine.update(this.engine.TURN_INTERVAL);
+            this.engine.update(this.engine.turnInterval);
         }, 100);
     }
 
@@ -127,8 +127,9 @@ export class SimulationController {
         if (this.simulationInterval) {
             clearInterval(this.simulationInterval);
             this.simulationInterval = null;
-        } else {
+        }
+        else {
             throw new Error('Simulation not running');
         }
     }
-} 
+}

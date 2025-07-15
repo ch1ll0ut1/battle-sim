@@ -1,8 +1,7 @@
-import { GameEngine } from "../../GameEngine/GameEngine";
-import { units1v1 } from "../../testData";
-import { Unit } from "../../Unit/Unit";
-import { Logger } from "../../utils/Logger";
-import { BattleAi } from "./BattleAi";
+import { GameEngine } from '../../GameEngine/GameEngine';
+import { Unit } from '../../Unit/Unit';
+import { Logger } from '../../utils/Logger';
+import { BattleAi } from './BattleAi';
 
 /**
  * Result of a game simulation
@@ -46,7 +45,7 @@ export class BattleMode {
         // this.units.forEach(unit => {
         //     // Unit Reset
         //     unit.health = 100;
-            
+
         //     // Log initial unit status
         //     this.logger.log(`${unit.name} enters the game with ${unit.health} health`);
 
@@ -78,12 +77,12 @@ export class BattleMode {
             throw new Error('Game must have at least 2 units');
         }
 
-        const teams = Object.values(this.teams)
+        const teams = Object.values(this.teams);
         if (teams.length <= 1) {
             throw new Error('Game must have at least 2 teams');
         }
 
-        teams.forEach(team => {
+        teams.forEach((team) => {
             if (team.length === 0) {
                 throw new Error('Team has no units');
             }
@@ -102,7 +101,7 @@ export class BattleMode {
         // } else if (team2Alive.length > 0 && team1Alive.length === 0) {
         //     return 'Team 2';
         // }
-        
+
         return undefined;
     }
 }

@@ -1,12 +1,12 @@
-import EventEmitter from "node:events";
-import { serverConfig } from "../config/server";
+import EventEmitter from 'node:events';
+import { serverConfig } from '../config/server';
 
 /**
  * Logger class responsible for recording and displaying battle events
  */
 export class Logger extends EventEmitter {
     private events: string[] = [];
-    private currentTime: number = 0;
+    private currentTime = 0;
 
     /**
      * Records a battle event with the current timestamp
@@ -26,7 +26,7 @@ export class Logger extends EventEmitter {
         this.emit('log', formattedMsg);
     }
 
-    debug(message: string, ...args: any[]) {
+    debug(message: string, ...args: unknown[]) {
         if (serverConfig.debug) {
             const formattedMsg = `[${this.currentTime.toFixed(1)}s] DEBUG: ${message} ${args.map(arg => JSON.stringify(arg)).join(' ')}`;
             console.log(formattedMsg);
@@ -57,5 +57,4 @@ export class Logger extends EventEmitter {
         this.events = [];
         this.currentTime = 0;
     }
-
-} 
+}

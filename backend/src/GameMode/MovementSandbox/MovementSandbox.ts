@@ -1,6 +1,6 @@
-import { Unit } from "../../Unit/Unit";
-import { UnitAttributesData } from "../../Unit/UnitAttributes";
-import { GameMode } from "../GameMode";
+import { Unit } from '../../Unit/Unit';
+import { UnitAttributesData } from '../../Unit/UnitAttributes';
+import { GameMode } from '../GameMode';
 
 export class MovementSandbox extends GameMode {
     private nextUnitId = 0; // Start from 2 since we already have Unit 1
@@ -16,31 +16,33 @@ export class MovementSandbox extends GameMode {
         this.logger.debug(`MovementSandbox: ${deltaTime}`);
 
         // Give units random move order
-        this.units.filter(unit => !unit.movement.isMoving).forEach(unit => {
+        this.units.filter(unit => !unit.movement.isMoving).forEach((unit) => {
             unit.movement.moveTo(this.generateRandomPosition());
         });
 
         // Each unit takes action
-        this.units.forEach(unit => unit.update(deltaTime));
+        this.units.forEach((unit) => {
+            unit.update(deltaTime);
+        });
     }
 
     getState() {
         return {
-            units: this.units.map(unit => unit.getState())
+            units: this.units.map(unit => unit.getState()),
         };
     }
 
-    handleCommand(command: string, data?: any) {
+    handleCommand(command: string, data?: unknown) {
         this.logger.debug(`MovementSandbox: ${command}`, data);
 
         switch (command) {
             case 'generateRandomUnit':
                 const unit = this.createRandomUnit();
-            break;
-            
+                break;
+
             default:
                 this.logger.log(`Unknown command: ${command}`);
-            break;
+                break;
         }
     }
 
@@ -53,17 +55,17 @@ export class MovementSandbox extends GameMode {
             strength: Math.floor(Math.random() * 100) + 1, // 1-100
             experience: Math.random(), // 0-1
             age: Math.floor(Math.random() * 60) + 1, // 1-60 years
-            gender: Math.random() < 0.5 ? 'male' : 'female'
+            gender: Math.random() < 0.5 ? 'male' : 'female',
         };
     }
 
     /**
      * Generates a random position within a reasonable area
      */
-    private generateRandomPosition(): { x: number, y: number } {
+    private generateRandomPosition(): { x: number; y: number } {
         return {
             x: Math.floor(Math.random() * 200) + 50, // 50-250
-            y: Math.floor(Math.random() * 200) + 50  // 50-250
+            y: Math.floor(Math.random() * 200) + 50, // 50-250
         };
     }
 
@@ -81,7 +83,7 @@ export class MovementSandbox extends GameMode {
             name,
             team,
             attributes,
-            position
+            position,
         );
 
         this.nextUnitId++;

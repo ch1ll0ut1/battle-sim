@@ -2,9 +2,8 @@
  * MapGenerator module for creating predefined maps for testing and gameplay.
  * Provides functions to generate Map instances with specific layouts and to serialize them for persistence.
  */
-import { Map } from "./Map";
-import { Tree } from "./Terrain/Tree";
-import { Position } from "../Unit/Position";
+import { Map } from './Map';
+import { Tree } from './Terrain/Tree';
 
 /**
  * Simple seeded random number generator (mulberry32).
@@ -12,12 +11,12 @@ import { Position } from "../Unit/Position";
  * @returns Function that returns a pseudo-random number between 0 and 1
  */
 function mulberry32(seed: number): () => number {
-    return function() {
+    return function () {
         let t = seed += 0x6D2B79F5;
         t = Math.imul(t ^ t >>> 15, t | 1);
         t ^= t + Math.imul(t ^ t >>> 7, t | 61);
         return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    }
+    };
 }
 
 /**
@@ -46,7 +45,7 @@ export function generateForestMap(width: number, height: number, seed: number): 
             const dist = Math.sqrt(dx * dx + dy * dy) / maxDist;
 
             // Base probability: high at edges, low at center
-            let baseProb = 0.7 * dist + 0.05; // 0.05 in center, up to 0.75 at edge
+            const baseProb = 0.7 * dist + 0.05; // 0.05 in center, up to 0.75 at edge
 
             // Add some noise for natural look
             const noise = (rand() - 0.5) * 0.2; // +/- 0.1
@@ -69,4 +68,4 @@ export function generateForestMap(width: number, height: number, seed: number): 
  */
 export function serializeMapToJson(map: Map): string {
     return JSON.stringify(map.getState(), null, 2);
-} 
+}

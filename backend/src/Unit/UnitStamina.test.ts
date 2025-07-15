@@ -12,7 +12,7 @@ describe('UnitStamina', () => {
             strength: 50,
             experience: 1.0,
             age: 25,
-            gender: 'male'
+            gender: 'male',
         };
         const attributes = new UnitAttributes(attributesData);
         const position = { x: 0, y: 0 };
@@ -90,7 +90,7 @@ describe('UnitStamina', () => {
                 strength: 50,
                 experience: 0,
                 age: 25,
-                gender: 'male'
+                gender: 'male',
             };
             const noExpAttributes = new UnitAttributes(noExpAttributesData);
             const noExpUnit = new Unit(2, 'no-exp', 1, noExpAttributesData, { x: 0, y: 0 });
@@ -119,10 +119,10 @@ describe('UnitStamina', () => {
         it('should recover stamina at correct rate for resting context', () => {
             // Unit should be resting by default (stationary)
             expect(stamina.recoveryContext).toBe('resting');
-            
+
             // Resting recovery: 8% per second = 0.08 * 95 = 7.6 absolute units per second
             stamina.recoverStamina(1.0);
-            
+
             // Expected: 7.6 * experienceModifier = 7.6 * 1.2 = 9.12
             expect(stamina.stamina).toBeCloseTo(59.12, 1);
         });
@@ -131,7 +131,7 @@ describe('UnitStamina', () => {
             // Set unit to walking
             unit.movement.moveTo({ x: 10, y: 0 }, false);
             expect(stamina.recoveryContext).toBe('moving');
-            
+
             // Set unit to running
             unit.movement.moveTo({ x: 10, y: 0 }, true);
             expect(stamina.recoveryContext).toBe('moving');
@@ -141,7 +141,7 @@ describe('UnitStamina', () => {
             stamina.setStamina(5); // Below 10% threshold
             expect(stamina.isExhausted).toBe(true);
             expect(stamina.recoveryContext).toBe('exhausted');
-            
+
             stamina.recoverStamina(1.0);
             expect(stamina.stamina).toBe(5);
         });
@@ -159,7 +159,7 @@ describe('UnitStamina', () => {
                 strength: 50,
                 experience: 0,
                 age: 25,
-                gender: 'male'
+                gender: 'male',
             };
             const noExpAttributes = new UnitAttributes(noExpAttributesData);
             const noExpUnit = new Unit(3, 'no-exp', 1, noExpAttributesData, { x: 0, y: 0 });
@@ -193,21 +193,21 @@ describe('UnitStamina', () => {
     describe('max stamina calculation', () => {
         it('should recalculate max stamina when attributes change', () => {
             const originalMax = stamina.maxStamina;
-            
+
             // Increase strength
             unit.attributes.strength = 60;
             stamina.recalculateMaxStamina();
-            
+
             expect(stamina.maxStamina).toBeGreaterThan(originalMax);
         });
 
         it('should proportionally adjust current stamina when max changes', () => {
             stamina.setStamina(47.5); // 50% of original max (95)
-            
+
             // Double strength to increase max stamina
             unit.attributes.strength = 100;
             stamina.recalculateMaxStamina();
-            
+
             // Should still be at 50% of new max
             expect(stamina.staminaPercentage).toBeCloseTo(50, 1);
         });
@@ -215,16 +215,16 @@ describe('UnitStamina', () => {
         it('should cap conditioning bonus at 20', () => {
             // Create strong unit to test conditioning cap
             const strongAttributesData: UnitAttributesData = {
-                weight: 50,  // Low weight for high conditioning ratio
+                weight: 50, // Low weight for high conditioning ratio
                 strength: 100, // Max valid strength
                 experience: 1.0,
                 age: 25,
-                gender: 'male'
+                gender: 'male',
             };
             const strongAttributes = new UnitAttributes(strongAttributesData);
             const strongUnit = new Unit(4, 'strong', 1, strongAttributesData, { x: 0, y: 0 });
             const strongStamina = new UnitStamina(strongUnit);
-            
+
             // baseStamina = 100 * 1.4 = 140
             // experienceBonus = 1.0 * 20 = 20
             // conditioningBonus = min(100/50 * 10, 20) = min(20, 20) = 20
@@ -237,7 +237,7 @@ describe('UnitStamina', () => {
         it('should provide accurate summary with calibrated weight modifier', () => {
             stamina.setStamina(47.5);
             const summary = stamina.getState();
-            
+
             expect(summary.stamina).toBe(47.5);
             expect(summary.maxStamina).toBe(95);
             expect(summary.staminaPercentage).toBe(50);
@@ -249,18 +249,18 @@ describe('UnitStamina', () => {
         it('should update correctly with delta time', () => {
             stamina.setStamina(50);
             const initialStamina = stamina.stamina;
-            
+
             stamina.update(0.5); // Half second of recovery
-            
+
             expect(stamina.stamina).toBeGreaterThan(initialStamina);
         });
 
         it('should enforce stamina bounds when setting manually', () => {
             stamina.setStamina(-10);
             expect(stamina.stamina).toBe(0);
-            
+
             stamina.setStamina(200);
             expect(stamina.stamina).toBe(95); // maxStamina
         });
     });
-}); 
+});

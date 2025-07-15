@@ -1,6 +1,6 @@
-import { GameEngine } from "../GameEngine/GameEngine";
-import { Logger } from "../utils/Logger";
-import { TickUpdate } from "../utils/TickUpdate";
+import { GameEngine } from '../GameEngine/GameEngine';
+import { Logger } from '../utils/Logger';
+import { TickUpdate } from '../utils/TickUpdate';
 
 export abstract class GameMode implements TickUpdate {
     protected logger: Logger;
@@ -12,10 +12,9 @@ export abstract class GameMode implements TickUpdate {
     }
 
     abstract reset(): void;
-    abstract handleCommand(command: string, data?: any): void;
+    abstract handleCommand(command: string, data?: unknown): void;
     abstract update(deltaTime: number): void;
-    abstract getState(): any;
+    abstract getState(): unknown;
 }
 
 export type GameModeConstructor = new (logger: Logger, engine: GameEngine) => GameMode;
-

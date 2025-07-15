@@ -1,17 +1,17 @@
 import { EventEmitter } from 'events';
-import { WebSocketServer, WebSocket } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 
 /**
  * Message structure for WebSocket communication
  */
-interface WebSocketMessage<T = any> {
+export interface WebSocketMessage<T = unknown> {
     type: string;
     data: T;
 }
 
-type EventMessage = {
-    'connect': [WebSocket],
-    'message': [WebSocket, WebSocketMessage],
+export interface EventMessage {
+    connect: [WebSocket];
+    message: [WebSocket, WebSocketMessage];
 }
 
 /**
@@ -34,17 +34,18 @@ export class WebsocketServer extends EventEmitter<EventMessage> {
 
     /**
      * Sends a message to a specific client
-     * 
+     *
      * @throws Error if client is not connected
      */
-    send(ws: WebSocket, type: string, data: any): void {
+    send(ws: WebSocket, type: string, data: unknown): void {
         if (ws.readyState !== WebSocket.OPEN) {
             throw new Error('Client is not connected');
         }
 
         try {
             ws.send(JSON.stringify({ type, data }));
-        } catch (error) {
+        }
+        catch (error) {
             console.error('Error sending message to client:', { error, type });
             this.removeClient(ws);
         }
@@ -53,13 +54,14 @@ export class WebsocketServer extends EventEmitter<EventMessage> {
     /**
      * Broadcasts a message to all connected clients
      */
-    broadcast(type: string, data: any): void {
+    broadcast(type: string, data: unknown): void {
         const message = JSON.stringify({ type, data });
 
-        this.clients.forEach(client => {
+        this.clients.forEach((client) => {
             try {
                 client.send(message);
-            } catch (error) {
+            }
+            catch (error) {
                 console.error('Error broadcasting to client:', { error, type });
                 this.removeClient(client);
             }
@@ -79,10 +81,11 @@ export class WebsocketServer extends EventEmitter<EventMessage> {
      */
     close(): void {
         // Close all client connections
-        this.clients.forEach(client => {
+        this.clients.forEach((client) => {
             try {
                 client.close();
-            } catch (error) {
+            }
+            catch (error) {
                 console.error('Error closing client connection:', error);
             }
         });
@@ -102,8 +105,11 @@ export class WebsocketServer extends EventEmitter<EventMessage> {
     private handleConnection(ws: WebSocket): void {
         // Wait for connection to be established
         if (ws.readyState === WebSocket.CONNECTING) {
-            ws.once('open', () => this.setupClient(ws));
-        } else if (ws.readyState === WebSocket.OPEN) {
+            ws.once('open', () => {
+                this.setupClient(ws);
+            });
+        }
+        else if (ws.readyState === WebSocket.OPEN) {
             this.setupClient(ws);
         }
     }
@@ -131,7 +137,8 @@ export class WebsocketServer extends EventEmitter<EventMessage> {
                 if (this.validateMessage(message)) {
                     this.emit('message', ws, message);
                 }
-            } catch (error) {
+            }
+            catch (error) {
                 console.error('Error parsing message from client:', error);
             }
         });
@@ -143,13 +150,13 @@ export class WebsocketServer extends EventEmitter<EventMessage> {
     /**
      * Validates a WebSocket message
      */
-    private validateMessage(message: any): message is WebSocketMessage {
+    private validateMessage(message: unknown): message is WebSocketMessage {
         console.log('Validating message:', message);
         return (
-            message &&
-            typeof message === 'object' &&
-            typeof message.type === 'string' &&
-            'data' in message
+            message !== null
+            && typeof message === 'object'
+            && typeof (message as Record<string, unknown>).type === 'string'
+            && 'data' in message
         );
     }
 
@@ -169,4 +176,4 @@ export class WebsocketServer extends EventEmitter<EventMessage> {
     private handleServerError(error: Error): void {
         console.error('WebSocket server error:', error);
     }
-} 
+}

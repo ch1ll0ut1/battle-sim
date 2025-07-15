@@ -1,10 +1,10 @@
-import { Position } from "../../Unit/Position";
+import { Position } from '../../Unit/Position';
 
 export class Tree {
     /**
      * The position of the tree on the world map.
      */
-    public position: Position
+    public position: Position;
 
     /**
      * The radius of the tree's trunk in cm.

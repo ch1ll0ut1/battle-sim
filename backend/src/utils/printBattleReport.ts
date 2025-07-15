@@ -8,7 +8,7 @@ export function printBattleReport(events: string[], duration: number, winner?: s
  */
 function displayEvents(events: string[]): void {
     console.log('\n=== Battle Events ===');
-    events.forEach(event => {
+    events.forEach((event) => {
         console.log(event);
     });
 }
@@ -23,7 +23,7 @@ function displaySummary(events: string[], duration: number, winner?: string): vo
 
     console.log('\n=== Battle Summary ===');
     console.log(`Duration: ${duration.toFixed(1)} seconds`);
-    console.log(`Winner: ${winner || 'Draw'}`);
+    console.log(`Winner: ${winner ?? 'Draw'}`);
 
     console.log('\nStatistics:');
     console.log(`- Total actions: ${stats.totalEvents}`);

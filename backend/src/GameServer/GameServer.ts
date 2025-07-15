@@ -1,8 +1,9 @@
-import { WebsocketServer } from '../utils/WebsocketServer.js';
-import { SimulationController } from './SimulationController.js';
-import { GameEngine } from '../GameEngine/GameEngine.js';
-import { Logger } from '../utils/Logger.js';
 import { WebSocket } from 'ws';
+import { GameEngine } from '../GameEngine/GameEngine.js';
+import { MovementSandbox } from '../GameMode/MovementSandbox/MovementSandbox.js';
+import { Logger } from '../utils/Logger.js';
+import { WebSocketMessage, WebsocketServer } from '../utils/WebsocketServer.js';
+import { SimulationController } from './SimulationController.js';
 
 /**
  * Main game server that orchestrates WebSocket connections, command processing, and simulation control
@@ -22,9 +23,9 @@ export class GameServer {
     constructor(port: number) {
         this.wsServer = new WebsocketServer(port);
         this.logger = new Logger();
-        this.gameEngine = new GameEngine(this.logger, 'movement-sandbox');
+        this.gameEngine = new GameEngine(this.logger, MovementSandbox);
         this.simulationController = new SimulationController(this.gameEngine, this.logger);
-        
+
         this.setupEventHandlers();
     }
 
@@ -48,7 +49,7 @@ export class GameServer {
         this.wsServer.on('message', (ws, message) => {
             this.handleCommand(ws, message);
         });
-        
+
         this.logger.on('log', (message) => {
             this.wsServer.broadcast('log', message);
         });
@@ -66,10 +67,11 @@ export class GameServer {
      * @param ws - The WebSocket connection that sent the command
      * @param message - The command message object
      */
-    private handleCommand(ws: any, message: any): void {
+    private handleCommand(ws: WebSocket, message: WebSocketMessage): void {
+        this.logger.debug('Received command:', message);
+
         if (message.type !== 'command') return;
-        
-        console.log(`Received command: ${message.data}`);
+
         switch (message.data) {
             case 'start':
                 this.simulationController.start();
@@ -84,7 +86,7 @@ export class GameServer {
                 this.simulationController.reset();
                 break;
             default:
-                throw new Error(`Unknown command: ${message.data}`);
+                throw new Error(`Unknown command: ${JSON.stringify(message.data)}`);
         }
     }
 
@@ -92,4 +94,4 @@ export class GameServer {
         this.wsServer.send(ws, 'gameState', this.gameEngine.getState());
         this.wsServer.send(ws, 'log', this.logger.getEvents());
     }
-} 
+}

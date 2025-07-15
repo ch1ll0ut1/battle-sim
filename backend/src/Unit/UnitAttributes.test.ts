@@ -11,7 +11,7 @@ describe('UnitAttributes', () => {
                 strength: 60,
                 experience: 0.5,
                 age: 30,
-                gender: 'male'
+                gender: 'male',
             };
             const manager = new UnitAttributes(attributes);
 
@@ -28,7 +28,7 @@ describe('UnitAttributes', () => {
                 strength: 50,
                 experience: 0.3,
                 age: 25,
-                gender: 'female'
+                gender: 'female',
             };
             const manager = new UnitAttributes(attributes);
 
@@ -75,7 +75,7 @@ describe('UnitAttributes', () => {
                 strength: 50,
                 experience: 0.5,
                 age: 25,
-                gender: 'male'
+                gender: 'male',
             });
             consoleSpy = jest.spyOn(console, 'log').mockImplementation();
         });
@@ -135,8 +135,6 @@ describe('UnitAttributes', () => {
         });
     });
 
-
-
     /**
      * Tests experience level calculations
      */
@@ -174,7 +172,7 @@ describe('UnitAttributes', () => {
                 strength: 80,
                 experience: 0.6,
                 age: 28,
-                gender: 'female'
+                gender: 'female',
             };
             const manager = new UnitAttributes(attributesData);
 
@@ -187,4 +185,4 @@ describe('UnitAttributes', () => {
             expect(summary.gender).toBe('female');
         });
     });
-}); 
+});
