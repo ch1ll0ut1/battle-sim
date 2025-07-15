@@ -1,25 +1,44 @@
 {
-	"folders": [
-		{
-			"name": "root",
-			"path": "."
-		},
-		{
-			"name": "frontend",
-			"path": "frontend"
-		},
+    "folders": [
+        {
+            "name": "root",
+            "path": "."
+        },
+        {
+            "name": "frontend",
+            "path": "frontend"
+        },
         {
             "name": "pixi-ui",
             "path": "pixi-ui"
         },
-		{
-			"name": "backend",
-			"path": "backend"
-		}
-	],
-	"settings": {
-		"jest.disabledWorkspaceFolders": [
-			"root"
-		]
-	}
+        {
+            "name": "backend",
+            "path": "backend"
+        }
+    ],
+    "settings": {
+        "jest.disabledWorkspaceFolders": [
+            "root"
+        ],
+        "editor.codeActionsOnSave": {
+            "source.fixAll.eslint": "explicit",
+            "source.organizeImports": "explicit"
+        },
+        "editor.formatOnSave": true,
+        "eslint.workingDirectories": [
+            {
+                "mode": "auto"
+            }
+        ],
+    },
+    "extensions": {
+        "recommendations": [
+            "editorconfig.editorconfig",
+            "dbaeumer.vscode-eslint",
+            "karlito40.fix-irregular-whitespace",
+            "orta.vscode-jest",
+            "davidanson.vscode-markdownlint"
+        ]
+    }
 }
