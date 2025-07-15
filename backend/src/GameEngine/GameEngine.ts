@@ -3,7 +3,8 @@ import { Logger } from '../utils/Logger.js';
 import { GameMode } from '../GameMode/GameMode.js';
 import { GameModeType } from "../GameMode/GameModeType.js";
 import { TickUpdate } from '../utils/TickUpdate.js';
-import { MovementSandbox } from '../GameMode/MovementSandbox/MovementSandbox.js';
+import { generateForestMap } from '../Map/MapGenerator.js';
+import { Map } from '../Map/Map.js';
 
 type EnginePhase = 'initialized' | 'paused' | 'running' | 'finished';
 
@@ -23,6 +24,7 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
     private logger: Logger;
     private currentTime: number = 0;
     private gameMode: GameMode;
+    private map: Map;
 
     /**
      * Creates a new GameEngine instance
@@ -36,6 +38,8 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
         super();
 
         this.gameMode = new GameModeType[gameMode](logger, this);
+        this.map = generateForestMap(100 * 100, 100 * 100, 1);
+        // this.map = new Map(10 * 100, 10 * 100);
         this.logger = logger;
     }
 
@@ -138,6 +142,7 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
             time: this.currentTime,
             phase: this.phase,
             gameMode: this.gameMode.getState(),
+            map: this.map.getState(),
         };
     }
 } 
