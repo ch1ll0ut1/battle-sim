@@ -1,6 +1,6 @@
-import { Container, Text, TextStyle } from 'pixi.js';
-import { GAME_MODES } from '../Data/GameModes';
-import { Button } from '../UI/Button';
+import { Container } from 'pixi.js';
+import { Title } from './components/Title';
+import { GameModeButtonList } from './components/GameModeButtonList';
 
 /**
  * Main menu screen configuration
@@ -12,69 +12,35 @@ export interface MainMenuConfig {
 }
 
 /**
- * Main menu screen component
+ * Main menu screen component - composes title and button list
  */
 export class MainMenu extends Container {
     private config: MainMenuConfig;
+    private title: Title;
+    private buttonList: GameModeButtonList;
 
     /**
-   * Create the main menu screen
-   */
+     * Create the main menu screen
+     */
     constructor(config: MainMenuConfig) {
         super();
         this.config = config;
 
-        this.createTitle();
-        this.createGameModeButtons();
+        this.title = new Title(config.screenWidth);
+        this.buttonList = new GameModeButtonList(config.screenWidth, config.onGameModeSelect);
+
+        this.addChild(this.title);
+        this.addChild(this.buttonList);
     }
 
     /**
-   * Create the game title
-   */
-    private createTitle(): void {
-        const titleStyle = new TextStyle({
-            fontFamily: 'Arial',
-            fontSize: 48,
-            fill: 0xFFFFFF,
-            align: 'center',
-            fontWeight: 'bold',
-        });
+     * Update the screen size and reposition components
+     */
+    updateScreenSize(width: number, height: number): void {
+        this.config.screenWidth = width;
+        this.config.screenHeight = height;
 
-        const title = new Text({
-            text: 'Battle Simulation',
-            style: titleStyle,
-        });
-
-        title.anchor.set(0.5);
-        title.position.set(this.config.screenWidth / 2, 100);
-        this.addChild(title);
-    }
-
-    /**
-   * Create game mode selection buttons
-   */
-    private createGameModeButtons(): void {
-        const buttonWidth = 300;
-        const buttonHeight = 60;
-        const buttonSpacing = 80;
-        const startY = 250;
-
-        GAME_MODES.forEach((gameMode, index) => {
-            const button = new Button({
-                text: gameMode.name,
-                width: buttonWidth,
-                height: buttonHeight,
-                backgroundColor: 0x2196F3,
-                fontSize: 18,
-                onClick: () => { this.config.onGameModeSelect(gameMode.id); },
-            });
-
-            button.position.set(
-                (this.config.screenWidth - buttonWidth) / 2,
-                startY + (buttonHeight + buttonSpacing) * index,
-            );
-
-            this.addChild(button);
-        });
+        this.title.updatePosition(width);
+        this.buttonList.updateLayout(width);
     }
 }

@@ -1,8 +1,15 @@
-import { Application } from 'pixi.js';
+import { Application, Container } from 'pixi.js';
 import { MainMenu } from './MainMenu/MainMenu';
 import { MapEditor } from './MapEditor/MapEditor';
 import { ScreenManager } from './Navigation/ScreenManager';
 import { ScreenType } from './Navigation/ScreenType';
+
+/**
+ * Interface for scenes that can be resized
+ */
+interface ResizableScene {
+    updateScreenSize(width: number, height: number): void;
+}
 
 /**
  * Main application class
@@ -36,8 +43,38 @@ class BattleSimApp {
         // Create and register screens
         this.createScreens();
 
+        // Setup resize handler
+        this.setupResizeHandler();
+
         // Start with main menu
         this.screenManager.switchTo(ScreenType.mainMenu);
+    }
+
+    /**
+     * Setup window resize handler to update UI components
+     */
+    private setupResizeHandler(): void {
+        // Listen for PIXI application resize events
+        this.app.renderer.on('resize', () => {
+            const currentScene = this.screenManager.getCurrentScene();
+            if (currentScene) {
+                // Update the current scene with new dimensions
+                this.updateCurrentScene(currentScene);
+            }
+        });
+    }
+
+    /**
+     * Update the current scene with new screen dimensions
+     */
+    private updateCurrentScene(scene: Container): void {
+        const newWidth = this.app.screen.width;
+        const newHeight = this.app.screen.height;
+
+        // Check if the scene has an updateScreenSize method and call it
+        if ('updateScreenSize' in scene && typeof (scene as ResizableScene).updateScreenSize === 'function') {
+            (scene as ResizableScene).updateScreenSize(newWidth, newHeight);
+        }
     }
 
     /**

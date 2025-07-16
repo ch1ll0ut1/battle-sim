@@ -20,6 +20,8 @@ export class Button extends Container {
     private background!: Graphics;
     private textElement!: Text;
     private config: ButtonConfig;
+    private isHovered = false;
+    private isActive = false;
 
     /**
    * Create a new button
@@ -27,20 +29,39 @@ export class Button extends Container {
     constructor(config: ButtonConfig) {
         super();
         this.config = config;
-
         this.createBackground();
         this.createText();
         this.setupInteractivity();
     }
 
     /**
-     * Create the button background
+     * Create the button background with border and drop shadow
      */
     private createBackground(): void {
+        if (this.children.length > 0) this.removeChildAt(0);
         this.background = new Graphics();
-        this.background.fill({ color: this.config.backgroundColor ?? 0x4CAF50 });
-        this.background.roundRect(0, 0, this.config.width, this.config.height, 8);
-        this.addChild(this.background);
+
+        // Draw drop shadow (manual)
+        this.background.alpha = 1;
+        this.background.fill({ color: 0x000000, alpha: 0.13 });
+        this.background.roundRect(3, 5, this.config.width, this.config.height, 12);
+
+        // Determine background color based on state
+        let bgColor = this.config.backgroundColor ?? 0x4CAF50;
+        if (this.isActive) {
+            bgColor = 0x1976D2;
+        }
+        else if (this.isHovered) {
+            bgColor = 0x42A5F5;
+        }
+
+        // Draw button background
+        this.background.fill({ color: bgColor });
+        this.background.roundRect(0, 0, this.config.width, this.config.height, 12);
+        // Border
+        this.background.stroke({ color: 0x222F3E, width: 2 });
+        this.background.roundRect(0, 0, this.config.width, this.config.height, 12);
+        this.addChildAt(this.background, 0);
     }
 
     /**
@@ -52,6 +73,8 @@ export class Button extends Container {
             fontSize: this.config.fontSize ?? 16,
             fill: this.config.textColor ?? 0xFFFFFF,
             align: 'center',
+            fontWeight: 'bold',
+            dropShadow: false,
         });
 
         this.textElement = new Text({
@@ -73,22 +96,27 @@ export class Button extends Container {
         this.cursor = 'pointer';
 
         this.on('pointerdown', () => {
-            this.background.tint = 0xCCCCCC;
+            this.isActive = true;
+            this.createBackground();
         });
 
         this.on('pointerup', () => {
-            this.background.tint = 0xFFFFFF;
+            this.isActive = false;
+            this.createBackground();
             if (this.config.onClick) {
                 this.config.onClick();
             }
         });
 
         this.on('pointerover', () => {
-            this.background.tint = 0xDDDDDD;
+            this.isHovered = true;
+            this.createBackground();
         });
 
         this.on('pointerout', () => {
-            this.background.tint = 0xFFFFFF;
+            this.isHovered = false;
+            this.isActive = false;
+            this.createBackground();
         });
     }
 
