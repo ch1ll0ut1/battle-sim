@@ -16,10 +16,10 @@ export class Tree {
      */
     public canopyRadius: number;
 
-    public constructor(position: Position, trunkRadius: number) {
+    public constructor(position: Position, trunkRadius: number, canopyRadius: number) {
         this.position = position;
         this.trunkRadius = trunkRadius;
-        this.canopyRadius = 15 * trunkRadius;
+        this.canopyRadius = canopyRadius;
 
         this.validate();
     }
@@ -27,6 +27,11 @@ export class Tree {
     private validate() {
         if (this.trunkRadius < 25 || this.trunkRadius > 150) {
             throw new Error(`Trunk radius of "${this.trunkRadius}" must be between 25 and 150 cm`);
+        }
+
+        // Canopy radius must be between 10-20 times the trunk radius
+        if (this.canopyRadius < 10 * this.trunkRadius || this.canopyRadius > 20 * this.trunkRadius) {
+            throw new Error(`Canopy radius of "${this.canopyRadius}" must be between ${10 * this.trunkRadius} and ${20 * this.trunkRadius} cm`);
         }
     }
 }

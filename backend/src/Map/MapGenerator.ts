@@ -54,7 +54,8 @@ export function generateForestMap(width: number, height: number, seed: number): 
             if (rand() < prob) {
                 // Vary trunk radius a bit for realism
                 const trunkRadius = 25 + Math.floor(rand() * 125); // 25-150cm
-                map.terrain.trees.push(new Tree({ x, y }, trunkRadius));
+                const canopyRadius = trunkRadius * (10 + Math.floor(rand() * 10)); // 10-20 times the trunk radius
+                map.terrain.trees.push(new Tree({ x, y }, trunkRadius, canopyRadius));
             }
         }
     }
