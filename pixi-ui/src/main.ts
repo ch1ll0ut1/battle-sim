@@ -1,35 +1,79 @@
-import { Application, Assets, Sprite } from "pixi.js";
+import { Application } from 'pixi.js';
+import { MainMenu } from './MainMenu/MainMenu';
+import { MapEditor } from './MapEditor/MapEditor';
+import { ScreenManager } from './Navigation/ScreenManager';
+import { ScreenType } from './Navigation/ScreenType';
 
+/**
+ * Main application class
+ */
+class BattleSimApp {
+    private app!: Application;
+    private screenManager!: ScreenManager;
+
+    /**
+   * Initialize the application
+   */
+    async init(): Promise<void> {
+        // Create a new application
+        this.app = new Application();
+
+        // Initialize the application
+        await this.app.init({
+            background: '#2c3e50',
+            resizeTo: window,
+        });
+
+        // Append the application canvas to the document body
+        document.getElementById('pixi-container')?.appendChild(this.app.canvas);
+
+        // Initialize screen manager
+        this.screenManager = new ScreenManager(this.app);
+
+        // Create and register screens
+        this.createScreens();
+
+        // Start with main menu
+        this.screenManager.switchTo(ScreenType.mainMenu);
+    }
+
+    /**
+   * Create and register all screens
+   */
+    private createScreens(): void {
+        // Main Menu
+        const mainMenu = new MainMenu({
+            onGameModeSelect: (gameModeId: string) => {
+                console.log(`Selected game mode: ${gameModeId}`);
+                if (gameModeId === 'map_editor') {
+                    this.screenManager.switchTo(ScreenType.mapEditor);
+                }
+                // TODO: Handle other game modes
+            },
+            screenWidth: this.app.screen.width,
+            screenHeight: this.app.screen.height,
+        });
+        this.screenManager.registerScene(ScreenType.mainMenu, mainMenu);
+
+        // Map Editor
+        const mapEditor = new MapEditor({
+            onBack: () => {
+                this.screenManager.switchTo(ScreenType.mainMenu);
+            },
+            onSave: (mapData) => {
+                console.log('Saving map:', mapData);
+                // TODO: Implement map saving
+                alert('Map saved! (Not implemented yet)');
+            },
+            screenWidth: this.app.screen.width,
+            screenHeight: this.app.screen.height,
+        });
+        this.screenManager.registerScene(ScreenType.mapEditor, mapEditor);
+    }
+}
+
+// Initialize the application
 (async () => {
-    // Create a new application
-    const app = new Application();
-
-    // Initialize the application
-    await app.init({ background: "#1099bb", resizeTo: window });
-
-    // Append the application canvas to the document body
-    document.getElementById("pixi-container")!.appendChild(app.canvas);
-
-    // Load the bunny texture
-    const texture = await Assets.load("/assets/bunny.png");
-
-    // Create a bunny Sprite
-    const bunny = new Sprite(texture);
-
-    // Center the sprite's anchor point
-    bunny.anchor.set(0.5);
-
-    // Move the sprite to the center of the screen
-    bunny.position.set(app.screen.width / 2, app.screen.height / 2);
-
-    // Add the bunny to the stage
-    app.stage.addChild(bunny);
-
-    // Listen for animate update
-    app.ticker.add((time) => {
-        // Just for fun, let's rotate mr rabbit a little.
-        // * Delta is 1 if running at 100% performance *
-        // * Creates frame-independent transformation *
-        bunny.rotation += 0.1 * time.deltaTime;
-    });
-})();
+    const battleSimApp = new BattleSimApp();
+    await battleSimApp.init();
+})().catch(console.error);
