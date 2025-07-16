@@ -12,8 +12,8 @@ class BattleSimApp {
     private screenManager!: ScreenManager;
 
     /**
-   * Initialize the application
-   */
+     * Initialize the application
+     */
     async init(): Promise<void> {
         // Create a new application
         this.app = new Application();
@@ -22,6 +22,9 @@ class BattleSimApp {
         await this.app.init({
             background: '#2c3e50',
             resizeTo: window,
+            antialias: true,
+            autoDensity: true,
+            resolution: window.devicePixelRatio,
         });
 
         // Append the application canvas to the document body
@@ -38,8 +41,8 @@ class BattleSimApp {
     }
 
     /**
-   * Create and register all screens
-   */
+     * Create and register all screens
+     */
     private createScreens(): void {
         // Main Menu
         const mainMenu = new MainMenu({
