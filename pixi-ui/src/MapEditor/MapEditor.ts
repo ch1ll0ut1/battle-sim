@@ -1,4 +1,4 @@
-import { Container } from 'pixi.js';
+import { Container, Application } from 'pixi.js';
 import { MapViewport } from '../UI/MapViewport';
 import { MapCanvas } from './components/MapCanvas';
 import { MapProperties } from './components/MapProperties';
@@ -15,13 +15,15 @@ export class MapEditor extends Container {
     private canvas!: MapCanvas;
     private properties!: MapProperties;
     private viewport!: MapViewport;
+    private app: Application;
 
     /**
      * Create the map editor screen
      */
-    constructor(config: MapEditorConfig) {
+    constructor(config: MapEditorConfig, app: Application) {
         super();
         this.config = config;
+        this.app = app;
 
         // Initialize with default map data (1km x 1km)
         this.mapData = {
@@ -75,6 +77,7 @@ export class MapEditor extends Container {
         this.canvas = new MapCanvas(
             this.mapData,
             this.onMapDataChange.bind(this),
+            this.app,
         );
 
         // Add canvas to viewport's world container
@@ -83,6 +86,9 @@ export class MapEditor extends Container {
         // Make viewport focusable and focused for keyboard events
         this.viewport.eventMode = 'static';
         this.viewport.cursor = 'default';
+
+        // Start monitoring viewport changes for performance optimization
+        this.startViewportMonitoring();
 
         this.addChild(this.toolbar);
         this.addChild(this.properties);
@@ -111,6 +117,57 @@ export class MapEditor extends Container {
         this.canvas.updateSize(width, height);
         this.viewport.updateWorldSize(width, height);
         this.toolbar.updateMapData(this.mapData);
+    }
+
+    /**
+     * Start monitoring viewport changes for performance optimization
+     */
+    private startViewportMonitoring(): void {
+        let lastBounds = this.viewport.getViewportBounds();
+        let lastZoom = this.viewport.getZoom();
+
+        // Throttled update function with minimum movement threshold
+        let updateQueued = false;
+        const throttledUpdate = () => {
+            if (!updateQueued) {
+                updateQueued = true;
+                requestAnimationFrame(() => {
+                    const currentBounds = this.viewport.getViewportBounds();
+                    const currentZoom = this.viewport.getZoom();
+
+                    // Only update if viewport changed significantly
+                    const significantMovement = (
+                        Math.abs(currentBounds.x - lastBounds.x) > 100
+                        || Math.abs(currentBounds.y - lastBounds.y) > 100
+                        || Math.abs(currentBounds.width - lastBounds.width) > 10
+                        || Math.abs(currentBounds.height - lastBounds.height) > 10
+                    );
+
+                    const zoomChanged = Math.abs(currentZoom - lastZoom) > 0.001;
+
+                    if (significantMovement || zoomChanged) {
+                        this.canvas.updateViewportBounds(currentBounds, currentZoom);
+                        lastBounds = currentBounds;
+                        lastZoom = currentZoom;
+                    }
+
+                    updateQueued = false;
+                });
+            }
+        };
+
+        // Listen for viewport events instead of continuous polling
+        this.viewport.on('pointermove', throttledUpdate);
+        this.viewport.on('wheel', throttledUpdate);
+        this.viewport.on('pointerdown', throttledUpdate);
+        this.viewport.on('pointerup', throttledUpdate);
+
+        // Also listen for keyboard events (for WASD panning)
+        document.addEventListener('keydown', throttledUpdate);
+        document.addEventListener('keyup', throttledUpdate);
+
+        // Initial update
+        this.canvas.updateViewportBounds(lastBounds, lastZoom);
     }
 
     /**

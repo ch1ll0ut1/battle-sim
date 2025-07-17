@@ -224,7 +224,7 @@ export class MapViewport extends Container {
                 return;
             }
 
-            const panAmount = (this.config.panSpeed ?? 10) * 0.6; // Faster constant speed
+            const panAmount = (this.config.panSpeed ?? 10) * 0.8; // Faster constant speed
             let panX = 0;
             let panY = 0;
 

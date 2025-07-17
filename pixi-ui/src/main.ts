@@ -107,7 +107,7 @@ class BattleSimApp {
             },
             screenWidth: this.app.screen.width,
             screenHeight: this.app.screen.height,
-        });
+        }, this.app);
         this.screenManager.registerScene(ScreenType.mapEditor, mapEditor);
     }
 }

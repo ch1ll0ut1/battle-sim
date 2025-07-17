@@ -74,7 +74,7 @@ export class MapProperties extends Container {
             width: 140,
             height: 30,
             minValue: 1,
-            maxValue: 100,
+            maxValue: 10,
             value: this.mapData.width / 100000, // Convert from cm to km
             step: 0.1,
             onChange: (value) => {
@@ -98,7 +98,7 @@ export class MapProperties extends Container {
             width: 140,
             height: 30,
             minValue: 1,
-            maxValue: 100,
+            maxValue: 10,
             value: this.mapData.height / 100000, // Convert from cm to km
             step: 0.1,
             onChange: (value) => {
