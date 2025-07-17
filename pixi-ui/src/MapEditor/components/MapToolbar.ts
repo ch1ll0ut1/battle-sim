@@ -12,7 +12,10 @@ export class MapToolbar extends Container {
     private onToolSelect: (tool: string) => void;
     private onGenerateTrees: (trees: TreeData[]) => void;
     private mapData: MapData;
-    private selectedTool = 'tree';
+    private selectedTool = 'none'; // Default to no tool selected
+    private generateButton!: Button;
+    private progressText!: Text;
+    private toolButtons: Button[] = [];
 
     constructor(
         screenWidth: number,
@@ -83,6 +86,7 @@ export class MapToolbar extends Container {
     private createToolButtons(): void {
         const toolY = 80;
         const tools = [
+            { id: 'none', name: 'None', color: 0x666666 },
             { id: 'tree', name: 'Tree', color: 0x4CAF50 },
             { id: 'erase', name: 'Erase', color: 0xF44336 },
         ];
@@ -101,32 +105,86 @@ export class MapToolbar extends Container {
                 },
             });
 
-            button.position.set(20 + (90 * index), toolY);
+            button.position.set(20 + (80 * index), toolY);
+            this.toolButtons.push(button);
             this.addChild(button);
         });
     }
 
     private createGenerateTreesButton(): void {
-        const generateButton = new Button({
+        this.generateButton = new Button({
             text: 'Generate Trees',
             width: 140,
             height: 35,
             backgroundColor: 0xFF9800,
             fontSize: 14,
-            onClick: () => {
-                const trees = generateTreesForMap(this.mapData);
-                this.onGenerateTrees(trees);
+            onClick: async () => {
+                this.generateButton.setText('Generating...');
+                this.generateButton.setEnabled(false);
+
+                try {
+                    const trees = await generateTreesForMap(this.mapData, 1, (current, total) => {
+                        this.updateProgress(current, total);
+                    });
+                    this.onGenerateTrees(trees);
+                }
+                catch (error) {
+                    console.error('Error generating trees:', error);
+                }
+                finally {
+                    this.generateButton.setText('Generate Trees');
+                    this.generateButton.setEnabled(true);
+                    this.hideProgress();
+                }
             },
         });
 
-        generateButton.position.set(220, 80);
-        this.addChild(generateButton);
+        this.generateButton.position.set(260, 80);
+        this.addChild(this.generateButton);
+
+        // Create progress text
+        const progressStyle = new TextStyle({
+            fontFamily: 'Arial, sans-serif',
+            fontSize: 12,
+            fill: 0xFFFFFF,
+            align: 'center',
+        });
+
+        this.progressText = new Text({
+            text: '',
+            style: progressStyle,
+        });
+        this.progressText.position.set(330, 100);
+        this.progressText.visible = false;
+        this.addChild(this.progressText);
+    }
+
+    private updateProgress(current: number, total: number): void {
+        this.progressText.text = `Trees: ${current}/${total}`;
+        this.progressText.visible = true;
+    }
+
+    private hideProgress(): void {
+        this.progressText.visible = false;
     }
 
     private updateToolButtons(): void {
-        // Remove and recreate tool buttons to update their appearance
-        this.removeChildren();
-        this.createToolbar(800); // TODO: Pass actual screen width
+        // Update tool button appearance based on selection
+        const tools = [
+            { id: 'none', name: 'None', color: 0x666666 },
+            { id: 'tree', name: 'Tree', color: 0x4CAF50 },
+            { id: 'erase', name: 'Erase', color: 0xF44336 },
+        ];
+
+        this.toolButtons.forEach((button, index) => {
+            const tool = tools[index];
+            // Remove and recreate just the button background to update color
+            if (tool) {
+                // Update button config and recreate
+                (button as any).config.backgroundColor = this.selectedTool === tool.id ? 0x2196F3 : tool.color;
+                (button as any).createBackground();
+            }
+        });
     }
 
     updateMapData(mapData: MapData): void {
