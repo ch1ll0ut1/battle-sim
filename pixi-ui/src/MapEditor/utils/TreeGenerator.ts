@@ -69,8 +69,8 @@ export async function generateTreesForMap(
 
     // Calculate tree density based on map size - much lower density to prevent freezing
     const mapArea = mapData.width * mapData.height; // cm²
-    const baseDensity = 0.000001; // trees per cm² - reduced by 10x
-    const targetTreeCount = Math.min(Math.floor(mapArea * baseDensity), 2000); // Cap at 2000 trees
+    const baseDensity = 0.0000001; // trees per cm² - reduced by 10x
+    const targetTreeCount = Math.floor(mapArea * baseDensity);
 
     let attempts = 0;
     const maxAttempts = targetTreeCount * 10; // Prevent infinite loops
