@@ -10,6 +10,10 @@ export class MapProperties extends Container {
     private onMapResize: (width: number, height: number) => void;
     private widthSlider!: Slider;
     private heightSlider!: Slider;
+    private treeCountText!: Text;
+    private fpsText!: Text;
+    private fpsStartTime = performance.now();
+    private fpsFrameCount = 0;
 
     constructor(
         screenWidth: number,
@@ -22,6 +26,7 @@ export class MapProperties extends Container {
         this.onMapResize = onMapResize;
 
         this.createPropertiesPanel(screenWidth, screenHeight);
+        this.startFpsMonitoring();
     }
 
     private createPropertiesPanel(screenWidth: number, _screenHeight: number): void {
@@ -47,7 +52,7 @@ export class MapProperties extends Container {
         this.createSizeControls(panelX, panelY + 30);
 
         // Map info
-        this.createMapInfo(panelX, panelY + 120);
+        this.createMapInfo(panelX, panelY + 140);
     }
 
     private createSizeControls(x: number, y: number): void {
@@ -113,17 +118,46 @@ export class MapProperties extends Container {
             fill: 0xCCCCCC,
         });
 
-        const treeCountText = new Text({
+        // Tree count
+        this.treeCountText = new Text({
             text: `Trees: ${this.mapData.trees.length}`,
             style: infoStyle,
         });
-        treeCountText.position.set(x, y);
-        this.addChild(treeCountText);
+        this.treeCountText.position.set(x, y);
+        this.addChild(this.treeCountText);
+
+        // FPS display
+        this.fpsText = new Text({
+            text: 'FPS: --',
+            style: infoStyle,
+        });
+        this.fpsText.position.set(x, y + 20);
+        this.addChild(this.fpsText);
     }
 
     updateMapData(mapData: MapData): void {
         this.mapData = mapData;
         this.widthSlider.setValue(mapData.width / 100000);
         this.heightSlider.setValue(mapData.height / 100000);
+        this.treeCountText.text = `Trees: ${mapData.trees.length}`;
+    }
+
+    private startFpsMonitoring(): void {
+        const updateFps = () => {
+            this.fpsFrameCount++;
+            const currentTime = performance.now();
+            const elapsed = currentTime - this.fpsStartTime;
+
+            if (elapsed >= 1000) { // Update every second
+                const fps = Math.round((this.fpsFrameCount * 1000) / elapsed);
+                this.fpsText.text = `FPS: ${fps}`;
+                this.fpsFrameCount = 0;
+                this.fpsStartTime = currentTime;
+            }
+
+            requestAnimationFrame(updateFps);
+        };
+
+        updateFps();
     }
 }
