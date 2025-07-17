@@ -228,3 +228,12 @@ Units use a component-based architecture:
 - **@pixi/ui** - UI components for PIXI
 - **Vite** - Build tool
 - **ESLint** - Code linting
+
+## PIXI.js Development Guidelines
+
+When working with PIXI.js framework in the `/pixi-ui/` directory:
+
+1. **Always reference PIXI.js documentation** - Use `/pixi-ui/docs/pixeljs-documentation.md` as the primary reference for PIXI.js API and best practices
+2. **Extended documentation** - When the primary documentation is insufficient, refer to `/pixi-ui/docs/pixel-documentation-full.md` for comprehensive PIXI.js information
+3. **Follow PIXI.js conventions** - Use established PIXI.js patterns for scene management, rendering, and event handling
+4. **Performance optimization** - Leverage PIXI.js performance features like object pooling, batching, and efficient rendering practices

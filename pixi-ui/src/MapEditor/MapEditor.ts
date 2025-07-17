@@ -1,8 +1,9 @@
 import { Container } from 'pixi.js';
-import { MapData, MapEditorConfig, TreeData } from './types/MapData';
-import { MapToolbar } from './components/MapToolbar';
+import { MapViewport } from '../UI/MapViewport';
 import { MapCanvas } from './components/MapCanvas';
 import { MapProperties } from './components/MapProperties';
+import { MapToolbar } from './components/MapToolbar';
+import { MapData, MapEditorConfig, TreeData } from './types/MapData';
 
 /**
  * Map editor screen component - composes toolbar, canvas, and properties
@@ -13,6 +14,7 @@ export class MapEditor extends Container {
     private toolbar!: MapToolbar;
     private canvas!: MapCanvas;
     private properties!: MapProperties;
+    private viewport!: MapViewport;
 
     /**
      * Create the map editor screen
@@ -21,11 +23,11 @@ export class MapEditor extends Container {
         super();
         this.config = config;
 
-        // Initialize with default map data
+        // Initialize with default map data (1km x 1km)
         this.mapData = {
             name: 'New Map',
-            width: 1000,
-            height: 800,
+            width: 100000, // 1km = 100,000 cm
+            height: 100000, // 1km = 100,000 cm
             trees: [],
         };
 
@@ -43,12 +45,6 @@ export class MapEditor extends Container {
             this.onGenerateTrees.bind(this),
         );
 
-        // Create canvas
-        this.canvas = new MapCanvas(
-            this.mapData,
-            this.onMapDataChange.bind(this),
-        );
-
         // Create properties panel
         this.properties = new MapProperties(
             this.config.screenWidth,
@@ -57,9 +53,40 @@ export class MapEditor extends Container {
             this.onMapResize.bind(this),
         );
 
+        // Calculate viewport dimensions with proper spacing
+        const spacing = 20; // 20px spacing
+        const viewportX = spacing;
+        const viewportY = 120 + spacing; // Space for toolbar + spacing
+        const viewportWidth = this.config.screenWidth - 200 - (spacing * 2); // Space for properties panel + spacing on both sides
+        const viewportHeight = this.config.screenHeight - 120 - (spacing * 2); // Space for toolbar + spacing top and bottom
+
+        // Create viewport
+        this.viewport = new MapViewport({
+            width: viewportWidth,
+            height: viewportHeight,
+            worldWidth: this.mapData.width,
+            worldHeight: this.mapData.height,
+            minZoom: 0.0001, // Allow very small zoom for large maps
+            maxZoom: 10.0,
+        });
+        this.viewport.position.set(viewportX, viewportY);
+
+        // Create canvas
+        this.canvas = new MapCanvas(
+            this.mapData,
+            this.onMapDataChange.bind(this),
+        );
+
+        // Add canvas to viewport's world container
+        this.viewport.addWorldContent(this.canvas);
+
+        // Make viewport focusable and focused for keyboard events
+        this.viewport.eventMode = 'static';
+        this.viewport.cursor = 'default';
+
         this.addChild(this.toolbar);
-        this.addChild(this.canvas);
         this.addChild(this.properties);
+        this.addChild(this.viewport);
     }
 
     private onToolSelect(tool: string): void {
@@ -82,6 +109,7 @@ export class MapEditor extends Container {
         this.mapData.width = width;
         this.mapData.height = height;
         this.canvas.updateSize(width, height);
+        this.viewport.updateWorldSize(width, height);
         this.toolbar.updateMapData(this.mapData);
     }
 

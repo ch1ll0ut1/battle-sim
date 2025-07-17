@@ -1,5 +1,5 @@
 import { Container, Text, TextStyle } from 'pixi.js';
-import { Button } from '../../UI/Button';
+import { Slider } from '../../UI/Slider';
 import { MapData } from '../types/MapData';
 
 /**
@@ -8,8 +8,8 @@ import { MapData } from '../types/MapData';
 export class MapProperties extends Container {
     private mapData: MapData;
     private onMapResize: (width: number, height: number) => void;
-    private widthText!: Text;
-    private heightText!: Text;
+    private widthSlider!: Slider;
+    private heightSlider!: Slider;
 
     constructor(
         screenWidth: number,
@@ -24,7 +24,7 @@ export class MapProperties extends Container {
         this.createPropertiesPanel(screenWidth, screenHeight);
     }
 
-    private createPropertiesPanel(screenWidth: number, screenHeight: number): void {
+    private createPropertiesPanel(screenWidth: number, _screenHeight: number): void {
         const panelX = screenWidth - 200;
         const panelY = 140;
 
@@ -57,13 +57,6 @@ export class MapProperties extends Container {
             fill: 0xCCCCCC,
         });
 
-        const valueStyle = new TextStyle({
-            fontFamily: 'Arial, sans-serif',
-            fontSize: 14,
-            fill: 0xFFFFFF,
-            fontWeight: 'bold',
-        });
-
         // Width controls
         const widthLabel = new Text({
             text: 'Width:',
@@ -72,73 +65,45 @@ export class MapProperties extends Container {
         widthLabel.position.set(x, y);
         this.addChild(widthLabel);
 
-        this.widthText = new Text({
-            text: `${this.mapData.width}cm`,
-            style: valueStyle,
+        this.widthSlider = new Slider({
+            width: 140,
+            height: 30,
+            minValue: 1,
+            maxValue: 100,
+            value: this.mapData.width / 100000, // Convert from cm to km
+            step: 0.1,
+            onChange: (value) => {
+                const newWidth = value * 100000; // Convert from km to cm
+                this.mapData.width = newWidth;
+                this.onMapResize(newWidth, this.mapData.height);
+            },
         });
-        this.widthText.position.set(x + 50, y);
-        this.addChild(this.widthText);
-
-        // Width buttons
-        const widthDecButton = new Button({
-            text: '-',
-            width: 25,
-            height: 25,
-            backgroundColor: 0xF44336,
-            fontSize: 12,
-            onClick: () => { this.adjustMapSize(-100, 0); },
-        });
-        widthDecButton.position.set(x + 120, y - 5);
-        this.addChild(widthDecButton);
-
-        const widthIncButton = new Button({
-            text: '+',
-            width: 25,
-            height: 25,
-            backgroundColor: 0x4CAF50,
-            fontSize: 12,
-            onClick: () => { this.adjustMapSize(100, 0); },
-        });
-        widthIncButton.position.set(x + 150, y - 5);
-        this.addChild(widthIncButton);
+        this.widthSlider.position.set(x, y + 20);
+        this.addChild(this.widthSlider);
 
         // Height controls
         const heightLabel = new Text({
             text: 'Height:',
             style: labelStyle,
         });
-        heightLabel.position.set(x, y + 30);
+        heightLabel.position.set(x, y + 60);
         this.addChild(heightLabel);
 
-        this.heightText = new Text({
-            text: `${this.mapData.height}cm`,
-            style: valueStyle,
+        this.heightSlider = new Slider({
+            width: 140,
+            height: 30,
+            minValue: 1,
+            maxValue: 100,
+            value: this.mapData.height / 100000, // Convert from cm to km
+            step: 0.1,
+            onChange: (value) => {
+                const newHeight = value * 100000; // Convert from km to cm
+                this.mapData.height = newHeight;
+                this.onMapResize(this.mapData.width, newHeight);
+            },
         });
-        this.heightText.position.set(x + 50, y + 30);
-        this.addChild(this.heightText);
-
-        // Height buttons
-        const heightDecButton = new Button({
-            text: '-',
-            width: 25,
-            height: 25,
-            backgroundColor: 0xF44336,
-            fontSize: 12,
-            onClick: () => { this.adjustMapSize(0, -100); },
-        });
-        heightDecButton.position.set(x + 120, y + 25);
-        this.addChild(heightDecButton);
-
-        const heightIncButton = new Button({
-            text: '+',
-            width: 25,
-            height: 25,
-            backgroundColor: 0x4CAF50,
-            fontSize: 12,
-            onClick: () => { this.adjustMapSize(0, 100); },
-        });
-        heightIncButton.position.set(x + 150, y + 25);
-        this.addChild(heightIncButton);
+        this.heightSlider.position.set(x, y + 80);
+        this.addChild(this.heightSlider);
     }
 
     private createMapInfo(x: number, y: number): void {
@@ -156,22 +121,9 @@ export class MapProperties extends Container {
         this.addChild(treeCountText);
     }
 
-    private adjustMapSize(widthDelta: number, heightDelta: number): void {
-        const newWidth = Math.max(500, this.mapData.width + widthDelta);
-        const newHeight = Math.max(500, this.mapData.height + heightDelta);
-
-        this.mapData.width = newWidth;
-        this.mapData.height = newHeight;
-
-        this.widthText.text = `${newWidth}cm`;
-        this.heightText.text = `${newHeight}cm`;
-
-        this.onMapResize(newWidth, newHeight);
-    }
-
     updateMapData(mapData: MapData): void {
         this.mapData = mapData;
-        this.widthText.text = `${mapData.width}cm`;
-        this.heightText.text = `${mapData.height}cm`;
+        this.widthSlider.setValue(mapData.width / 100000);
+        this.heightSlider.setValue(mapData.height / 100000);
     }
 }
