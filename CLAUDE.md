@@ -113,6 +113,7 @@ Each module follows this pattern:
 - Explicitly type complex interfaces and function parameters
 - Use strict mode with proper error handling
 - Avoid unnecessary return type annotations for simple functions
+- Never use ": void" return types or other unnecessary type annotations when TypeScript can infer them
 
 ### Performance Considerations
 - **Spatial partitioning** for efficient unit queries
