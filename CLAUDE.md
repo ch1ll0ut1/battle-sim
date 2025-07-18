@@ -238,3 +238,40 @@ When working with PIXI.js framework in the `/pixi-ui/` directory:
 2. **Extended documentation** - When the primary documentation is insufficient, refer to `/pixi-ui/docs/pixel-documentation-full.md` for comprehensive PIXI.js information
 3. **Follow PIXI.js conventions** - Use established PIXI.js patterns for scene management, rendering, and event handling
 4. **Performance optimization** - Leverage PIXI.js performance features like object pooling, batching, and efficient rendering practices
+
+## Additional User and Workspace Rules for Claude Code
+
+The following rules are defined by the user and workspace configuration. Claude Code must follow these in addition to all other project guidelines:
+
+### Workspace-Level Rules
+- All files in the folder "_OLD" are deprecated and only remain to use as example and maybe extract some logic and values later.
+
+### User Rules
+- Propose solutions and present options for the user to choose from.
+- Let TypeScript infer types when possible (e.g., avoid unnecessary return type annotations like `: void`).
+- Do not do things that are not needed (YAGNI principle).
+- Private methods should be at the end of a file.
+- Never do a git reset unless the user is asked and confirms.
+- Add multiline comments to every method, function, and class.
+- Never write `types.ts` files.
+- Do not create proxy methods to dependencies and no getter boilerplate.
+- Only do what is asked; do not do extra work. Make suggestions afterwards without causing any changes.
+- Cover all files with tests. Tests should not do semantic testing but only test behavior and business logic. Do not test implementation details—only the public API of modules.
+- Develop in small iterations to give the user time to review changes and do git commits in between.
+- Write self-containing modules (single responsibility, containing logic, tests, and types as close together as possible). Example structure:
+  ```
+  /UserAccount/UserAccount.ts
+  /UserAccount/UserAccount.test.ts
+  /UserAccount/calculateSomething.ts (only used by UserAccount.ts)
+  /UserAccount/calculateSomething.test.ts
+  /UserAccount/UserAccountBalance.ts (child dependency of UserAccount)
+  /UserAccount/UserAccountBalance.test.ts
+  ```
+- Tests should follow the guidelines in `@TESTING_STRATEGY.md`.
+- The assistant should inspect the actual code rather than speculate when diagnosing issues.
+- To run TypeScript scripts directly, use `npx tsx script.ts` instead of `npx ts-node` or building first.
+- Do not use object cloning or defensive copying (e.g., `{...obj}` or `Object.assign()`). Use direct property access and assignment instead.
+- Prefer direct property access for object properties. Only add getter/setter methods when needed.
+- State changes should be explicit and logged with configurable log levels to enable simulation debugging without affecting performance in production battles.
+- Documentation files should be placed in the `/docs` directory.
+- The user prefers code that is simple, obvious, and has easy-to-follow references, follow KISS.
