@@ -55,8 +55,8 @@ export class MapCanvas extends Container {
         this.initializeTextures();
     }
 
-    private async initializeTextures(): Promise<void> {
-        await this.textureManager.initialize();
+    private initializeTextures(): void {
+        this.textureManager.initialize();
 
         // Re-render trees once textures are ready
         if (this.mapData.trees.length > 0) {
@@ -82,7 +82,7 @@ export class MapCanvas extends Container {
         for (const size of sizeCategories) {
             const key = `1_${size}`;
             const container = new Container();
-            container.name = `TreeBatch_${key}`;
+            container.label = `TreeBatch_${key}`;
             this.treeBatchContainers.set(key, container);
             this.addChild(container);
         }
@@ -92,7 +92,7 @@ export class MapCanvas extends Container {
         for (const size of sizeCategories) {
             const key = `0_${size}`;
             const container = new Container();
-            container.name = `TreeBatch_${key}`;
+            container.label = `TreeBatch_${key}`;
             this.treeBatchContainers.set(key, container);
             this.addChild(container);
         }
@@ -120,6 +120,8 @@ export class MapCanvas extends Container {
     private initializeTreeRenderInfo(): void {
         // Clear existing render info and return sprites to pool
         this.treeRenderInfo.forEach((info) => {
+            // TypeScript can't infer parent is non-null after assignment
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             if (info.sprite.parent) {
                 info.sprite.parent.removeChild(info.sprite);
             }
@@ -210,6 +212,8 @@ export class MapCanvas extends Container {
             else if (!shouldShow && wasVisible) {
                 // Tree should not be visible but is - hide it
                 info.isVisible = false;
+                // TypeScript can't infer parent is non-null after assignment
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                 if (info.sprite.parent) {
                     info.sprite.parent.removeChild(info.sprite);
                 }
@@ -219,6 +223,8 @@ export class MapCanvas extends Container {
                 const newLOD = this.calculateLOD(currentZoom);
                 if (newLOD !== info.currentLOD) {
                     // Remove from old batch container
+                    // TypeScript can't infer parent is non-null after assignment
+                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                     if (info.sprite.parent) {
                         info.sprite.parent.removeChild(info.sprite);
                     }
@@ -299,9 +305,11 @@ export class MapCanvas extends Container {
      */
     private getSpriteFromPool(): Sprite {
         if (this.pooledSprites.length > 0) {
-            const sprite = this.pooledSprites.pop()!;
-            sprite.visible = true;
-            return sprite;
+            const sprite = this.pooledSprites.pop();
+            if (sprite !== undefined) {
+                sprite.visible = true;
+                return sprite;
+            }
         }
         return new Sprite();
     }

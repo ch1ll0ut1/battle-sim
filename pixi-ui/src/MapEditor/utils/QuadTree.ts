@@ -22,8 +22,8 @@ export interface Point {
  * Quadtree node for spatial indexing of trees
  */
 export class QuadTree {
-    private static readonly MAX_OBJECTS = 25;
-    private static readonly MAX_LEVELS = 8;
+    private static readonly maxObjects = 25;
+    private static readonly maxLevels = 8;
 
     private level: number;
     private objects: TreeData[] = [];
@@ -40,7 +40,9 @@ export class QuadTree {
      */
     clear(): void {
         this.objects = [];
-        this.nodes.forEach((node) => { node.clear(); });
+        this.nodes.forEach((node) => {
+            node.clear();
+        });
         this.nodes = [];
     }
 
@@ -137,7 +139,7 @@ export class QuadTree {
 
         this.objects.push(tree);
 
-        if (this.objects.length > QuadTree.MAX_OBJECTS && this.level < QuadTree.MAX_LEVELS) {
+        if (this.objects.length > QuadTree.maxObjects && this.level < QuadTree.maxLevels) {
             if (this.nodes.length === 0) {
                 this.split();
             }
@@ -219,7 +221,7 @@ export class QuadTree {
     /**
      * Get debug information about the quadtree
      */
-    getDebugInfo(): { level: number; objects: number; bounds: Rectangle; children: any[] } {
+    getDebugInfo(): { level: number; objects: number; bounds: Rectangle; children: unknown[] } {
         return {
             level: this.level,
             objects: this.objects.length,

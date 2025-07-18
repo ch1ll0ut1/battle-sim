@@ -118,24 +118,24 @@ export class MapToolbar extends Container {
             height: 35,
             backgroundColor: 0xFF9800,
             fontSize: 14,
-            onClick: async () => {
+            onClick: () => {
                 this.generateButton.setText('Generating...');
                 this.generateButton.setEnabled(false);
 
-                try {
-                    const trees = await generateTreesForMap(this.mapData, 1, (current, total) => {
-                        this.updateProgress(current, total);
+                generateTreesForMap(this.mapData, 1, (current, total) => {
+                    this.updateProgress(current, total);
+                })
+                    .then((trees) => {
+                        this.onGenerateTrees(trees);
+                    })
+                    .catch((error: unknown) => {
+                        console.error('Error generating trees:', error);
+                    })
+                    .finally(() => {
+                        this.generateButton.setText('Generate Trees');
+                        this.generateButton.setEnabled(true);
+                        this.hideProgress();
                     });
-                    this.onGenerateTrees(trees);
-                }
-                catch (error) {
-                    console.error('Error generating trees:', error);
-                }
-                finally {
-                    this.generateButton.setText('Generate Trees');
-                    this.generateButton.setEnabled(true);
-                    this.hideProgress();
-                }
             },
         });
 
@@ -179,10 +179,15 @@ export class MapToolbar extends Container {
         this.toolButtons.forEach((button, index) => {
             const tool = tools[index];
             // Remove and recreate just the button background to update color
-            if (tool) {
+            const currentTool = tools[index];
+            // TypeScript can't infer tools[index] is non-null after assignment
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            if (currentTool) {
+                // Cast to known button type to access config
+                const pixiButton = button as { config: { backgroundColor: number }; createBackground: () => void };
                 // Update button config and recreate
-                (button as any).config.backgroundColor = this.selectedTool === tool.id ? 0x2196F3 : tool.color;
-                (button as any).createBackground();
+                pixiButton.config.backgroundColor = this.selectedTool === currentTool.id ? 0x2196F3 : currentTool.color;
+                pixiButton.createBackground();
             }
         });
     }

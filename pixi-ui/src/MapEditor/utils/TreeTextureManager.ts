@@ -4,17 +4,17 @@ import { Graphics, RenderTexture, Texture, Application } from 'pixi.js';
  * Tree texture types for different detail levels
  */
 export enum TreeTextureType {
-    HIGH_DETAIL = 'high_detail',
-    LOW_DETAIL = 'low_detail',
+    highDetail = 'high_detail',
+    lowDetail = 'low_detail',
 }
 
 /**
  * Tree texture variation based on size categories
  */
 export enum TreeSizeCategory {
-    SMALL = 'small', // trunk: 25-50cm, canopy: 250-500cm
-    MEDIUM = 'medium', // trunk: 50-100cm, canopy: 500-1000cm
-    LARGE = 'large', // trunk: 100-150cm, canopy: 1000-3000cm
+    small = 'small', // trunk: 25-50cm, canopy: 250-500cm
+    medium = 'medium', // trunk: 50-100cm, canopy: 500-1000cm
+    large = 'large', // trunk: 100-150cm, canopy: 1000-3000cm
 }
 
 /**
@@ -31,6 +31,8 @@ export class TreeTextureManager {
     }
 
     static getInstance(app: Application): TreeTextureManager {
+        // TypeScript can't infer static member is non-null after assignment
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (!TreeTextureManager.instance) {
             TreeTextureManager.instance = new TreeTextureManager(app);
         }
@@ -40,16 +42,16 @@ export class TreeTextureManager {
     /**
      * Initialize all tree textures
      */
-    async initialize(): Promise<void> {
+    initialize(): void {
         if (this.initialized) return;
 
         // Create textures for each combination of detail level and size category
-        const detailLevels = [TreeTextureType.HIGH_DETAIL, TreeTextureType.LOW_DETAIL];
-        const sizeCategories = [TreeSizeCategory.SMALL, TreeSizeCategory.MEDIUM, TreeSizeCategory.LARGE];
+        const detailLevels = [TreeTextureType.highDetail, TreeTextureType.lowDetail];
+        const sizeCategories = [TreeSizeCategory.small, TreeSizeCategory.medium, TreeSizeCategory.large];
 
         for (const detail of detailLevels) {
             for (const size of sizeCategories) {
-                await this.createTreeTexture(detail, size);
+                this.createTreeTexture(detail, size);
             }
         }
 
@@ -59,13 +61,13 @@ export class TreeTextureManager {
     /**
      * Create a single tree texture for given detail and size
      */
-    private async createTreeTexture(detail: TreeTextureType, size: TreeSizeCategory): Promise<void> {
+    private createTreeTexture(detail: TreeTextureType, size: TreeSizeCategory): void {
         const { trunkRadius, canopyRadius } = this.getSizeParameters(size);
 
         // Create graphics for rendering
         const graphics = new Graphics();
 
-        if (detail === TreeTextureType.HIGH_DETAIL) {
+        if (detail === TreeTextureType.highDetail) {
             // High detail: canopy + trunk
             graphics.circle(0, 0, canopyRadius).fill({ color: 0x2F4F2F, alpha: 0.5 });
             graphics.circle(0, 0, trunkRadius).fill({ color: 0x8D6E63 });
@@ -84,7 +86,7 @@ export class TreeTextureManager {
         graphics.position.set(textureSize / 2, textureSize / 2);
 
         // Render to texture
-        this.app.renderer.render(graphics, { renderTexture });
+        this.app.renderer.render({ container: graphics, target: renderTexture });
 
         // Store texture
         const key = this.getTextureKey(detail, size);
@@ -99,11 +101,11 @@ export class TreeTextureManager {
      */
     private getSizeParameters(size: TreeSizeCategory): { trunkRadius: number; canopyRadius: number } {
         switch (size) {
-            case TreeSizeCategory.SMALL:
+            case TreeSizeCategory.small:
                 return { trunkRadius: 37, canopyRadius: 375 }; // Average of 25-50 trunk, 250-500 canopy
-            case TreeSizeCategory.MEDIUM:
+            case TreeSizeCategory.medium:
                 return { trunkRadius: 75, canopyRadius: 750 }; // Average of 50-100 trunk, 500-1000 canopy
-            case TreeSizeCategory.LARGE:
+            case TreeSizeCategory.large:
                 return { trunkRadius: 125, canopyRadius: 1500 }; // Average of 100-150 trunk, 1000-3000 canopy
         }
     }
@@ -119,7 +121,7 @@ export class TreeTextureManager {
      * Get texture for a specific tree based on its properties
      */
     getTreeTexture(trunkRadius: number, canopyRadius: number, isHighDetail: boolean): Texture {
-        const detail = isHighDetail ? TreeTextureType.HIGH_DETAIL : TreeTextureType.LOW_DETAIL;
+        const detail = isHighDetail ? TreeTextureType.highDetail : TreeTextureType.lowDetail;
         const size = this.categorizeTreeSize(trunkRadius, canopyRadius);
         const key = this.getTextureKey(detail, size);
 
@@ -136,13 +138,13 @@ export class TreeTextureManager {
      */
     private categorizeTreeSize(trunkRadius: number, canopyRadius: number): TreeSizeCategory {
         if (trunkRadius <= 50 && canopyRadius <= 500) {
-            return TreeSizeCategory.SMALL;
+            return TreeSizeCategory.small;
         }
         else if (trunkRadius <= 100 && canopyRadius <= 1000) {
-            return TreeSizeCategory.MEDIUM;
+            return TreeSizeCategory.medium;
         }
         else {
-            return TreeSizeCategory.LARGE;
+            return TreeSizeCategory.large;
         }
     }
 
@@ -157,7 +159,9 @@ export class TreeTextureManager {
      * Clean up all textures
      */
     destroy(): void {
-        this.textures.forEach((texture) => { texture.destroy(); });
+        this.textures.forEach((texture) => {
+            texture.destroy();
+        });
         this.textures.clear();
         this.initialized = false;
     }

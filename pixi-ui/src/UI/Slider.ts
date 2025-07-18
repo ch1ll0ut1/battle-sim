@@ -41,8 +41,10 @@ export class Slider extends Container {
 
         // Create background track
         this.background = new Graphics();
-        this.background.roundRect(0, height! / 2 - 3, width, 6, 3).fill({ color: 0x333333 });
-        this.background.roundRect(0, height! / 2 - 3, width, 6, 3).stroke({ color: 0x666666, width: 1 });
+        if (height !== undefined) {
+            this.background.roundRect(0, height / 2 - 3, width, 6, 3).fill({ color: 0x333333 });
+            this.background.roundRect(0, height / 2 - 3, width, 6, 3).stroke({ color: 0x666666, width: 1 });
+        }
         this.addChild(this.background);
 
         // Create filled track
@@ -74,7 +76,7 @@ export class Slider extends Container {
 
     private updateVisuals(): void {
         const { width, height, minValue, maxValue, value } = this.config;
-        const trackHeight = height! / 2;
+        const trackHeight = height !== undefined ? height / 2 : 0;
 
         // Calculate thumb position
         const normalizedValue = (value - minValue) / (maxValue - minValue);

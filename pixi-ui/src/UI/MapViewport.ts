@@ -375,8 +375,8 @@ export class MapViewport extends Container {
         this.calculateInitialZoom();
 
         // If current zoom is below new minimum, reset to minimum
-        if (this.zoom < this.config.minZoom!) {
-            this.zoom = this.config.minZoom!;
+        if (this.config.minZoom !== undefined && this.zoom < this.config.minZoom) {
+            this.zoom = this.config.minZoom;
         }
 
         // Re-center and constrain position
@@ -392,8 +392,8 @@ export class MapViewport extends Container {
         this.calculateInitialZoom();
 
         // If current zoom is below new minimum, reset to minimum
-        if (this.zoom < this.config.minZoom!) {
-            this.zoom = this.config.minZoom!;
+        if (this.config.minZoom !== undefined && this.zoom < this.config.minZoom) {
+            this.zoom = this.config.minZoom;
         }
 
         this.centerMap();
