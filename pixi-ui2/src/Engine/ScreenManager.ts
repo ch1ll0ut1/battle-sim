@@ -98,11 +98,9 @@ export class ScreenManager {
         }
 
         // Show the new screen
-        if (screen.show) {
-            screen.interactiveChildren = false;
-            await screen.show();
-            screen.interactiveChildren = true;
-        }
+        screen.interactiveChildren = false;
+        await screen.show();
+        screen.interactiveChildren = true;
     }
 
     /** Remove screen from the stage, unlink update & resize functions */
@@ -111,9 +109,7 @@ export class ScreenManager {
         screen.interactiveChildren = false;
 
         // Hide screen if method is available
-        if (screen.hide) {
-            await screen.hide();
-        }
+        await screen.hide();
 
         // Unlink update function if method is available
         if (screen.update) {

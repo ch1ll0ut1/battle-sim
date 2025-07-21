@@ -1,16 +1,26 @@
 import { CircularProgressBar } from '@pixi/ui';
-import { animate, ObjectTarget } from 'motion';
 import { BitmapText } from 'pixi.js';
 import { Screen } from '../../../Engine/Screen';
 import { colors } from '../../config/colors';
 import { font } from '../../config/font';
 
+/**
+ * LoadScreen displays a loading progress bar and text while assets are being loaded.
+ * Inherits animation and lifecycle from the Screen base class.
+ */
 export class LoadScreen extends Screen {
+    /**
+     * Asset bundles required for the loading screen.
+     * Used to preload essential assets before entering the main app.
+     */
     static assetBundles = ['preload'];
 
     private progressBar: CircularProgressBar;
     private loadingText: BitmapText;
 
+    /**
+     * Constructs the LoadScreen, initializing the progress bar and loading text.
+     */
     constructor() {
         super();
         console.log('LoadScreen init');
@@ -38,6 +48,11 @@ export class LoadScreen extends Screen {
         this.addChild(this.loadingText);
     }
 
+    /**
+     * Resize the loading screen and reposition UI elements.
+     * @param width - New width of the screen.
+     * @param height - New height of the screen.
+     */
     resize(width: number, height: number): void {
         console.log('LoadScreen resize', width, height);
 
@@ -45,62 +60,10 @@ export class LoadScreen extends Screen {
         this.progressBar.position.set(width * 0.5, height * 0.5);
     }
 
-    async show() {
-        console.log('LoadScreen show');
-        this.alpha = 0;
-        const toAnimate: ObjectTarget<LoadScreen> = {
-            alpha: 1,
-        };
-        await animate(this, toAnimate, {
-            duration: 0.3,
-            ease: 'linear',
-            delay: 1,
-        });
-    }
-
-    async hide() {
-        console.log('LoadScreen hide');
-
-        const toAnimate: ObjectTarget<LoadScreen> = {
-            alpha: 0,
-        };
-        await animate(this, toAnimate, {
-            duration: 0.3,
-            ease: 'linear',
-            delay: 1,
-        });
-    }
-
-    async pause() {
-        console.log('LoadScreen pause');
-        return Promise.resolve();
-    }
-
-    async resume() {
-        console.log('LoadScreen resume');
-        return Promise.resolve();
-    }
-
-    prepare() {
-        console.log('LoadScreen prepare');
-    }
-
-    reset() {
-        console.log('LoadScreen reset');
-    }
-
-    update() {
-        // console.log('update');
-    }
-
-    blur() {
-        console.log('LoadScreen blur');
-    }
-
-    focus() {
-        console.log('LoadScreen focus');
-    }
-
+    /**
+     * Update the progress bar based on asset loading progress.
+     * @param progress - Loading progress (0 to 1).
+     */
     onLoad(progress: number) {
         console.log('LoadScreen onLoad', progress);
         this.progressBar.progress = progress;
