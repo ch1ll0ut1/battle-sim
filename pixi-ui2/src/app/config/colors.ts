@@ -1,16 +1,15 @@
-const colors = {
-    primary: '#e72264',
-    secondary: '',
-    text: '#ffffff',
-    background: '#1099bb',
+export const colors = {
+    primary: '#4B5D3A', // Deep Olive Green
+    secondary: '#B08D57', // Warm Bronze/Ochre
+    text: '#EDE6D6', // Parchment/Bone
+    background: '#23211A', // Charcoal Brown
     button: {
-        background: '#3d3d3d',
-        text: '#ffffff',
+        background: '#5C4632', // Muted Brown (Leather/Wood)
+        text: '#EDE6D6',
     },
     progressBar: {
-        backgroundColor: '#3d3d3d',
-        fillColor: '#e72264',
+        backgroundColor: '#3A3325', // Dark Iron/Wood
+        fillColor: '#B08D57', // Bronze/Ochre
+        glow: '#FFD700', // Subtle Gold (optional)
     },
 };
-
-export default colors;

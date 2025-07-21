@@ -1,6 +1,6 @@
 import { initDevtools } from '@pixi/devtools';
 import { Application } from 'pixi.js';
-import colors from '../app/config/colors';
+import { colors } from '../app/config/colors';
 import { ScreenManager } from './ScreenManager';
 
 export class Engine {

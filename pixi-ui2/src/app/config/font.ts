@@ -1,6 +1,6 @@
-import colors from './colors';
+import { colors } from './colors';
 
-const font = {
+export const font = {
     title: {
         fontFamily: 'Verdana',
         fontSize: 36,
@@ -9,8 +9,9 @@ const font = {
     },
     subTitle: {
         fontFamily: 'Verdana',
-        fontSize: 20,
+        fontSize: 24,
         fill: colors.secondary,
+        letterSpacing: 2,
     },
     text: {
         fontFamily: 'Verdana',
@@ -18,5 +19,3 @@ const font = {
         fill: colors.text,
     },
 };
-
-export default font;

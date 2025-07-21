@@ -2,8 +2,8 @@ import { CircularProgressBar } from '@pixi/ui';
 import { animate, ObjectTarget } from 'motion';
 import { BitmapText } from 'pixi.js';
 import { Screen } from '../../../Engine/Screen';
-import colors from '../../config/colors';
-import font from '../../config/font';
+import { colors } from '../../config/colors';
+import { font } from '../../config/font';
 
 export class LoadScreen extends Screen {
     static assetBundles = ['preload'];
@@ -30,7 +30,7 @@ export class LoadScreen extends Screen {
         this.loadingText = new BitmapText({
             text: 'Loading...',
             style: {
-                ...font.title,
+                ...font.subTitle,
             },
         });
         this.loadingText.anchor.set(0.4, 0.5);
