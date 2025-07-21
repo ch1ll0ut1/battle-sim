@@ -1,9 +1,9 @@
 // Test script to run a simple battle
 
-import { GameEngine } from './GameEngine/GameEngine.js';
-import { MovementSandbox } from './GameMode/MovementSandbox/MovementSandbox.js';
-import { units1v1 } from './testData.js';
-import { Logger } from './utils/Logger.js';
+import { GameEngine } from './GameEngine/GameEngine';
+import { MovementSandbox } from './GameMode/MovementSandbox/MovementSandbox';
+import { units1v1 } from './testData';
+import { Logger } from './utils/Logger';
 
 // Create logger and battle engine
 const logger = new Logger();

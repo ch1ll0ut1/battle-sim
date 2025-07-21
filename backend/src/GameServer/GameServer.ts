@@ -1,9 +1,9 @@
 import { WebSocket } from 'ws';
-import { GameEngine } from '../GameEngine/GameEngine.js';
-import { MovementSandbox } from '../GameMode/MovementSandbox/MovementSandbox.js';
-import { Logger } from '../utils/Logger.js';
-import { WebSocketMessage, WebsocketServer } from '../utils/WebsocketServer.js';
-import { SimulationController } from './SimulationController.js';
+import { GameEngine } from '../GameEngine/GameEngine';
+import { MovementSandbox } from '../GameMode/MovementSandbox/MovementSandbox';
+import { Logger } from '../utils/Logger';
+import { WebSocketMessage, WebsocketServer } from '../utils/WebsocketServer';
+import { SimulationController } from './SimulationController';
 
 /**
  * Main game server that orchestrates WebSocket connections, command processing, and simulation control

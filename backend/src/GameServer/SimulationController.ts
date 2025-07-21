@@ -1,5 +1,5 @@
-import { GameEngine } from '../GameEngine/GameEngine.js';
-import { Logger } from '../utils/Logger.js';
+import { GameEngine } from '../GameEngine/GameEngine';
+import { Logger } from '../utils/Logger';
 
 /**
  * Manages the simulation loop, timing, and state transitions

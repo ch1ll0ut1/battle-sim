@@ -1,5 +1,5 @@
-import { BodyPartType } from './body-part.js';
-import { Position } from '../../common/position.js';
+import { Position } from '../../common/position';
+import { BodyPartType } from './body-part';
 
 export type ActionType = 'attack' | 'block' | 'grab' | 'move' | 'rotate';
 
@@ -58,7 +58,7 @@ export class Action {
   update(deltaTime: number): boolean {
     if (this.state.isExecuting) {
       this.state.progress += deltaTime / this.state.timing.executionTime;
-      
+
       if (this.state.progress >= 1) {
         this.state.isExecuting = false;
         this.state.isRecovering = true;
@@ -66,14 +66,14 @@ export class Action {
       }
     } else if (this.state.isRecovering) {
       this.state.recoveryProgress += deltaTime / this.state.timing.recoveryTime;
-      
+
       if (this.state.recoveryProgress >= 1) {
         this.state.isRecovering = false;
         this.state.recoveryProgress = 1;
         return true;
       }
     }
-    
+
     return false;
   }
 

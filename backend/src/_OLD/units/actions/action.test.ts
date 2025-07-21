@@ -1,5 +1,5 @@
-import { Action, ActionType, ActionTiming } from './action.js';
-import { BodyPartType } from './body-part.js';
+import { Action, ActionTiming } from './action';
+import { BodyPartType } from './body-part';
 
 describe('Action', () => {
   let action: Action;
@@ -27,7 +27,7 @@ describe('Action', () => {
     expect(action.state.progress).toBe(0.5);
     expect(action.state.isExecuting).toBe(true);
     expect(action.state.isRecovering).toBe(false);
-    
+
     // Complete execution
     action.update(0.25); // Another 250ms
     expect(action.state.progress).toBe(1);
@@ -39,12 +39,12 @@ describe('Action', () => {
     // Get through execution first
     action.update(0.5);
     expect(action.state.isRecovering).toBe(true);
-    
+
     // Update halfway through recovery
     action.update(0.15); // 150ms
     expect(action.state.recoveryProgress).toBe(0.5);
     expect(action.state.isRecovering).toBe(true);
-    
+
     // Complete recovery
     const isComplete = action.update(0.15); // Another 150ms
     expect(action.state.recoveryProgress).toBe(1);
@@ -54,7 +54,7 @@ describe('Action', () => {
 
   test('should be interruptible during execution but not recovery', () => {
     expect(action.canBeInterrupted()).toBe(true);
-    
+
     // Get through execution
     action.update(0.5);
     expect(action.state.isRecovering).toBe(true);
@@ -67,7 +67,7 @@ describe('Action', () => {
       action.update(0.1);
     }
     expect(action.state.isRecovering).toBe(true);
-    
+
     // Large update
     const isComplete = action.update(0.5);
     expect(isComplete).toBe(true);

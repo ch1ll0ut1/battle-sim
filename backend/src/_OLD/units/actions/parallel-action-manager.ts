@@ -1,5 +1,5 @@
-import { Action, ActionType, ActionTarget, ActionTiming } from './action.js';
-import { BodyPartType, VALID_ACTIONS } from './body-part.js';
+import { Action, ActionTarget, ActionTiming, ActionType } from './action';
+import { BodyPartType, VALID_ACTIONS } from './body-part';
 
 export class ParallelActionManager {
   private activeActions: Map<BodyPartType, Action>;
@@ -7,7 +7,7 @@ export class ParallelActionManager {
 
   constructor() {
     this.activeActions = new Map();
-    
+
     // Default timings for different action types
     this.defaultTimings = {
       attack: {
@@ -59,7 +59,7 @@ export class ParallelActionManager {
     const timing = customTiming || this.defaultTimings[type];
     const action = new Action(type, bodyPart, timing, target, battleTime);
     this.activeActions.set(bodyPart, action);
-    
+
     return true;
   }
 
@@ -73,7 +73,7 @@ export class ParallelActionManager {
     // Update each action and collect completed ones
     for (const [bodyPart, action] of this.activeActions) {
       const isComplete = action.update(deltaTime);
-      
+
       if (isComplete) {
         completedActions.set(bodyPart, action);
         this.activeActions.delete(bodyPart);

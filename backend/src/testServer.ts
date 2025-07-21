@@ -1,5 +1,5 @@
-import { GameServer } from './GameServer/GameServer.js';
-import { serverConfig } from './config/server.js';
+import { GameServer } from './GameServer/GameServer';
+import { serverConfig } from './config/server';
 
 // Create and start the battle server
 const gameServer = new GameServer(serverConfig.port);

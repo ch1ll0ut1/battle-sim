@@ -1,10 +1,10 @@
-import { movementConfig } from '../config/movement.js';
-import { TickUpdate } from '../utils/TickUpdate.js';
-import { Position } from './Position.js';
-import { UnitAttributes, UnitAttributesData } from './UnitAttributes.js';
-import { UnitMovement } from './UnitMovement.js';
-import { UnitMovementPhysics } from './UnitMovementPhysics.js';
-import { UnitStamina } from './UnitStamina.js';
+import { movementConfig } from '../config/movement';
+import { TickUpdate } from '../utils/TickUpdate';
+import { Position } from './Position';
+import { UnitAttributes, UnitAttributesData } from './UnitAttributes';
+import { UnitMovement } from './UnitMovement';
+import { UnitMovementPhysics } from './UnitMovementPhysics';
+import { UnitStamina } from './UnitStamina';
 
 /**
  * Core unit class that represents a combatant in the battle simulation.

@@ -1,4 +1,4 @@
-import { ActionType } from './action.js';
+import { ActionType } from './action';
 
 export enum BodyPartType {
   HEAD = 'head',

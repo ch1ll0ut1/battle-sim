@@ -1,7 +1,7 @@
-import { Position } from './Position.js';
-import { Unit } from './Unit.js';
-import { movementConfig } from '../config/movement.js';
-import { TickUpdate } from '../utils/TickUpdate.js';
+import { movementConfig } from '../config/movement';
+import { TickUpdate } from '../utils/TickUpdate';
+import { Position } from './Position';
+import { Unit } from './Unit';
 
 type MovementState = 'stationary' | 'accelerating' | 'moving' | 'decelerating';
 

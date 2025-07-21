@@ -1,6 +1,6 @@
-import { Unit } from './Unit/Unit.js';
-import { UnitMovementPhysics } from './Unit/UnitMovementPhysics.js';
-import { movementConfig } from './config/movement.js';
+import { Unit } from './Unit/Unit';
+import { UnitMovementPhysics } from './Unit/UnitMovementPhysics';
+import { movementConfig } from './config/movement';
 
 interface UnitTestResult {
     name: string;

@@ -1,4 +1,5 @@
 import stylistic from '@stylistic/eslint-plugin';
+import importPlugin from 'eslint-plugin-import';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
@@ -6,6 +7,8 @@ export default tseslint.config(
     tseslint.configs.strictTypeChecked,
     tseslint.configs.stylisticTypeChecked,
     stylistic.configs.recommended,
+    importPlugin.flatConfigs.recommended,
+    importPlugin.flatConfigs.typescript,
     {
         languageOptions: {
             parserOptions: {
@@ -16,7 +19,7 @@ export default tseslint.config(
     },
     {
         plugins: {
-            '@stylistic': stylistic
+            '@stylistic': stylistic,
         },
         rules: {
             // Stylistic rules
@@ -34,6 +37,7 @@ export default tseslint.config(
                     requireLast: false,
                 },
             }],
+            'import/no-default-export': 'error',
 
             // Developer Experience
             '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true, allowNever: true, allowNullish: true, allowAny: true }],

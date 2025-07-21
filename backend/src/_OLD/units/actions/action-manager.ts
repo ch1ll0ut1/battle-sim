@@ -1,4 +1,4 @@
-import { Action, ActionType, ActionTiming } from './action.js';
+import { Action, ActionTiming, ActionType } from './action';
 
 export interface ActionDefinition {
   type: ActionType;
@@ -24,7 +24,7 @@ export class ActionManager {
 
     if (this.currentAction) {
       const isComplete = this.currentAction.update(deltaTime);
-      
+
       if (isComplete) {
         this.currentAction = null;
         stateChanged = true;

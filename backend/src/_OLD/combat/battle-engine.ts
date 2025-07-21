@@ -1,10 +1,10 @@
-import { Unit } from '../units/unit.js';
-import { Action, ActionTarget } from '../units/actions/action.js';
-import { BodyPartType } from '../units/actions/body-part.js';
-import { ParallelActionManager } from '../units/actions/parallel-action-manager.js';
-import { BattleLogger, LogLevel } from './battle-logger.js';
-import { Position } from '../common/position.js';
-import { Injuries } from '../injuries/injuries.js';
+import { Position } from '../common/position';
+import { Injuries } from '../injuries/injuries';
+import { Action, ActionTarget } from '../units/actions/action';
+import { BodyPartType } from '../units/actions/body-part';
+import { ParallelActionManager } from '../units/actions/parallel-action-manager';
+import { Unit } from '../units/unit';
+import { BattleLogger, LogLevel } from './battle-logger';
 
 export interface BattleState {
   units: Unit[];
@@ -61,7 +61,7 @@ export class BattleEngine {
     this.executeCombatTurn();
     this.battleState.currentTime += this.TURN_INTERVAL;
     this.logger.setTime(this.battleState.currentTime);
-    
+
     // Check for battle end conditions
     this.checkBattleEnd();
 
@@ -117,7 +117,7 @@ export class BattleEngine {
     // Update all units
     for (const unit of this.battleState.units) {
       const wasAlive = unit.body.isAlive();
-      
+
       // Update unit state
       unit.update(this.TURN_INTERVAL);
       this.logger.logStatChanges(unit);
@@ -134,7 +134,7 @@ export class BattleEngine {
 
       // Update ongoing actions
       const completedActions = actionManager.update(this.TURN_INTERVAL);
-      
+
       // Process completed actions
       for (const [bodyPart, action] of completedActions) {
         this.resolveCompletedAction(unit, bodyPart, action);
@@ -183,7 +183,7 @@ export class BattleEngine {
       }
     } else if (distance <= this.ATTACK_RANGE) { // If in range, attack
       const attackTarget: ActionTarget = { unit: nearestEnemy };
-      
+
       // Try attack with both arms if possible
       if (unit.combat.stamina >= 20 && unit.combat.canPerformAction('attack')) { // Check stamina before starting
         if (unit.body.getBodyPartFunctionality(BodyPartType.LEFT_ARM) > 60) {
@@ -230,7 +230,7 @@ export class BattleEngine {
     if (hit) {
       const damage = this.calculateDamage(unit, bodyPart);
       const targetBodyPart = this.chooseTargetBodyPart();
-      
+
       // Create injury based on damage level
       let injuryType;
       if (damage > 70) { // Reduced threshold for fatal injuries
@@ -272,7 +272,7 @@ export class BattleEngine {
     const newPos = unit.position.moveTowards(targetPos, moveSpeed);
     unit.position.x = newPos.x;
     unit.position.y = newPos.y;
-    
+
     this.logger.logAction(unit, action);
 
     // Drain stamina for movement

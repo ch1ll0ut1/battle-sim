@@ -1,9 +1,9 @@
 import { EventEmitter } from 'events';
-import { GameMode, GameModeConstructor } from '../GameMode/GameMode.js';
-import { Map } from '../Map/Map.js';
-import { generateForestMap } from '../Map/MapGenerator.js';
-import { Logger } from '../utils/Logger.js';
-import { TickUpdate } from '../utils/TickUpdate.js';
+import { GameMode, GameModeConstructor } from '../GameMode/GameMode';
+import { Map } from '../Map/Map';
+import { generateForestMap } from '../Map/MapGenerator';
+import { Logger } from '../utils/Logger';
+import { TickUpdate } from '../utils/TickUpdate';
 
 type EnginePhase = 'initialized' | 'paused' | 'running' | 'finished';
 

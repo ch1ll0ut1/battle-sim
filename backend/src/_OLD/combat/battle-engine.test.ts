@@ -1,7 +1,7 @@
-import { Unit } from '../units/unit.js';
-import { Position } from '../common/position.js';
-import { BattleEngine } from './battle-engine.js';
-import { Weapon } from '../weapons/weapon.js';
+import { Position } from '../common/position';
+import { Unit } from '../units/unit';
+import { Weapon } from '../weapons/weapon';
+import { BattleEngine } from './battle-engine';
 
 describe('BattleEngine', () => {
   let veteran: Unit;
@@ -82,10 +82,10 @@ describe('BattleEngine', () => {
     it('should end battle appropriately', () => {
       const result = engine.runBattle();
       const events = result.logger.getEvents();
-      
+
       // Should have an end event
       expect(events.some(e => e.type === 'end')).toBe(true);
-      
+
       // One unit should be defeated
       expect(veteran.body.isAlive() || novice.body.isAlive()).toBe(true);
       expect(veteran.body.isAlive() && novice.body.isAlive()).toBe(false);
@@ -109,10 +109,10 @@ describe('BattleEngine', () => {
       const events = result.logger.getEvents();
 
       // Veteran should be more effective in combat
-      const veteranHits = events.filter(e => 
+      const veteranHits = events.filter(e =>
         e.type === 'action' && e.description.includes('hits') && e.unit?.id === veteran.id
       ).length;
-      const noviceHits = events.filter(e => 
+      const noviceHits = events.filter(e =>
         e.type === 'action' && e.description.includes('hits') && e.unit?.id === novice.id
       ).length;
 

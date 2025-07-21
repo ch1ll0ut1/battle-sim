@@ -11,7 +11,7 @@
 import { UnitBody } from './body.js'
 import { UnitCombat } from './combat.js'
 import { Position } from '../common/position.js'
-import { ActionType, Action } from './action.js';
+import { ActionType, Action } from './action';
 
 export type BodyPart = 'leftArm' | 'rightArm' | 'leftLeg' | 'rightLeg' | 'head';
 
@@ -89,45 +89,45 @@ export class Unit {
    * If movementTarget is set, move towards it
    */
   update(deltaTime: number, currentTime?: number): void {
-  update(deltaTime: number): void {
-    if (this.movementTarget) {
+    update(deltaTime: number): void {
+      if(this.movementTarget) {
       this.moveTowards(this.movementTarget, deltaTime)
       // If reached target, clear it
       if (this.position.distanceTo(this.movementTarget) < 0.01) {
         this.movementTarget = null
-        }
       }
+    }
 
     // Update injuries and stamina
     this.body.updateInjuries(deltaTime)
     this.combat.updateStamina(deltaTime)
 
-  /**
-   * Calculates reaction time in seconds based on experience, fatigue, and injuries
-   * @returns Reaction time in seconds
-   */
-  getReactionTime(): number {
-    // Base reaction time for combat (choice reaction)
-    const baseReactionTime = 0.28 // 280ms base for combat decisions
-    
-    // Experience can improve reaction time up to 20%
-    const experienceBonus = this.combat.experience * 0.2
-    
-    // Fatigue increases reaction time up to 50%
-    const fatiguePenalty = (1 - this.combat.stamina / this.combat.maxStamina) * 0.5
-    
-    // Head injuries and blood loss affect reaction time
-    const headFunctionality = this.body.getBodyPartFunctionality('head') / 100
-    const bloodLossPenalty = this.body.getBloodLoss() / 100 * 0.3 // Up to 30% slower
-    
-    // Calculate final reaction time
-    const reactionTime = baseReactionTime * 
-      (1 - experienceBonus) * // Experience bonus
-      (1 + fatiguePenalty) *  // Fatigue penalty
-      (2 - headFunctionality) * // Head injury effect
-      (1 + bloodLossPenalty)   // Blood loss effect
-      
-    // Clamp between realistic minimum and maximum
-    return Math.max(0.22, Math.min(0.6, reactionTime))
-  }
-} 
+    /**
+     * Calculates reaction time in seconds based on experience, fatigue, and injuries
+     * @returns Reaction time in seconds
+     */
+    getReactionTime(): number {
+      // Base reaction time for combat (choice reaction)
+      const baseReactionTime = 0.28 // 280ms base for combat decisions
+
+      // Experience can improve reaction time up to 20%
+      const experienceBonus = this.combat.experience * 0.2
+
+      // Fatigue increases reaction time up to 50%
+      const fatiguePenalty = (1 - this.combat.stamina / this.combat.maxStamina) * 0.5
+
+      // Head injuries and blood loss affect reaction time
+      const headFunctionality = this.body.getBodyPartFunctionality('head') / 100
+      const bloodLossPenalty = this.body.getBloodLoss() / 100 * 0.3 // Up to 30% slower
+
+      // Calculate final reaction time
+      const reactionTime = baseReactionTime *
+        (1 - experienceBonus) * // Experience bonus
+        (1 + fatiguePenalty) *  // Fatigue penalty
+        (2 - headFunctionality) * // Head injury effect
+        (1 + bloodLossPenalty)   // Blood loss effect
+
+      // Clamp between realistic minimum and maximum
+      return Math.max(0.22, Math.min(0.6, reactionTime))
+    }
+  } 
