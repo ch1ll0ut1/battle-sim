@@ -37,6 +37,7 @@ export default tseslint.config(
 
             // Developer Experience
             '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true, allowNever: true, allowNullish: true, allowAny: true }],
+            '@typescript-eslint/require-await': 'off',
 
             // Rules that are already checked by TypeScript
             '@typescript-eslint/no-undef': 'off', // TS catches undefined variables

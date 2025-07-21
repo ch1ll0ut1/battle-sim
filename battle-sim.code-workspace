@@ -13,6 +13,10 @@
             "path": "pixi-ui"
         },
         {
+            "name": "pixi-ui2",
+            "path": "pixi-ui2"
+        },
+        {
             "name": "backend",
             "path": "backend"
         }
