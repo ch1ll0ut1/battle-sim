@@ -29,8 +29,11 @@ export class LoadScreen extends Screen {
 
         this.loadingText = new BitmapText({
             text: 'Loading...',
-            style: { ...font.title },
+            style: {
+                ...font.title,
+            },
         });
+        this.loadingText.anchor.set(0.4, 0.5);
 
         this.addChild(this.loadingText);
     }
@@ -38,7 +41,7 @@ export class LoadScreen extends Screen {
     resize(width: number, height: number): void {
         console.log('LoadScreen resize', width, height);
 
-        this.loadingText.position.set(width * 0.5, height * 0.5 + 100);
+        this.loadingText.position.set(width * 0.5, height * 0.5 + 200);
         this.progressBar.position.set(width * 0.5, height * 0.5);
     }
 

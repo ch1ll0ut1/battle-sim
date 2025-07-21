@@ -3,8 +3,9 @@ import colors from './colors';
 const font = {
     title: {
         fontFamily: 'Verdana',
-        fontSize: 24,
+        fontSize: 36,
         fill: colors.primary,
+        letterSpacing: 2,
     },
     subTitle: {
         fontFamily: 'Verdana',
