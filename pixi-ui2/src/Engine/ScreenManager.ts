@@ -1,37 +1,61 @@
 import { Application, Assets, BigPool, Container } from 'pixi.js';
 import { Screen, ScreenConstructor } from './Screen';
 
+/**
+ * ScreenManager handles the lifecycle and transitions of application screens.
+ * Responsible for showing, hiding, and resizing screens, as well as managing asset loading and event hooks.
+ * Integrates with PixiJS Application and coordinates screen updates and resource management.
+ */
 export class ScreenManager {
-    /** Application instance */
+    /**
+     * Reference to the PixiJS Application instance.
+     */
     private app: Application;
 
-    /** Stage container - Root container for all screens */
+    /**
+     * Root container for all screens managed by the ScreenManager.
+     */
     private stage: Container;
 
-    /** Screen width */
+    /**
+     * Current width of the screen (used for resize events).
+     */
     private screenWidth = 0;
 
-    /** Screen height */
+    /**
+     * Current height of the screen (used for resize events).
+     */
     private screenHeight = 0;
 
-    /** Constant background view for all screens */
+    /**
+     * Optional background screen, rendered behind all other screens.
+     */
     public background?: Screen;
 
-    /** Current screen being displayed */
+    /**
+     * The currently active screen displayed to the user.
+     */
     public currentScreen?: Screen;
 
-    /** Current popup being displayed */
+    /**
+     * The currently active popup screen, if any.
+     */
     public currentPopup?: Screen;
 
+    /**
+     * Constructs the ScreenManager and attaches it to the given PixiJS Application.
+     * @param app - The PixiJS Application instance.
+     */
     constructor(app: Application) {
         this.app = app;
         this.stage = app.stage;
     }
 
-    init() {
-        console.log('Init ScreenManager');
-    }
-
+    /**
+     * Resize all managed screens and propagate new dimensions.
+     * @param width - New width of the application.
+     * @param height - New height of the application.
+     */
     resize(width: number, height: number) {
         console.log('Resize ScreenManager', width, height);
         this.screenWidth = width;
@@ -42,9 +66,10 @@ export class ScreenManager {
     }
 
     /**
-   * Hide current screen (if there is one) and present a new screen.
-   * Any class that matches AppScreen interface can be used here.
-   */
+     * Transition to a new screen, hiding the current one and loading required assets.
+     * Handles asset bundle loading, progress reporting, and screen instantiation.
+     * @param ctor - The constructor for the new screen to display.
+     */
     public async show(ctor: ScreenConstructor) {
         // Block interactivity in current screen
         if (this.currentScreen) {
@@ -75,7 +100,11 @@ export class ScreenManager {
         await this.addAndShowScreen(this.currentScreen);
     }
 
-    /** Add screen to the stage, link update & resize functions */
+    /**
+     * Add a new screen to the stage, prepare it, and animate it in.
+     * Handles resize and update hooks for the new screen.
+     * @param screen - The screen instance to add and show.
+     */
     private async addAndShowScreen(screen: Screen) {
         // Add screen to stage
         this.stage.addChild(screen);
@@ -103,7 +132,11 @@ export class ScreenManager {
         screen.interactiveChildren = true;
     }
 
-    /** Remove screen from the stage, unlink update & resize functions */
+    /**
+     * Hide and remove a screen from the stage, cleaning up event hooks and state.
+     * Calls reset to allow the screen to unregister listeners and clear state for reuse.
+     * @param screen - The screen instance to hide and remove.
+     */
     private async hideAndRemoveScreen(screen: Screen) {
         // Prevent interaction in the screen
         screen.interactiveChildren = false;

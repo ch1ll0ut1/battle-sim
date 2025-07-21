@@ -31,7 +31,6 @@ export class Engine {
         document.getElementById('pixi-container')?.appendChild(this.app.canvas);
 
         // Initialize the scene manager
-        this.screens.init();
         this.setupResize();
     }
 
