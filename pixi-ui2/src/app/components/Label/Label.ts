@@ -15,4 +15,14 @@ export class Label extends BitmapText {
         });
         this.anchor.set(0.5, 0.5);
     }
+
+    setStyle(style: keyof typeof font) {
+        this.style = {
+            ...font[style],
+        };
+    }
+
+    setColor(color: string) {
+        this.style.fill = color;
+    }
 }

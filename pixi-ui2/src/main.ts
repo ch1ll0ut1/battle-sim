@@ -1,4 +1,5 @@
 import { LoadScreen } from './app/screens/LoadScreen/LoadScreen';
+import { MenuScreen } from './app/screens/MenuScreen/MenuScreen';
 import { Engine } from './Engine/Engine';
 
 /**
@@ -12,6 +13,6 @@ import { Engine } from './Engine/Engine';
     // Show the load screen
     await engine.screens.show(LoadScreen);
 
-    // Show the main screen once the load screen is dismissed
-    // await engine.navigation.showScreen(MainScreen);
+    // Show the menu screen once the load screen is dismissed
+    await engine.screens.show(MenuScreen);
 })().catch(console.error);
