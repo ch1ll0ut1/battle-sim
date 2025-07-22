@@ -1,5 +1,7 @@
 import { animate, ObjectTarget } from 'motion';
 import { Container, Ticker } from 'pixi.js';
+import { Poolable } from './Poolable';
+import { ScreenManager } from './ScreenManager';
 
 /**
  * Interface for screen constructors used in the app.
@@ -17,12 +19,14 @@ export interface ScreenConstructor {
  * Handles common functionality such as asset bundle requirements, show/hide animations, and lifecycle hooks.
  * Extend this class to implement custom screens for the app.
  */
-export class Screen extends Container {
+export class Screen extends Container implements Poolable<ScreenManager> {
     /**
      * List of asset bundle names required by this screen.
      * Override in subclasses to specify dependencies for preloading.
      */
     static assetBundles?: string[];
+
+    screenManager!: ScreenManager;
 
     /**
      * Animate the screen in (fade in).
@@ -61,6 +65,14 @@ export class Screen extends Container {
     }
 
     /**
+     * This method is called by BigPool when the object is initialized from the pool.
+     * Note: Do not call this method manually or override it in subclasses. Use prepare() instead.
+     */
+    init(data: ScreenManager): void {
+        this.screenManager = data;
+    }
+
+    /**
      * Prepare the screen before it is shown.
      * Override to update latest state.
      * Generally setting up of UI elements is done in the constructor.
@@ -73,7 +85,10 @@ export class Screen extends Container {
      * Override to clean up or reset state after hiding.
      * Should be used in combination with prepare() for state and event listeners.
      */
-    reset?(): void;
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    reset(): void {
+
+    }
 
     /**
      * Update the screen each frame.

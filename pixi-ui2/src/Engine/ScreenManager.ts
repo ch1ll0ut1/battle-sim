@@ -96,7 +96,7 @@ export class ScreenManager {
         }
 
         // Create the new screen and add that to the stage
-        this.currentScreen = BigPool.get(ctor);
+        this.currentScreen = BigPool.get(ctor, this);
         await this.addAndShowScreen(this.currentScreen);
     }
 
@@ -157,8 +157,6 @@ export class ScreenManager {
         }
 
         // Clean up the screen so that instance can be reused again later
-        if (screen.reset) {
-            screen.reset();
-        }
+        BigPool.return(screen);
     }
 }
