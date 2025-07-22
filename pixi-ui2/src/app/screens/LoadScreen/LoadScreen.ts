@@ -1,8 +1,7 @@
 import { CircularProgressBar } from '@pixi/ui';
-import { BitmapText } from 'pixi.js';
 import { Screen } from '../../../Engine/Screen';
+import { Label } from '../../components/Label/Label';
 import { colors } from '../../config/colors';
-import { font } from '../../config/font';
 
 /**
  * LoadScreen displays a loading progress bar and text while assets are being loaded.
@@ -16,7 +15,7 @@ export class LoadScreen extends Screen {
     static assetBundles = ['preload'];
 
     private progressBar: CircularProgressBar;
-    private loadingText: BitmapText;
+    private loadingText: Label;
 
     /**
      * Constructs the LoadScreen, initializing the progress bar and loading text.
@@ -37,14 +36,7 @@ export class LoadScreen extends Screen {
 
         this.addChild(this.progressBar);
 
-        this.loadingText = new BitmapText({
-            text: 'Loading...',
-            style: {
-                ...font.subTitle,
-            },
-        });
-        this.loadingText.anchor.set(0.4, 0.5);
-
+        this.loadingText = new Label('subTitle', 'Loading...');
         this.addChild(this.loadingText);
     }
 
