@@ -1,9 +1,10 @@
+import storybook from "eslint-plugin-storybook";
 import stylistic from '@stylistic/eslint-plugin';
 import importPlugin from 'eslint-plugin-import';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-    { ignores: ["dist", "node_modules", "eslint.config.js", "jest.config.js", "**/_OLD/**"] },
+    { ignores: ["dist", "node_modules", "eslint.config.js", "jest.config.js", "**/_OLD/**", "!.storybook"] },
     tseslint.configs.strictTypeChecked,
     tseslint.configs.stylisticTypeChecked,
     stylistic.configs.recommended,
@@ -70,4 +71,5 @@ export default tseslint.config(
             '@typescript-eslint/no-unsafe-argument': 'off',
         },
     },
+    storybook.configs["flat/recommended"]
 );
