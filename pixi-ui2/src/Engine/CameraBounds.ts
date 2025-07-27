@@ -71,37 +71,29 @@ export class CameraBounds {
     }
 
     /**
-     * Constrain camera position to keep world content visible
+     * Constrain camera position to keep world content visible with buffer
      */
     private constrainPosition(x: number, y: number, zoom: number): { x: number; y: number } {
         console.log('constrainPosition', {x, worldWidth: this.worldWidth, zoom, viewportWidth: this.viewportWidth});
         const worldScreenWidth = this.worldWidth * zoom;
         const worldScreenHeight = this.worldHeight * zoom;
 
+        // Calculate buffer as percentage of viewport size
+        const bufferX = this.viewportWidth * cameraConfig.boundaryBufferPercent;
+        const bufferY = this.viewportHeight * cameraConfig.boundaryBufferPercent;
+
         let constrainedX = x;
         let constrainedY = y;
 
-        // Horizontal constraints
-        if (worldScreenWidth <= this.viewportWidth) {
-            // Center horizontally if world is smaller than viewport
-            constrainedX = (this.viewportWidth - worldScreenWidth) / 2;
-        } else {
-            // Keep world within viewport bounds
-            const maxX = 0;
-            const minX = this.viewportWidth - worldScreenWidth;
-            constrainedX = Math.max(minX, Math.min(maxX, x));
-        }
+        // Horizontal constraints with buffer
+        const maxX = bufferX;
+        const minX = this.viewportWidth - worldScreenWidth - bufferX;
+        constrainedX = Math.max(minX, Math.min(maxX, x));
 
-        // Vertical constraints
-        if (worldScreenHeight <= this.viewportHeight) {
-            // Center vertically if world is smaller than viewport
-            constrainedY = (this.viewportHeight - worldScreenHeight) / 2;
-        } else {
-            // Keep world within viewport bounds
-            const maxY = 0;
-            const minY = this.viewportHeight - worldScreenHeight;
-            constrainedY = Math.max(minY, Math.min(maxY, y));
-        }
+        // Vertical constraints with buffer
+        const maxY = bufferY;
+        const minY = this.viewportHeight - worldScreenHeight - bufferY;
+        constrainedY = Math.max(minY, Math.min(maxY, y));
 
         return { x: constrainedX, y: constrainedY };
     }

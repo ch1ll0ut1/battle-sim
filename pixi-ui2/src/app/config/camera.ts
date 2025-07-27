@@ -27,4 +27,11 @@ export const camera = {
      * Maximum zoom level
      */
     maxZoom: 5.0,
+    
+    /**
+     * Buffer around world boundaries (percentage of viewport size)
+     * Allows panning beyond world edges for better content centering
+     * 0.3 means 30% of viewport on each side can show empty space
+     */
+    boundaryBufferPercent: 0.3,
 } as const;

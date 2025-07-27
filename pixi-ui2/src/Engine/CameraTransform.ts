@@ -20,7 +20,6 @@ export class CameraTransform {
      * Apply current transform state to the world container
      */
     applyTransform() {
-        console.log('applyTransform', this.zoom, this.x, this.y);
         this.worldContainer.scale.set(this.zoom);
         this.worldContainer.position.set(this.x, this.y);
     }
