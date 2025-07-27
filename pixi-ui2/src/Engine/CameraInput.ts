@@ -129,13 +129,33 @@ export class CameraInput {
         if (cameraConfig.smoothMovement) {
             const currentTarget = this.camera.interpolator.getTarget();
             const newZoom = currentTarget.zoom * (1 + zoomDelta);
-            this.camera.interpolator.setTargetZoom(newZoom);
+            const zoomTarget = this.calculateZoomToPoint(event, newZoom);
+            this.camera.interpolator.setTarget(zoomTarget.x, zoomTarget.y, zoomTarget.zoom);
         }
         else {
             const currentState = this.camera.transform.getState();
             const newZoom = currentState.zoom * (1 + zoomDelta);
-            this.camera.transform.setZoom(newZoom);
+            const zoomTarget = this.calculateZoomToPoint(event, newZoom);
+            this.camera.transform.setState(zoomTarget.x, zoomTarget.y, zoomTarget.zoom);
         }
+    }
+
+    /**
+     * Calculate camera position for zooming to a specific screen point
+     */
+    private calculateZoomToPoint(event: FederatedWheelEvent, newZoom: number) {
+        // Calculate zoom target position
+        const mouseX = event.global.x;
+        const mouseY = event.global.y;
+
+        // Convert screen point to world coordinates at current zoom
+        const worldPoint = this.camera.transform.screenToWorld(mouseX, mouseY);
+
+        // Calculate new camera position to keep world point under cursor
+        const newCameraX = mouseX - worldPoint.x * newZoom;
+        const newCameraY = mouseY - worldPoint.y * newZoom;
+
+        return { x: newCameraX, y: newCameraY, zoom: newZoom };
     }
 
     /**
