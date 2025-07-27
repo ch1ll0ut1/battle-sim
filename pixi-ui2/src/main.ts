@@ -3,7 +3,7 @@ import { MenuScreen } from './app/screens/MenuScreen/MenuScreen';
 import { Engine } from './Engine/Engine';
 
 /**
- * Importing these modules will automatically register there plugins with the engine.
+ * Importing these modules will automatically register their plugins with the engine.
  */
 
 (async () => {

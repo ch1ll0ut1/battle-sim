@@ -1,6 +1,7 @@
 import { Screen } from '../../../Engine/Screen';
 import { Button } from '../../components/Button/Button';
 import { Label } from '../../components/Label/Label';
+import { MapScreen } from '../MapScreen/MapScreen';
 
 /**
  * MenuScreen displays the main menu title and handles menu layout.
@@ -22,7 +23,7 @@ export class MenuScreen extends Screen {
         this.menuButtons = [
             new Button('primary', 'Play', () => {
                 console.log('Play button clicked');
-                // this.screenManager.show(MapEditorScreen);
+                this.screenManager.show(MapScreen);
             }),
             new Button('primary', 'Map Editor', () => {
                 console.log('Map Editor button clicked');
@@ -30,7 +31,7 @@ export class MenuScreen extends Screen {
             }),
         ];
 
-        this.menuButtons[0].setEnabled(false);
+        // this.menuButtons[0].setEnabled(false);
 
         this.menuButtons.forEach((button) => {
             this.addChild(button);

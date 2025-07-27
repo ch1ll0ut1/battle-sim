@@ -42,6 +42,6 @@ import { PoolItem } from 'pixi.js';
  *
  */
 export interface Poolable<T = undefined> extends PoolItem {
-    init(data: T): void;
-    reset(): void;
+    init?(data: T): void;
+    reset?(): void;
 }
