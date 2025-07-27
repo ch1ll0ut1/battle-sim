@@ -23,7 +23,7 @@ export class MenuScreen extends Screen {
         this.menuButtons = [
             new Button('primary', 'Play', () => {
                 console.log('Play button clicked');
-                this.screenManager.show(MapScreen);
+                void this.screenManager.show(MapScreen);
             }),
             new Button('primary', 'Map Editor', () => {
                 console.log('Map Editor button clicked');

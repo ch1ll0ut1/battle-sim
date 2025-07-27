@@ -11,9 +11,9 @@ export class MapScreen extends Screen {
 
     constructor() {
         super();
-        
+
         const worldContainer = new Container();
-        
+
         // Add some sample world content for testing
         this.addSampleWorldContent(worldContainer);
 
@@ -21,9 +21,7 @@ export class MapScreen extends Screen {
         this.camera = new Camera(worldContainer, worldContainer.width, worldContainer.height);
         this.addChild(this.camera);
         this.camera.init();
-
     }
-
 
     /**
      * Add sample content to the world for testing camera functionality
@@ -59,7 +57,7 @@ export class MapScreen extends Screen {
             const x = Math.random() * (worldWidth - 50);
             const y = Math.random() * (worldHeight - 50);
             const color = colors[i % colors.length];
-            
+
             rect.rect(x, y, 50, 50).fill({ color });
             worldContainer.addChild(rect);
         }

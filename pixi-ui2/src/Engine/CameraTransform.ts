@@ -6,7 +6,7 @@ import { Container, Point } from 'pixi.js';
  */
 export class CameraTransform {
     private worldContainer: Container;
-    
+
     // Current transform state
     public x = 0;
     public y = 0;
@@ -81,7 +81,7 @@ export class CameraTransform {
         return {
             x: this.x,
             y: this.y,
-            zoom: this.zoom
+            zoom: this.zoom,
         };
     }
 }

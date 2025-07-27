@@ -4,12 +4,13 @@ import importPlugin from 'eslint-plugin-import';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-    { ignores: ["dist", "node_modules", "eslint.config.js", "jest.config.js", "**/_OLD/**", "!.storybook"] },
+    { ignores: ["dist", "node_modules", "eslint.config.js", "vite.config.ts", "jest.config.js", "**/_OLD/**", "!.storybook"] },
     tseslint.configs.strictTypeChecked,
     tseslint.configs.stylisticTypeChecked,
     stylistic.configs.recommended,
     importPlugin.flatConfigs.recommended,
     importPlugin.flatConfigs.typescript,
+    ...storybook.configs["flat/recommended"],
     {
         languageOptions: {
             parserOptions: {
@@ -71,5 +72,11 @@ export default tseslint.config(
             '@typescript-eslint/no-unsafe-argument': 'off',
         },
     },
-    storybook.configs["flat/recommended"]
+    {
+        files: ['**/*.stories.ts'],
+        rules: {
+            '@typescript-eslint/naming-convention': 'off',
+            'import/no-default-export': 'off',
+        },
+    }
 );

@@ -15,10 +15,6 @@ export class CameraBounds {
     private worldHeight = 1000;
     private calculatedMinZoom = 0.1;
 
-    constructor() {
-        // No static configuration - sizes set dynamically
-    }
-
     /**
      * Initialize with camera instance after construction
      */
@@ -54,18 +50,19 @@ export class CameraBounds {
         if (!this.camera) return;
 
         const currentState = this.camera.transform.getState();
-        
+
         // Constrain zoom
         const minZoom = Math.max(this.calculatedMinZoom, cameraConfig.minZoom);
         const constrainedZoom = Math.max(minZoom, Math.min(cameraConfig.maxZoom, currentState.zoom));
-        
+
         // Constrain position
         const constrainedPos = this.constrainPosition(currentState.x, currentState.y, constrainedZoom);
-        
+
         // Apply constraints if needed
-        if (constrainedZoom !== currentState.zoom || 
-            constrainedPos.x !== currentState.x || 
-            constrainedPos.y !== currentState.y) {
+        if (constrainedZoom !== currentState.zoom
+          || constrainedPos.x !== currentState.x
+          || constrainedPos.y !== currentState.y
+        ) {
             this.camera.transform.setState(constrainedPos.x, constrainedPos.y, constrainedZoom);
         }
     }
@@ -74,7 +71,7 @@ export class CameraBounds {
      * Constrain camera position to keep world content visible with buffer
      */
     private constrainPosition(x: number, y: number, zoom: number): { x: number; y: number } {
-        console.log('constrainPosition', {x, worldWidth: this.worldWidth, zoom, viewportWidth: this.viewportWidth});
+        console.log('constrainPosition', { x, worldWidth: this.worldWidth, zoom, viewportWidth: this.viewportWidth });
         const worldScreenWidth = this.worldWidth * zoom;
         const worldScreenHeight = this.worldHeight * zoom;
 
@@ -109,7 +106,7 @@ export class CameraBounds {
             x: topLeft.x,
             y: topLeft.y,
             width: bottomRight.x - topLeft.x,
-            height: bottomRight.y - topLeft.y
+            height: bottomRight.y - topLeft.y,
         };
     }
 
@@ -122,10 +119,9 @@ export class CameraBounds {
 
         return {
             x: (this.viewportWidth - worldScreenWidth) / 2,
-            y: (this.viewportHeight - worldScreenHeight) / 2
+            y: (this.viewportHeight - worldScreenHeight) / 2,
         };
     }
-
 
     /**
      * Helper method for coordinate conversion
@@ -133,7 +129,7 @@ export class CameraBounds {
     private screenToWorld(screenX: number, screenY: number, camX: number, camY: number, zoom: number) {
         return {
             x: (screenX - camX) / zoom,
-            y: (screenY - camY) / zoom
+            y: (screenY - camY) / zoom,
         };
     }
 
@@ -145,7 +141,7 @@ export class CameraBounds {
             viewportWidth: this.viewportWidth,
             viewportHeight: this.viewportHeight,
             worldWidth: this.worldWidth,
-            worldHeight: this.worldHeight
+            worldHeight: this.worldHeight,
         };
     }
 

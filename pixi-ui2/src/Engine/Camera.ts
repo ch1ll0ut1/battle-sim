@@ -16,7 +16,7 @@ export class Camera extends Container {
     public worldWidth: number;
     public worldHeight: number;
     private background: Graphics;
-    
+
     // Composed components
     public transform: CameraTransform;
     private input: CameraInput;
@@ -25,17 +25,17 @@ export class Camera extends Container {
 
     constructor(worldContainer: Container, worldWidth: number, worldHeight: number) {
         super();
-        
+
         this.worldContainer = worldContainer;
         this.worldWidth = worldWidth;
         this.worldHeight = worldHeight;
 
         this.background = this.createBackground();
         this.setupWorldContainer();
-        
+
         // Make camera interactive for mouse events
         this.eventMode = 'static';
-        
+
         // Initialize components
         this.transform = new CameraTransform(this.worldContainer);
         this.input = new CameraInput();
@@ -79,18 +79,17 @@ export class Camera extends Container {
         this.addChild(this.worldContainer);
     }
 
-
     /**
      * Initialize camera to centered position with fit-to-screen zoom
      */
     private initializePosition() {
         const minZoom = this.bounds.getMinZoom();
         const centeredPos = this.bounds.getCenteredPosition(minZoom);
-        
+
         // Set both transform and interpolator target
         this.transform.setState(centeredPos.x, centeredPos.y, minZoom);
         this.interpolator.setTarget(centeredPos.x, centeredPos.y, minZoom);
-        
+
         this.transform.applyTransform();
     }
 
@@ -101,19 +100,18 @@ export class Camera extends Container {
     update(ticker: Ticker) {
         // Process input (applies directly to transform/interpolator)
         this.input.update(ticker.deltaTime);
-        
+
         // Apply smooth interpolation only if enabled
         if (cameraConfig.smoothMovement) {
             this.interpolator.update(ticker.deltaTime);
         }
-        
+
         // Apply bounds constraints
         this.bounds.applyConstraints();
-        
+
         // Apply final transform to world container
         this.transform.applyTransform();
     }
-
 
     /**
      * Resize the camera viewport - automatically gets size from camera dimensions
@@ -133,12 +131,13 @@ export class Camera extends Container {
 
         // Update bounds component with current viewport and world sizes
         this.bounds.updateSizes(width, height, this.worldWidth, this.worldHeight);
-        
+
         // Initialize position if this is the first resize (camera just created)
         const currentState = this.transform.getState();
         if (currentState.zoom === 1 && currentState.x === 0 && currentState.y === 0) {
             this.initializePosition();
-        } else {
+        }
+        else {
             // Apply constraints with new viewport size
             this.bounds.applyConstraints();
             this.transform.applyTransform();

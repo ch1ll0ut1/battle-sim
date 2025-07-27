@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { FederatedPointerEvent, FederatedWheelEvent, Point } from 'pixi.js';
 import { controls } from '../app/config/controls';
 import { camera as cameraConfig } from '../app/config/camera';
@@ -14,10 +15,15 @@ export class CameraInput {
     private isDragging = false;
     private lastPointerPosition = new Point();
 
-    // Bound methods for proper event listener cleanup
-    private boundOnKeyDown = this.onKeyDown.bind(this);
-    private boundOnKeyUp = this.onKeyUp.bind(this);
-    private boundOnContextMenu = this.onContextMenu.bind(this);
+    constructor() {
+        this.onPointerDown = this.onPointerDown.bind(this);
+        this.onPointerMove = this.onPointerMove.bind(this);
+        this.onPointerUp = this.onPointerUp.bind(this);
+        this.onRightClick = this.onRightClick.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
+        this.onKeyUp = this.onKeyUp.bind(this);
+        this.onContextMenu = this.onContextMenu.bind(this);
+    }
 
     get camera() {
         if (!this.#camera) {
@@ -68,7 +74,8 @@ export class CameraInput {
         if (deltaX !== 0 || deltaY !== 0) {
             if (cameraConfig.smoothMovement) {
                 this.camera.interpolator.moveTarget(deltaX, deltaY);
-            } else {
+            }
+            else {
                 this.camera.transform.translate(deltaX, deltaY);
             }
         }
@@ -85,12 +92,12 @@ export class CameraInput {
      * Setup camera-specific event listeners for mouse events
      */
     private setupMouseEventListeners() {
-        this.camera.on('wheel', (event: FederatedWheelEvent) => this.onWheel(event));
-        this.camera.on('pointerdown', (event: FederatedPointerEvent) => this.onPointerDown(event));
-        this.camera.on('pointermove', (event: FederatedPointerEvent) => this.onPointerMove(event));
-        this.camera.on('pointerup', () => this.onPointerUp());
-        this.camera.on('pointerupoutside', () => this.onPointerUp());
-        this.camera.on('rightclick', (event: FederatedPointerEvent) => this.onRightClick(event));
+        this.camera.on('wheel', this.onWheel);
+        this.camera.on('pointerdown', this.onPointerDown);
+        this.camera.on('pointermove', this.onPointerMove);
+        this.camera.on('pointerup', this.onPointerUp);
+        this.camera.on('pointerupoutside', this.onPointerUp);
+        this.camera.on('rightclick', this.onRightClick);
     }
 
     /**
@@ -99,9 +106,9 @@ export class CameraInput {
     private setupKeyboardEventListeners() {
         console.log('setupKeyboardEventListeners', document);
         if (typeof document !== 'undefined') {
-            document.addEventListener('keydown', this.boundOnKeyDown);
-            document.addEventListener('keyup', this.boundOnKeyUp);
-            document.addEventListener('contextmenu', this.boundOnContextMenu);
+            document.addEventListener('keydown', this.onKeyDown);
+            document.addEventListener('keyup', this.onKeyUp);
+            document.addEventListener('contextmenu', this.onContextMenu);
         }
     }
 
@@ -110,15 +117,16 @@ export class CameraInput {
      */
     private onWheel(event: FederatedWheelEvent) {
         event.stopPropagation();
-        
+
         // Calculate zoom factor using sensitivity
         const zoomDelta = event.deltaY > 0 ? -controls.zoomSensitivity : controls.zoomSensitivity;
-        
+
         if (cameraConfig.smoothMovement) {
             const currentTarget = this.camera.interpolator.getTarget();
             const newZoom = currentTarget.zoom * (1 + zoomDelta);
             this.camera.interpolator.setTargetZoom(newZoom);
-        } else {
+        }
+        else {
             const currentState = this.camera.transform.getState();
             const newZoom = currentState.zoom * (1 + zoomDelta);
             this.camera.transform.setZoom(newZoom);
@@ -146,7 +154,8 @@ export class CameraInput {
 
         if (cameraConfig.smoothMovement) {
             this.camera.interpolator.moveTarget(deltaX, deltaY);
-        } else {
+        }
+        else {
             this.camera.transform.translate(deltaX, deltaY);
         }
         this.lastPointerPosition.copyFrom(event.global);
@@ -177,7 +186,7 @@ export class CameraInput {
             ...controls.up,
             ...controls.down,
             ...controls.left,
-            ...controls.right
+            ...controls.right,
         ].map(k => k.toLowerCase());
 
         if (allControlKeys.includes(key)) {
@@ -206,11 +215,11 @@ export class CameraInput {
      */
     destroy() {
         if (typeof document !== 'undefined') {
-            document.removeEventListener('keydown', this.boundOnKeyDown);
-            document.removeEventListener('keyup', this.boundOnKeyUp);
-            document.removeEventListener('contextmenu', this.boundOnContextMenu);
+            document.removeEventListener('keydown', this.onKeyDown);
+            document.removeEventListener('keyup', this.onKeyUp);
+            document.removeEventListener('contextmenu', this.onContextMenu);
         }
-        
+
         this.keysPressed.clear();
     }
 }

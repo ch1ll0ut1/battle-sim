@@ -8,22 +8,18 @@ import { Camera } from './Camera';
  */
 export class CameraInterpolator {
     private camera: Camera | null = null;
-    
+
     // Target state
     public targetX = 0;
     public targetY = 0;
     public targetZoom = 1;
-
-    constructor() {
-        // No config needed - uses centralized camera config
-    }
 
     /**
      * Initialize with camera instance after construction
      */
     init(camera: Camera) {
         this.camera = camera;
-        
+
         // Initialize target to current camera state
         const currentState = camera.transform.getState();
         this.targetX = currentState.x;
@@ -90,7 +86,7 @@ export class CameraInterpolator {
      */
     snapToTarget() {
         if (!this.camera) return;
-        
+
         this.camera.transform.setState(this.targetX, this.targetY, this.targetZoom);
     }
 
@@ -112,7 +108,7 @@ export class CameraInterpolator {
         return {
             x: this.targetX,
             y: this.targetY,
-            zoom: this.targetZoom
+            zoom: this.targetZoom,
         };
     }
 }
