@@ -31,5 +31,5 @@ export const controls = {
     /**
      * Mouse wheel zoom sensitivity (lower = less sensitive)
      */
-    zoomSensitivity: 0.3,
+    zoomSensitivity: 0.2,
 };

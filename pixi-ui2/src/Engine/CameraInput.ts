@@ -3,6 +3,7 @@ import { FederatedPointerEvent, FederatedWheelEvent, Point } from 'pixi.js';
 import { controls } from '../app/config/controls';
 import { camera as cameraConfig } from '../app/config/camera';
 import { Camera } from './Camera';
+import { mouse } from './Mouse';
 
 /**
  * Handles all input events for camera control
@@ -16,6 +17,7 @@ export class CameraInput {
     private lastPointerPosition = new Point();
 
     constructor() {
+        this.onWheel = this.onWheel.bind(this);
         this.onPointerDown = this.onPointerDown.bind(this);
         this.onPointerMove = this.onPointerMove.bind(this);
         this.onPointerUp = this.onPointerUp.bind(this);
@@ -118,8 +120,11 @@ export class CameraInput {
     private onWheel(event: FederatedWheelEvent) {
         event.stopPropagation();
 
-        // Calculate zoom factor using sensitivity
-        const zoomDelta = event.deltaY > 0 ? -controls.zoomSensitivity : controls.zoomSensitivity;
+        // Normalize delta to line-based units for consistent behavior across devices
+        const normalizedDelta = mouse.normalizeWheelDelta(event.deltaY, event.deltaMode);
+
+        // Calculate zoom factor using sensitivity and reducing overall speed by 99%
+        const zoomDelta = -normalizedDelta * controls.zoomSensitivity * 0.01;
 
         if (cameraConfig.smoothMovement) {
             const currentTarget = this.camera.interpolator.getTarget();

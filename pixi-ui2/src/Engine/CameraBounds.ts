@@ -71,7 +71,7 @@ export class CameraBounds {
      * Constrain camera position to keep world content visible with buffer
      */
     private constrainPosition(x: number, y: number, zoom: number): { x: number; y: number } {
-        console.log('constrainPosition', { x, worldWidth: this.worldWidth, zoom, viewportWidth: this.viewportWidth });
+        // console.log('constrainPosition', { x, worldWidth: this.worldWidth, zoom, viewportWidth: this.viewportWidth });
         const worldScreenWidth = this.worldWidth * zoom;
         const worldScreenHeight = this.worldHeight * zoom;
 
