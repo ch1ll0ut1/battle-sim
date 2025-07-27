@@ -275,3 +275,4 @@ The following rules are defined by the user and workspace configuration. Claude 
 - State changes should be explicit and logged with configurable log levels to enable simulation debugging without affecting performance in production battles.
 - Documentation files should be placed in the `/docs` directory.
 - The user prefers code that is simple, obvious, and has easy-to-follow references, follow KISS.
+- Use strict TypeScript typing - avoid `any`, `as` type assertions, and `!` non-null assertions.
