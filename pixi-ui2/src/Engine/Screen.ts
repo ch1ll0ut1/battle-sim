@@ -40,7 +40,7 @@ export class Screen extends Container implements Poolable<ScreenManager> {
             alpha: 1,
         };
         await animate(this, toAnimate, {
-            duration: 0.3,
+            duration: 0.1,
             ease: 'linear',
             delay: 1,
         });
@@ -58,7 +58,7 @@ export class Screen extends Container implements Poolable<ScreenManager> {
             alpha: 0,
         };
         await animate(this, toAnimate, {
-            duration: 0.3,
+            duration: 0.2,
             ease: 'linear',
             delay: 1,
         });
