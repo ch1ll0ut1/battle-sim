@@ -1,10 +1,13 @@
 import { Container, Point } from 'pixi.js';
+import { camera as cameraConfig } from '../app/config/camera';
+import { Camera } from './Camera';
 
 /**
  * Manages camera transform state and coordinate conversions
  * Handles position, zoom, and applies transforms to the world container
  */
 export class CameraTransform {
+    #camera: Camera | null = null;
     private worldContainer: Container;
 
     // Current transform state
@@ -14,6 +17,20 @@ export class CameraTransform {
 
     constructor(worldContainer: Container) {
         this.worldContainer = worldContainer;
+    }
+
+    get camera() {
+        if (!this.#camera) {
+            throw new Error('CameraTransform.init() not called');
+        }
+        return this.#camera;
+    }
+
+    /**
+     * Initialize with camera instance after construction
+     */
+    init(camera: Camera) {
+        this.#camera = camera;
     }
 
     /**
@@ -43,19 +60,24 @@ export class CameraTransform {
     }
 
     /**
-     * Set position directly
+     * Set position directly with bounds checking
      */
-    setPosition(x: number, y: number) {
-        this.x = x;
-        this.y = y;
+    setPosition(x: number, y: number, zoom?: number) {
+        const zoomLevel = zoom ?? this.zoom;
+        const constrained = this.constrainPosition(x, y, zoomLevel);
+
+        this.x = constrained.x;
+        this.y = constrained.y;
+        this.zoom = constrained.zoom;
     }
 
     /**
-     * Move by delta amount
+     * Move by delta amount with bounds checking
      */
     translate(deltaX: number, deltaY: number) {
-        this.x += deltaX;
-        this.y += deltaY;
+        const newX = this.x + deltaX;
+        const newY = this.y + deltaY;
+        this.setPosition(newX, newY);
     }
 
     /**
@@ -83,5 +105,45 @@ export class CameraTransform {
             y: this.y,
             zoom: this.zoom,
         };
+    }
+
+    /**
+     * Constrain camera position and zoom to keep world content visible with buffer
+     */
+    private constrainPosition(x: number, y: number, zoom: number): { x: number; y: number; zoom: number } {
+        // Constrain zoom to possible bounds
+        const minZoom = this.getMinZoom();
+        const constrainedZoom = Math.max(minZoom, Math.min(cameraConfig.maxZoom, zoom));
+
+        // Constrain position using the bounded zoom
+        const worldScreenWidth = this.camera.worldWidth * constrainedZoom;
+        const worldScreenHeight = this.camera.worldHeight * constrainedZoom;
+        const { viewportWidth, viewportHeight } = this.camera;
+
+        // Calculate buffer as percentage of viewport size
+        const bufferX = viewportWidth * cameraConfig.boundaryBufferPercent;
+        const bufferY = viewportHeight * cameraConfig.boundaryBufferPercent;
+
+        // Horizontal constraints with buffer
+        const maxX = bufferX;
+        const minX = viewportWidth - worldScreenWidth - bufferX;
+        const constrainedX = Math.max(minX, Math.min(maxX, x));
+
+        // Vertical constraints with buffer
+        const maxY = bufferY;
+        const minY = viewportHeight - worldScreenHeight - bufferY;
+        const constrainedY = Math.max(minY, Math.min(maxY, y));
+
+        return { x: constrainedX, y: constrainedY, zoom: constrainedZoom };
+    }
+
+    /**
+     * Get minimum zoom level to fit world in viewport
+     */
+    private getMinZoom(): number {
+        const scaleX = this.camera.viewportWidth / this.camera.worldWidth;
+        const scaleY = this.camera.viewportHeight / this.camera.worldHeight;
+        const calculatedMinZoom = Math.min(scaleX, scaleY);
+        return Math.max(calculatedMinZoom, cameraConfig.minZoom);
     }
 }

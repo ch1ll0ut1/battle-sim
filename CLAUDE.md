@@ -256,6 +256,7 @@ The following rules are defined by the user and workspace configuration. Claude 
 - Never write `types.ts` files.
 - Do not create proxy methods to dependencies and no getter boilerplate.
 - Only do what is asked; do not do extra work. Make suggestions afterwards without causing any changes.
+- **Export at definition** - Always export classes and enums at their definition (e.g., `export class Foo` instead of separate `export { Foo }`)
 - Cover all files with tests. Tests should not do semantic testing but only test behavior and business logic. Do not test implementation details—only the public API of modules.
 - Develop in small iterations to give the user time to review changes and do git commits in between.
 - Write self-containing modules (single responsibility, containing logic, tests, and types as close together as possible). Example structure:

@@ -1,8 +1,6 @@
 import { Container, Graphics, Ticker } from 'pixi.js';
 import { camera as cameraConfig } from '../app/config/camera';
-import { CameraBounds } from './CameraBounds';
 import { CameraInput } from './CameraInput';
-import { CameraInterpolator } from './CameraInterpolator';
 import { CameraTransform } from './CameraTransform';
 
 /**
@@ -12,16 +10,17 @@ import { CameraTransform } from './CameraTransform';
  * Note: world size can not be retrieved from container.bounds() after a mask has been applied, so we need to pass it in.
  */
 export class Camera extends Container {
-    private worldContainer: Container;
     public worldWidth: number;
     public worldHeight: number;
+    public viewportWidth = 0;
+    public viewportHeight = 0;
+
+    private worldContainer: Container;
     private background: Graphics;
 
     // Composed components
     public transform: CameraTransform;
     private input: CameraInput;
-    private bounds: CameraBounds;
-    public interpolator: CameraInterpolator;
 
     constructor(worldContainer: Container, worldWidth: number, worldHeight: number) {
         super();
@@ -39,8 +38,6 @@ export class Camera extends Container {
         // Initialize components
         this.transform = new CameraTransform(this.worldContainer);
         this.input = new CameraInput();
-        this.bounds = new CameraBounds();
-        this.interpolator = new CameraInterpolator();
     }
 
     /**
@@ -49,9 +46,8 @@ export class Camera extends Container {
      */
     init() {
         // Initialize all components with camera reference
+        this.transform.init(this);
         this.input.init(this);
-        this.bounds.init(this);
-        this.interpolator.init(this);
 
         // Initial position will be set after first resize() call
     }
@@ -83,12 +79,11 @@ export class Camera extends Container {
      * Initialize camera to centered position with fit-to-screen zoom
      */
     private initializePosition() {
-        const minZoom = this.bounds.getMinZoom();
-        const centeredPos = this.bounds.getCenteredPosition(minZoom);
+        const minZoom = this.getMinZoom();
+        const centeredPos = this.getCenteredPosition(minZoom);
 
-        // Set both transform and interpolator target
+        // Set transform state
         this.transform.setState(centeredPos.x, centeredPos.y, minZoom);
-        this.interpolator.setTarget(centeredPos.x, centeredPos.y, minZoom);
 
         this.transform.applyTransform();
     }
@@ -98,16 +93,8 @@ export class Camera extends Container {
      * Pure composition - just calls component update methods
      */
     update(ticker: Ticker) {
-        // Process input (applies directly to transform/interpolator)
+        // Process input (applies directly to transform)
         this.input.update(ticker.deltaTime);
-
-        // Apply smooth interpolation only if enabled
-        if (cameraConfig.smoothMovement) {
-            this.interpolator.update(ticker.deltaTime);
-        }
-
-        // Apply bounds constraints
-        this.bounds.applyConstraints();
 
         // Apply final transform to world container
         this.transform.applyTransform();
@@ -129,8 +116,9 @@ export class Camera extends Container {
             mask.rect(0, 0, width, height).fill({ color: 0xffffff });
         }
 
-        // Update bounds component with current viewport and world sizes
-        this.bounds.updateSizes(width, height, this.worldWidth, this.worldHeight);
+        // Update viewport dimensions
+        this.viewportWidth = width;
+        this.viewportHeight = height;
 
         // Initialize position if this is the first resize (camera just created)
         const currentState = this.transform.getState();
@@ -138,8 +126,7 @@ export class Camera extends Container {
             this.initializePosition();
         }
         else {
-            // Apply constraints with new viewport size
-            this.bounds.applyConstraints();
+            // Apply transform with new viewport size
             this.transform.applyTransform();
         }
     }
@@ -151,5 +138,28 @@ export class Camera extends Container {
         console.log('Camera destroy');
         this.input.destroy();
         super.destroy({ children: true });
+    }
+
+    /**
+     * Get minimum zoom level to fit world in viewport
+     */
+    private getMinZoom(): number {
+        const scaleX = this.viewportWidth / this.worldWidth;
+        const scaleY = this.viewportHeight / this.worldHeight;
+        const calculatedMinZoom = Math.min(scaleX, scaleY);
+        return Math.max(calculatedMinZoom, cameraConfig.minZoom);
+    }
+
+    /**
+     * Calculate initial centered position for given zoom
+     */
+    private getCenteredPosition(zoom: number): { x: number; y: number } {
+        const worldScreenWidth = this.worldWidth * zoom;
+        const worldScreenHeight = this.worldHeight * zoom;
+
+        return {
+            x: (this.viewportWidth - worldScreenWidth) / 2,
+            y: (this.viewportHeight - worldScreenHeight) / 2,
+        };
     }
 }

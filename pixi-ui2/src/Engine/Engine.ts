@@ -42,4 +42,11 @@ export class Engine {
 
         this.screens.resize(this.app.screen.width, this.app.screen.height);
     }
+
+    /**
+     * Clean up engine resources
+     */
+    destroy() {
+        this.app.destroy();
+    }
 }
