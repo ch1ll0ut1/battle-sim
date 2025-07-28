@@ -82,8 +82,14 @@ export class CameraInput {
         const currentState = this.camera.transform.getState();
         const newZoom = currentState.zoom * (1 + zoomDelta);
 
-        const zoomTarget = this.calculateZoomToPoint(mouseX, mouseY, newZoom);
-        this.camera.transform.setPosition(zoomTarget.x, zoomTarget.y, zoomTarget.zoom);
+        // Constrain zoom first to get the actual zoom that will be applied
+        const constrainedZoom = this.camera.transform.constrainZoom(newZoom);
+
+        // Only calculate new position if zoom actually changed
+        if (constrainedZoom !== currentState.zoom) {
+            const zoomTarget = this.calculateZoomToPoint(mouseX, mouseY, constrainedZoom);
+            this.camera.transform.setPosition(zoomTarget.x, zoomTarget.y, constrainedZoom);
+        }
     }
 
     /**
@@ -96,15 +102,15 @@ export class CameraInput {
     /**
      * Calculate camera position for zooming to a specific screen point
      */
-    private calculateZoomToPoint(mouseX: number, mouseY: number, newZoom: number) {
+    private calculateZoomToPoint(mouseX: number, mouseY: number, zoom: number) {
         // Convert screen point to world coordinates at current zoom
         const worldPoint = this.camera.transform.screenToWorld(mouseX, mouseY);
 
         // Calculate new camera position to keep world point under cursor
-        const newCameraX = mouseX - worldPoint.x * newZoom;
-        const newCameraY = mouseY - worldPoint.y * newZoom;
+        const newCameraX = mouseX - worldPoint.x * zoom;
+        const newCameraY = mouseY - worldPoint.y * zoom;
 
-        return { x: newCameraX, y: newCameraY, zoom: newZoom };
+        return { x: newCameraX, y: newCameraY };
     }
 
     /**

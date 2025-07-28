@@ -108,31 +108,43 @@ export class CameraTransform {
     }
 
     /**
+     * Constrain zoom level to min/max bounds
+     */
+    constrainZoom(zoom: number) {
+        const minZoom = this.camera.getMinZoom();
+        return Math.max(minZoom, Math.min(cameraConfig.maxZoom, zoom));
+    }
+
+    /**
+     * Constrain position along a single axis with buffer
+     */
+    private constrainAxis(
+        position: number,
+        worldSize: number,
+        viewportSize: number,
+        zoom: number,
+    ) {
+        const worldScreenSize = worldSize * zoom;
+        const buffer = viewportSize * cameraConfig.boundaryBufferPercent;
+
+        const max = buffer;
+        const min = viewportSize - worldScreenSize - buffer;
+
+        return Math.max(min, Math.min(max, position));
+    }
+
+    /**
      * Constrain camera position and zoom to keep world content visible with buffer
      */
-    private constrainPosition(x: number, y: number, zoom: number): { x: number; y: number; zoom: number } {
+    private constrainPosition(x: number, y: number, zoom: number) {
         // Constrain zoom to possible bounds
-        const minZoom = this.camera.getMinZoom();
-        const constrainedZoom = Math.max(minZoom, Math.min(cameraConfig.maxZoom, zoom));
+        const constrainedZoom = this.constrainZoom(zoom);
 
-        // Calculate zoom-adjusted world dimensions
-        const worldScreenWidth = this.camera.worldWidth * constrainedZoom;
-        const worldScreenHeight = this.camera.worldHeight * constrainedZoom;
         const { viewportWidth, viewportHeight } = this.camera;
 
-        // Calculate buffer as percentage of viewport size
-        const bufferX = viewportWidth * cameraConfig.boundaryBufferPercent;
-        const bufferY = viewportHeight * cameraConfig.boundaryBufferPercent;
-
-        // Horizontal constraints with buffer
-        const maxX = bufferX;
-        const minX = viewportWidth - worldScreenWidth - bufferX;
-        const constrainedX = Math.max(minX, Math.min(maxX, x));
-
-        // Vertical constraints with buffer
-        const maxY = bufferY;
-        const minY = viewportHeight - worldScreenHeight - bufferY;
-        const constrainedY = Math.max(minY, Math.min(maxY, y));
+        // Constrain both axes using the helper method
+        const constrainedX = this.constrainAxis(x, this.camera.worldWidth, viewportWidth, constrainedZoom);
+        const constrainedY = this.constrainAxis(y, this.camera.worldHeight, viewportHeight, constrainedZoom);
 
         return { x: constrainedX, y: constrainedY, zoom: constrainedZoom };
     }
