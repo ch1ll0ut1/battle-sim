@@ -44,7 +44,7 @@ export class CameraTransform {
     /**
      * Convert screen coordinates to world coordinates
      */
-    screenToWorld(screenX: number, screenY: number): Point {
+    screenToWorld(screenX: number, screenY: number) {
         const worldX = (screenX - this.x) / this.zoom;
         const worldY = (screenY - this.y) / this.zoom;
         return new Point(worldX, worldY);
@@ -53,7 +53,7 @@ export class CameraTransform {
     /**
      * Convert world coordinates to screen coordinates
      */
-    worldToScreen(worldX: number, worldY: number): Point {
+    worldToScreen(worldX: number, worldY: number) {
         const screenX = worldX * this.zoom + this.x;
         const screenY = worldY * this.zoom + this.y;
         return new Point(screenX, screenY);
@@ -112,10 +112,10 @@ export class CameraTransform {
      */
     private constrainPosition(x: number, y: number, zoom: number): { x: number; y: number; zoom: number } {
         // Constrain zoom to possible bounds
-        const minZoom = this.getMinZoom();
+        const minZoom = this.camera.getMinZoom();
         const constrainedZoom = Math.max(minZoom, Math.min(cameraConfig.maxZoom, zoom));
 
-        // Constrain position using the bounded zoom
+        // Calculate zoom-adjusted world dimensions
         const worldScreenWidth = this.camera.worldWidth * constrainedZoom;
         const worldScreenHeight = this.camera.worldHeight * constrainedZoom;
         const { viewportWidth, viewportHeight } = this.camera;
@@ -135,15 +135,5 @@ export class CameraTransform {
         const constrainedY = Math.max(minY, Math.min(maxY, y));
 
         return { x: constrainedX, y: constrainedY, zoom: constrainedZoom };
-    }
-
-    /**
-     * Get minimum zoom level to fit world in viewport
-     */
-    private getMinZoom(): number {
-        const scaleX = this.camera.viewportWidth / this.camera.worldWidth;
-        const scaleY = this.camera.viewportHeight / this.camera.worldHeight;
-        const calculatedMinZoom = Math.min(scaleX, scaleY);
-        return Math.max(calculatedMinZoom, cameraConfig.minZoom);
     }
 }

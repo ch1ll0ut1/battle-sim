@@ -33,6 +33,7 @@ interface MouseCallbacks {
 
 export class Mouse {
     private scrollLineHeight: number;
+    private pageHeight: number;
     private isDragging = false;
     private lastPointerX = 0;
     private lastPointerY = 0;
@@ -48,6 +49,7 @@ export class Mouse {
 
     constructor() {
         this.scrollLineHeight = this.getScrollLineHeight();
+        this.pageHeight = this.getPageHeight();
     }
 
     /**
@@ -115,7 +117,7 @@ export class Mouse {
             case WheelDeltaMode.line:
                 return deltaY * this.scrollLineHeight;
             case WheelDeltaMode.page:
-                return deltaY * this.getPageHeight();
+                return deltaY * this.pageHeight;
             default:
                 throw new Error(`Invalid delta mode: ${deltaMode}`);
         }

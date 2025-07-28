@@ -143,7 +143,7 @@ export class Camera extends Container {
     /**
      * Get minimum zoom level to fit world in viewport
      */
-    private getMinZoom(): number {
+    getMinZoom() {
         const scaleX = this.viewportWidth / this.worldWidth;
         const scaleY = this.viewportHeight / this.worldHeight;
         const calculatedMinZoom = Math.min(scaleX, scaleY);
@@ -153,7 +153,7 @@ export class Camera extends Container {
     /**
      * Calculate initial centered position for given zoom
      */
-    private getCenteredPosition(zoom: number): { x: number; y: number } {
+    private getCenteredPosition(zoom: number) {
         const worldScreenWidth = this.worldWidth * zoom;
         const worldScreenHeight = this.worldHeight * zoom;
 
