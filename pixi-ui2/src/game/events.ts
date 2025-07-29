@@ -4,13 +4,12 @@ import { debugConfig } from '../app/config/debug';
 
 export enum GameEvent {
     // Action events (user initiated)
+    initGame = 'action.initGame',
     startGame = 'action.startGame',
     stopGame = 'action.stopGame',
     pauseGame = 'action.pauseGame',
     resetGame = 'action.resetGame',
     nextTick = 'action.nextTick',
-    setGameMode = 'action.setGameMode',
-    setMap = 'action.setMap',
 
     // Game state events (backend responses/updates)
     gameStateChanged = 'game.stateChanged',
@@ -38,29 +37,28 @@ export enum GameEvent {
 }
 
 export interface GameEvents {
+    [GameEvent.initGame]: [{ gameMode: string; map: string }];
     [GameEvent.startGame]: [];
     [GameEvent.stopGame]: [];
     [GameEvent.pauseGame]: [];
     [GameEvent.resetGame]: [];
     [GameEvent.nextTick]: [];
-    [GameEvent.setGameMode]: [gameMode: string];
-    [GameEvent.setMap]: [mapConfig: object];
 
-    [GameEvent.gameStateChanged]: [state: object];
+    [GameEvent.gameStateChanged]: [{ state: object }];
     [GameEvent.gameStarted]: [];
     [GameEvent.gameStopped]: [];
     [GameEvent.gamePaused]: [];
     [GameEvent.gameReset]: [];
 
-    [GameEvent.unitCreated]: [unitId: number, unitData: object];
-    [GameEvent.unitUpdated]: [unitId: number, unitData: object];
-    [GameEvent.unitMoved]: [unitId: number, position: { x: number; y: number }];
-    [GameEvent.unitDied]: [unitId: number];
+    [GameEvent.unitCreated]: [{ unitId: number; unitData: object }];
+    [GameEvent.unitUpdated]: [{ unitId: number; unitData: object }];
+    [GameEvent.unitMoved]: [{ unitId: number; position: { x: number; y: number } }];
+    [GameEvent.unitDied]: [{ unitId: number }];
 
-    [GameEvent.mapLoaded]: [mapData: object];
-    [GameEvent.mapUpdated]: [mapData: object];
+    [GameEvent.mapLoaded]: [{ mapData: object }];
+    [GameEvent.mapUpdated]: [{ mapData: object }];
 
-    [GameEvent.logMessage]: [message: string];
+    [GameEvent.logMessage]: [{ message: string }];
 
     [GameEvent.connected]: [];
     [GameEvent.disconnected]: [];

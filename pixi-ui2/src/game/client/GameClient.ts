@@ -52,19 +52,31 @@ class GameClientClass {
     /**
      * Send an action event to the server or queue it if disconnected
      */
-    private sendActionEvent<T extends GameEvent>(eventType: T, args: GameEvents[T]) {
+    private sendActionEvent<T extends GameEvent>(eventType: T, args: GameEvents[T], allowQueue = true) {
+        if (!Array.isArray(args) || args.length > 1) {
+            throw new Error(`Invalid args for Action ${eventType}: ${JSON.stringify(args)}`);
+        }
+
         if (!this.wsClient?.isConnected) {
-            this.queueAction(eventType, args);
+            if (allowQueue) {
+                this.queueAction(eventType, args);
+            }
+            else {
+                throw new Error('Not connected to server');
+            }
             return;
         }
 
         try {
-            // Send the event in the backend's expected format
-            this.wsClient.send(eventType, args.length === 1 ? args[0] : args);
+            this.wsClient.send(eventType, args.length === 1 ? args[0] : {});
         }
         catch (error) {
-            // If sending fails (e.g., connection lost), queue the action
-            logger.error(`Failed to send action '${eventType}', queueing it:`, error);
+            logger.error(`Failed to send action '${eventType}' ${allowQueue ? '(add to queue)' : ''}`, error);
+
+            if (!allowQueue) {
+                throw error;
+            }
+
             this.queueAction(eventType, args);
         }
     }
@@ -123,17 +135,18 @@ class GameClientClass {
             if (!action) {
                 throw new Error('No action to send');
             }
-            this.wsClient.send(action.eventType, action.args.length === 1 ? action.args[0] : action.args);
+
+            this.sendActionEvent(action.eventType, action.args, false);
         }
     }
 
     /**
      * Handle incoming messages from the server by directly emitting the event
      */
-    private handleServerMessage<T extends GameEvent>(type: T, data: GameEvents[T]) {
-        // Check if the message type matches a GameEvent enum value
+    private handleServerMessage(type: GameEvent, data: unknown) {
         if (Object.values(GameEvent).includes(type)) {
-            events.emit(type as keyof GameEvents, data);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+            events.emit(type as keyof GameEvents, data as any);
         }
         else {
             throw new Error(`Unknown server message type: ${type}`);
