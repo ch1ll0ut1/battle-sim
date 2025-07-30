@@ -3,6 +3,18 @@ export const colors = {
     secondary: '#B08D57', // Warm Bronze/Ochre
     text: '#EDE6D6', // Parchment/Bone
     background: '#23211A', // Charcoal Brown
+
+    black: '#23211A',
+    white: '#EDE6D6',
+    red: '#B03030',
+    green: '#4B5D3A',
+    blue: '#3030B0',
+    yellow: '#B08D57',
+    orange: '#B05D30',
+    purple: '#5D30B0',
+    pink: '#B0308D',
+    brown: '#5D3030',
+
     button: {
         primary: {
             background: '#4B5D3A',
