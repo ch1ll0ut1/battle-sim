@@ -1,22 +1,23 @@
-import { EventEmitter } from 'events';
+import EventEmitter from 'eventemitter3';
 import { logger } from '../Engine/Logger';
 import { debugConfig } from '../app/config/debug';
+
+export interface EventAction<T extends GameEvent = GameEvent> {
+    eventType: T;
+    args: GameEvents[T];
+}
 
 export enum GameEvent {
     // Action events (user initiated)
     initGame = 'action.initGame',
     startGame = 'action.startGame',
-    stopGame = 'action.stopGame',
     pauseGame = 'action.pauseGame',
-    resetGame = 'action.resetGame',
     nextTick = 'action.nextTick',
 
     // Game state events (backend responses/updates)
     gameStateChanged = 'game.stateChanged',
     gameStarted = 'game.started',
     gameStopped = 'game.stopped',
-    gamePaused = 'game.paused',
-    gameReset = 'game.reset',
 
     // Unit events
     unitCreated = 'unit.created',
@@ -39,16 +40,12 @@ export enum GameEvent {
 export interface GameEvents {
     [GameEvent.initGame]: [{ gameMode: string; map: string }];
     [GameEvent.startGame]: [];
-    [GameEvent.stopGame]: [];
     [GameEvent.pauseGame]: [];
-    [GameEvent.resetGame]: [];
     [GameEvent.nextTick]: [];
 
     [GameEvent.gameStateChanged]: [{ state: object }];
     [GameEvent.gameStarted]: [];
     [GameEvent.gameStopped]: [];
-    [GameEvent.gamePaused]: [];
-    [GameEvent.gameReset]: [];
 
     [GameEvent.unitCreated]: [{ unitId: number; unitData: object }];
     [GameEvent.unitUpdated]: [{ unitId: number; unitData: object }];
@@ -72,7 +69,6 @@ export interface GameEvents {
 class GameEventsClass extends EventEmitter<GameEvents> {
     constructor() {
         super();
-        this.setMaxListeners(50); // Allow more listeners for complex UI scenarios
         this.setupLogging();
     }
 

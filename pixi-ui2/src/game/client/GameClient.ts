@@ -1,11 +1,6 @@
 import { WebSocketClient } from '../../Engine/WebSocketClient';
-import { events, GameEvent, GameEvents } from '../events';
+import { EventAction, events, GameEvent, GameEvents } from '../events';
 import { logger } from '../../Engine/Logger';
-
-interface QueuedAction<T extends GameEvent = GameEvent> {
-    eventType: T;
-    args: GameEvents[T];
-}
 
 /**
  * GameClient handles backend communication and automatically forwards action events to the server
@@ -14,7 +9,7 @@ interface QueuedAction<T extends GameEvent = GameEvent> {
  */
 class GameClientClass {
     private wsClient: WebSocketClient | null = null;
-    private actionQueue: QueuedAction[] = [];
+    private actionQueue: EventAction[] = [];
 
     constructor() {
         this.setupEventListeners();
