@@ -1,6 +1,7 @@
 import { Container, Graphics, Ticker } from 'pixi.js';
 import { Camera } from '../../../Engine/Camera';
 import { Screen } from '../../../Engine/Screen';
+import { PlaybackControls } from '../../components/PlaybackControls/PlaybackControls';
 
 /**
  * MapScreen demonstrates camera usage with world Container injection
@@ -8,6 +9,7 @@ import { Screen } from '../../../Engine/Screen';
  */
 export class MapScreen extends Screen {
     private camera: Camera;
+    private controls: PlaybackControls;
 
     constructor() {
         super();
@@ -21,6 +23,10 @@ export class MapScreen extends Screen {
         this.camera = new Camera(worldContainer, worldContainer.width, worldContainer.height);
         this.addChild(this.camera);
         this.camera.init();
+
+        // Add playback controls
+        this.controls = new PlaybackControls();
+        this.addChild(this.controls);
     }
 
     /**
