@@ -1,6 +1,6 @@
 import { action } from '@storybook/addon-actions';
 import { Button } from './Button';
-import { createComponentStoryRender } from '../../../stories/pixiStorybook';
+import { createComponentStoryRender } from '../../../../.storybook/pixiStorybook';
 import { colors } from '../../config/colors';
 
 export default {

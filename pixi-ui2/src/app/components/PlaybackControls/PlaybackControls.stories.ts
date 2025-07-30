@@ -1,5 +1,5 @@
 import { PlaybackControls } from './PlaybackControls';
-import { createComponentStoryRender } from '../../../stories/pixiStorybook';
+import { createComponentStoryRender } from '../../../../.storybook/pixiStorybook';
 
 export default {
     title: 'PlaybackControls',
