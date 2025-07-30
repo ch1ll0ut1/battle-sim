@@ -25,11 +25,14 @@ export class Button extends ButtonContainer {
      * @param onClick - Callback for click/tap events.
      */
     constructor(
-        type: 'primary' | 'secondary',
-        label: string,
-        onClick: () => void,
+        options: {
+            type: 'primary' | 'secondary';
+            label: string;
+            onClick: () => void;
+        },
     ) {
         super();
+        const { type, label, onClick } = options;
 
         this.type = type;
         const theme = colors.button[type];
