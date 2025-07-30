@@ -11,4 +11,4 @@ process.on('SIGINT', () => {
     process.exit(0);
 });
 
-console.log('Battle simulation server started on port 8080');
+console.log(`Battle simulation server started on port ${serverConfig.port}`);

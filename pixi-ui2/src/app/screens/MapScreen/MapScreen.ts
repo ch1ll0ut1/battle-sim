@@ -1,6 +1,7 @@
 import { Container, Graphics, Ticker } from 'pixi.js';
 import { Camera } from '../../../Engine/Camera';
 import { Screen } from '../../../Engine/Screen';
+import { events, GameEvent } from '../../../game/events';
 import { PlaybackControls } from '../../components/PlaybackControls/PlaybackControls';
 
 /**
@@ -27,6 +28,10 @@ export class MapScreen extends Screen {
         // Add playback controls
         this.controls = new PlaybackControls();
         this.addChild(this.controls);
+    }
+
+    prepare() {
+        events.emit(GameEvent.initGame, { gameMode: 'map', map: 'small' });
     }
 
     /**
