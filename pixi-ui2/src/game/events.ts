@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3';
-import { logger } from '../Engine/Logger';
-import { debugConfig } from '../app/config/debug';
+import { debugConfig } from '../config/debug';
+import { logger } from '../engine/Logger';
 
 export interface EventAction<T extends GameEvent = GameEvent> {
     eventType: T;

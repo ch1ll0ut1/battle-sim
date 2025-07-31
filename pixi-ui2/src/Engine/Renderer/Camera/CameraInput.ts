@@ -1,8 +1,8 @@
-import { controls } from '../app/config/controls';
-import { camera as cameraConfig } from '../app/config/camera';
+import { camera as cameraConfig } from '../../../config/camera';
+import { controls } from '../../../config/controls';
+import { Keyboard } from '../Input/Keyboard';
+import { Mouse } from '../Input/Mouse';
 import { Camera } from './Camera';
-import { Mouse } from './Mouse';
-import { Keyboard } from './Keyboard';
 
 /**
  * Handles all input events for camera control

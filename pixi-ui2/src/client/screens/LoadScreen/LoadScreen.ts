@@ -1,7 +1,7 @@
 import { CircularProgressBar } from '@pixi/ui';
-import { Screen } from '../../../Engine/Screen';
+import { colors } from '../../../config/colors';
+import { Screen } from '../../../engine/Renderer/Screen/Screen';
 import { Label } from '../../components/Label/Label';
-import { colors } from '../../config/colors';
 
 /**
  * LoadScreen displays a loading progress bar and text while assets are being loaded.

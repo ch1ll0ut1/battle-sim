@@ -1,4 +1,4 @@
-import { Screen } from '../../../Engine/Screen';
+import { Screen } from '../../../engine/Renderer/Screen/Screen';
 import { Button } from '../../components/Button/Button';
 import { Label } from '../../components/Label/Label';
 import { MapScreen } from '../MapScreen/MapScreen';

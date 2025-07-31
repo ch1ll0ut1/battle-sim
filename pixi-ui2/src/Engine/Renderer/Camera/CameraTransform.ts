@@ -1,5 +1,5 @@
 import { Container, Point } from 'pixi.js';
-import { camera as cameraConfig } from '../app/config/camera';
+import { camera as cameraConfig } from '../../../config/camera';
 import { Camera } from './Camera';
 
 /**

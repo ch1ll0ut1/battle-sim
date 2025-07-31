@@ -1,4 +1,4 @@
-import { debugConfig } from '../app/config/debug';
+import { debugConfig } from '../config/debug';
 
 /**
  * Logger service that provides formatted console output with variable parameters

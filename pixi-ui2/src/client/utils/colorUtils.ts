@@ -3,7 +3,7 @@
  * from a single base color using color theory principles.
  */
 
-import { colors } from '../config/colors';
+import { colors } from '../../config/colors';
 
 /**
  * Converts hex color to HSL values

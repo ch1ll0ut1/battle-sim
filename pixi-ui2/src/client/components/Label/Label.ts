@@ -1,5 +1,5 @@
 import { BitmapText } from 'pixi.js';
-import { font } from '../../config/font';
+import { font } from '../../../config/font';
 
 /**
  * A Text extension pre-formatted for this app, starting centred by default,

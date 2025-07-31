@@ -1,6 +1,6 @@
-import { WebSocketClient } from '../../Engine/WebSocketClient';
-import { EventAction, events, GameEvent, GameEvents } from '../events';
-import { logger } from '../../Engine/Logger';
+import { logger } from '../engine/Logger';
+import { WebSocketClient } from '../engine/WebSocketClient';
+import { EventAction, events, GameEvent, GameEvents } from './events';
 
 /**
  * GameClient handles backend communication and automatically forwards action events to the server

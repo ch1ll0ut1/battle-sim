@@ -1,5 +1,5 @@
 import { Container, Graphics, Ticker } from 'pixi.js';
-import { camera as cameraConfig } from '../app/config/camera';
+import { camera as cameraConfig } from '../../../config/camera';
 import { CameraInput } from './CameraInput';
 import { CameraTransform } from './CameraTransform';
 

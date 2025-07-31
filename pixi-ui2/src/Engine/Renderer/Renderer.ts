@@ -1,9 +1,9 @@
 import { initDevtools } from '@pixi/devtools';
 import { Application } from 'pixi.js';
-import { colors } from '../app/config/colors';
-import { ScreenManager } from './ScreenManager';
+import { colors } from '../../config/colors';
+import { ScreenManager } from './Screen/ScreenManager';
 
-export class Engine {
+export class Renderer {
     public app: Application;
     public screens: ScreenManager;
 
@@ -13,7 +13,7 @@ export class Engine {
     }
 
     async init() {
-        console.log('Init Engine');
+        console.log('Init Renderer');
 
         await this.app.init({
             background: colors.background,

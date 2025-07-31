@@ -1,6 +1,6 @@
 import { animate, ObjectTarget } from 'motion';
 import { Container, Ticker } from 'pixi.js';
-import { Poolable } from './Poolable';
+import { Poolable } from '../Poolable';
 import { ScreenManager } from './ScreenManager';
 
 /**

@@ -1,6 +1,6 @@
 import { Container, Graphics, Ticker } from 'pixi.js';
-import { Camera } from '../../../Engine/Camera';
-import { Screen } from '../../../Engine/Screen';
+import { Camera } from '../../../engine/Renderer/Camera/Camera';
+import { Screen } from '../../../engine/Renderer/Screen/Screen';
 import { events, GameEvent } from '../../../game/events';
 import { PlaybackControls } from '../../components/PlaybackControls/PlaybackControls';
 

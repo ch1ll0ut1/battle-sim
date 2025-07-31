@@ -1,11 +1,11 @@
-import { colors } from '../src/app/config/colors';
+import { colors } from '../src/config/colors';
 
 const preview = {
     parameters: {
         layout: 'fullscreen',
         pixi: {
-        // these are passed as options to `PIXI.Application` when instantiated by the
-        // renderer
+            // these are passed as options to `PIXI.Application` when instantiated by the
+            // renderer
             applicationOptions: {
                 background: colors.background,
                 resizeTo: window,

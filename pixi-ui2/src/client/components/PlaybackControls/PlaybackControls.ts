@@ -1,7 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
-import { events, GameEvent, GameEvents, EventAction } from '../../../game/events';
+import { colors } from '../../../config/colors';
+import { EventAction, events, GameEvent } from '../../../game/events';
 import { Button } from '../Button/Button';
-import { colors } from '../../config/colors';
 
 interface ButtonConfig {
     label: string;
@@ -20,7 +20,7 @@ const buttonConfig: ButtonConfig[] = [{
     label: '⏸',
     color: colors.orange,
     action: {
-        eventType: GameEvent.stopGame,
+        eventType: GameEvent.pauseGame,
         args: [],
     },
 }, {
@@ -119,7 +119,6 @@ export class PlaybackControls extends Container {
      * Position all buttons horizontally with proper spacing and vertical centering
      */
     private positionButtons(buttons: Map<string, Button>) {
-        const { maxButtonHeight } = this.calculateDimensions();
         let currentX = xPadding;
 
         buttonConfig.forEach((config) => {

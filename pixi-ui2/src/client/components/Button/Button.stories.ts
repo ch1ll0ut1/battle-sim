@@ -1,7 +1,7 @@
 import { action } from '@storybook/addon-actions';
-import { Button } from './Button';
 import { createComponentStoryRender } from '../../../../.storybook/pixiStorybook';
-import { colors } from '../../config/colors';
+import { colors } from '../../../config/colors';
+import { Button } from './Button';
 
 export default {
     title: 'Button',

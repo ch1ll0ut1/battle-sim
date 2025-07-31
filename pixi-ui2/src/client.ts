@@ -1,14 +1,14 @@
-import { LoadScreen } from './app/screens/LoadScreen/LoadScreen';
-import { MenuScreen } from './app/screens/MenuScreen/MenuScreen';
-import { Engine } from './Engine/Engine';
-import { gameClient } from './game/client/GameClient';
+import { LoadScreen } from './client/screens/LoadScreen/LoadScreen';
+import { MenuScreen } from './client/screens/MenuScreen/MenuScreen';
+import { Renderer } from './engine/Renderer/Renderer';
+import { gameClient } from './game/GameClient';
 
 /**
  * Importing these modules will automatically register their plugins with the engine.
  */
 
 (async () => {
-    const engine = new Engine();
+    const engine = new Renderer();
     await engine.init();
     await gameClient.connect('ws://localhost:8081');
 

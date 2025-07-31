@@ -1,6 +1,6 @@
 import { ButtonContainer } from '@pixi/ui';
 import { Graphics } from 'pixi.js';
-import { colors } from '../../config/colors';
+import { colors } from '../../../config/colors';
 import { Label } from '../Label/Label';
 import { generateButtonPalette } from './generateButtonPalette';
 
