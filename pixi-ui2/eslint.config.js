@@ -1,6 +1,6 @@
-import storybook from "eslint-plugin-storybook";
 import stylistic from '@stylistic/eslint-plugin';
 import importPlugin from 'eslint-plugin-import';
+import storybook from "eslint-plugin-storybook";
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
@@ -70,6 +70,7 @@ export default tseslint.config(
             '@typescript-eslint/no-unsafe-return': 'off',
             '@typescript-eslint/no-unsafe-call': 'off',
             '@typescript-eslint/no-unsafe-argument': 'off',
+            '@typescript-eslint/no-empty-function': 'off',
         },
     },
     {

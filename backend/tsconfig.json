@@ -13,6 +13,12 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
-} 
+  "include": [
+    "src/**/*",
+    "../pixi-ui2/src/data/testUnits.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
