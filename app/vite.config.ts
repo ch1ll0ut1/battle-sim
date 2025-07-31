@@ -14,8 +14,11 @@ export default defineConfig({
                 environment: 'jsdom',
                 root: './src',
                 include: [
-                    'src/client/**/*.test.ts',
-                    'src/engine/Renderer/**/*.test.ts',
+                    'client/**/*.test.ts',
+                    'engine/Renderer/**/*.test.ts',
+                ],
+                exclude: [
+                    'game/_OLD/**/*.test.ts',
                 ],
             },
         }, {
@@ -24,8 +27,9 @@ export default defineConfig({
                 environment: 'node',
                 root: './src',
                 exclude: [
-                    'src/client/**/*.test.ts',
-                    'src/engine/Renderer/**/*.test.ts',
+                    'client/**/*.test.ts',
+                    'engine/Renderer/**/*.test.ts',
+                    'game/_OLD/**/*.test.ts',
                 ],
             },
         }],

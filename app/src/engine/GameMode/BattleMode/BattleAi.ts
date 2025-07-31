@@ -1,4 +1,4 @@
-import { TickUpdate } from "../../TickUpdate";
+import { TickUpdate } from '../../TickUpdate';
 
 export class BattleAi implements TickUpdate {
     update(deltaTime: number): void {
