@@ -1,9 +1,9 @@
 // Test script to run a simple battle
 
-import { units1v1 } from '../../pixi-ui2/src/data/testUnits';
-import { GameEngine } from './GameEngine/GameEngine';
-import { MovementSandbox } from './GameMode/MovementSandbox/MovementSandbox';
-import { Logger } from './utils/Logger';
+import { units1v1 } from './data/testUnits';
+import { GameEngine } from './engine/GameEngine/GameEngine';
+import { MovementSandbox } from './engine/GameMode/MovementSandbox/MovementSandbox';
+import { Logger } from './engine/ServerLogger';
 
 // Create logger and battle engine
 const logger = new Logger();
