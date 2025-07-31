@@ -5,20 +5,8 @@
             "path": "."
         },
         {
-            "name": "frontend",
-            "path": "frontend"
-        },
-        {
-            "name": "pixi-ui",
-            "path": "pixi-ui"
-        },
-        {
-            "name": "pixi-ui2",
-            "path": "pixi-ui2"
-        },
-        {
-            "name": "backend",
-            "path": "backend"
+            "name": "app",
+            "path": "app"
         }
     ],
     "settings": {
@@ -41,8 +29,8 @@
             "editorconfig.editorconfig",
             "dbaeumer.vscode-eslint",
             "karlito40.fix-irregular-whitespace",
-            "orta.vscode-jest",
-            "davidanson.vscode-markdownlint"
+            "davidanson.vscode-markdownlint",
+            "vitest.explorer"
         ]
     }
 }
