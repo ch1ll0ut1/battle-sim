@@ -70,8 +70,6 @@ export class GameServer {
         events.on(GameEvent.initGame, () => {
             this.#gameEngine = new GameEngine(this.logger, MovementSandbox);
             this.#simulationController = new SimulationController(this.#gameEngine, this.logger);
-
-            // this.simulationController.start();
         });
 
         events.on(GameEvent.resumeGame, () => {
