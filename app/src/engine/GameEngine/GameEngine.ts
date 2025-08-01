@@ -74,25 +74,29 @@ export class GameEngine implements TickUpdate {
     update(delayTime: number, remainPausedAfterTick = false) {
         this.logger.debug('GameEngine: update', delayTime, remainPausedAfterTick);
 
+        // validate state
         if (this.phase === 'finished') {
             throw new Error('Game is finished');
         }
 
-        if (!remainPausedAfterTick && this.phase !== 'paused') {
-            if (this.phase !== 'running') {
-                this.phase = 'running';
-            }
+        // set running
+        if (!remainPausedAfterTick && this.phase !== 'running') {
+            this.phase = 'running';
         }
 
+        // set paused
         if (remainPausedAfterTick && this.phase !== 'paused') {
             this.phase = 'paused';
         }
 
+        // update time
         this.currentTime += delayTime;
         this.logger.setTime(this.currentTime);
 
+        // update game
         this.gameMode.update(delayTime);
 
+        // emit tick finished event
         events.emit(GameEvent.tickFinished, { time: this.currentTime, delayTime });
     }
 
