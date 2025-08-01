@@ -13,7 +13,7 @@ const buttonConfig: ButtonConfig[] = [{
     label: '▶',
     color: colors.green,
     action: {
-        eventType: GameEvent.startGame,
+        eventType: GameEvent.resumeGame,
         args: [],
     },
 }, {

@@ -5,7 +5,6 @@ import { serverConfig } from '../config/server';
  * Logger class responsible for recording and displaying battle events
  */
 export class Logger extends EventEmitter {
-    private events: string[] = [];
     private currentTime = 0;
 
     /**
@@ -15,14 +14,12 @@ export class Logger extends EventEmitter {
     log(message: string) {
         const formattedMsg = `[${this.currentTime.toFixed(1)}s] ${message}`;
         console.log(formattedMsg);
-        this.events.push(formattedMsg);
         this.emit('log', formattedMsg);
     }
 
     error(message: string) {
         const formattedMsg = `[${this.currentTime.toFixed(1)}s] ERROR: ${message}`;
         console.error(formattedMsg);
-        this.events.push(formattedMsg);
         this.emit('log', formattedMsg);
     }
 
@@ -30,7 +27,6 @@ export class Logger extends EventEmitter {
         if (serverConfig.debug) {
             const formattedMsg = `[${this.currentTime.toFixed(1)}s] DEBUG: ${message} ${args.map(arg => JSON.stringify(arg)).join(' ')}`;
             console.log(formattedMsg);
-            this.events.push(formattedMsg);
             this.emit('log', formattedMsg);
         }
     }
@@ -44,17 +40,9 @@ export class Logger extends EventEmitter {
     }
 
     /**
-     * Returns all recorded events
-     */
-    getEvents(): string[] {
-        return this.events;
-    }
-
-    /**
      * Clears all recorded events and resets time
      */
     clear() {
-        this.events = [];
         this.currentTime = 0;
     }
 }

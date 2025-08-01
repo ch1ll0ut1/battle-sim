@@ -10,55 +10,56 @@ export interface EventAction<T extends GameEvent = GameEvent> {
 export enum GameEvent {
     // Action events (user initiated)
     initGame = 'action.initGame',
-    startGame = 'action.startGame',
+    resumeGame = 'action.resumeGame',
     pauseGame = 'action.pauseGame',
     nextTick = 'action.nextTick',
 
     // Game state events (backend responses/updates)
+    /** Sent on initial connection when game is already running or after game start */
     gameStateChanged = 'game.stateChanged',
     gameStarted = 'game.started',
-    gameStopped = 'game.stopped',
+    gamePaused = 'game.paused',
+    gameFinished = 'game.finished',
+    tickFinished = 'game.tickFinished',
 
-    // Unit events
-    unitCreated = 'unit.created',
-    unitUpdated = 'unit.updated',
-    unitMoved = 'unit.moved',
-    unitDied = 'unit.died',
+    // // Unit events
+    // unitCreated = 'unit.created',
+    // unitUpdated = 'unit.updated',
+    // unitMoved = 'unit.moved',
+    // unitDied = 'unit.died',
 
-    // Map events
-    mapLoaded = 'map.loaded',
-    mapUpdated = 'map.updated',
+    // // Map events
+    // mapLoaded = 'map.loaded',
+    // mapUpdated = 'map.updated',
 
-    // Log events
-    logMessage = 'log.message',
-
-    // Connection events
-    connected = 'connection.connected',
-    disconnected = 'connection.disconnected',
+    // // Connection events
+    // connected = 'connection.connected',
+    // disconnected = 'connection.disconnected',
 }
 
 export interface GameEvents {
     [GameEvent.initGame]: [{ gameMode: string; map: string }];
-    [GameEvent.startGame]: [];
+    [GameEvent.resumeGame]: [];
     [GameEvent.pauseGame]: [];
     [GameEvent.nextTick]: [];
 
     [GameEvent.gameStateChanged]: [{ state: object }];
     [GameEvent.gameStarted]: [];
-    [GameEvent.gameStopped]: [];
+    [GameEvent.gamePaused]: [];
+    [GameEvent.gameFinished]: [];
+    [GameEvent.tickFinished]: [{ time: number; delayTime: number }];
 
-    [GameEvent.unitCreated]: [{ unitId: number; unitData: object }];
-    [GameEvent.unitUpdated]: [{ unitId: number; unitData: object }];
-    [GameEvent.unitMoved]: [{ unitId: number; position: { x: number; y: number } }];
-    [GameEvent.unitDied]: [{ unitId: number }];
+    // TODO: cleanup
+    // [GameEvent.unitCreated]: [{ unitId: number; unitData: object }];
+    // [GameEvent.unitUpdated]: [{ unitId: number; unitData: object }];
+    // [GameEvent.unitMoved]: [{ unitId: number; position: { x: number; y: number } }];
+    // [GameEvent.unitDied]: [{ unitId: number }];
 
-    [GameEvent.mapLoaded]: [{ mapData: object }];
-    [GameEvent.mapUpdated]: [{ mapData: object }];
+    // [GameEvent.mapLoaded]: [{ mapData: object }];
+    // [GameEvent.mapUpdated]: [{ mapData: object }];
 
-    [GameEvent.logMessage]: [{ message: string }];
-
-    [GameEvent.connected]: [];
-    [GameEvent.disconnected]: [];
+    // [GameEvent.connected]: [];
+    // [GameEvent.disconnected]: [];
 }
 
 /**
@@ -76,19 +77,16 @@ class GameEventsClass extends EventEmitter<GameEvents> {
      * Set up logging by listening to events and forwarding to logger
      */
     private setupLogging() {
-        // Log log events (passed through from backend)
-        this.on(GameEvent.logMessage, (message) => {
-            logger.info(message);
-        });
-
         // Log all other events as debug messages when in debug mode
         if (debugConfig.enabled && debugConfig.logEvents) {
             const originalEmit = this.emit.bind(this);
             this.emit = (eventName, ...args) => {
-                // Don't log the logMessage event again to avoid recursion
-                if (eventName !== GameEvent.logMessage) {
-                    logger.debug(`Event: ${String(eventName)}`, ...args);
+                logger.debug(`Event: ${String(eventName)}`, ...args);
+
+                if (this.listeners(eventName).length === 0) {
+                    logger.debug(`No listeners for event: ${String(eventName)}`);
                 }
+
                 return originalEmit(eventName, ...args);
             };
         }
