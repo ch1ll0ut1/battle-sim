@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
 import { units1v1 } from '../../data/testUnits';
+import { events, GameEvent } from '../../game/events';
 import { Unit } from '../../game/Unit/Unit';
 import { WebsocketServer } from '../WebsocketServer';
 import { GameServer } from './GameServer';
@@ -15,7 +16,6 @@ vi.mock('../WebsocketServer');
  */
 describe('GameServer', () => {
     let mockWsServer: any;
-    let mockGameEngine: any;
     let gameServer: GameServer;
     let units: Unit[];
 
@@ -37,9 +37,6 @@ describe('GameServer', () => {
         vi.mocked(WebsocketServer).mockImplementation(() => mockWsServer);
 
         gameServer = new GameServer(8080);
-
-        // Get reference to the mocked GameEngine for testing
-        mockGameEngine = (gameServer as any).gameEngine;
     });
 
     afterEach(() => {
@@ -58,58 +55,6 @@ describe('GameServer', () => {
     });
 
     /**
-     * Tests that logger events are broadcasted to WebSocket clients
-     * Verifies that the server properly routes log events to connected clients
-     */
-    it('should broadcast logger events to WebSocket clients', () => {
-        // Arrange
-        const logMessage = 'Test log message';
-
-        // Act - trigger a log event through the logger
-        // Access the private logger via type assertion for testing
-        const logger = (gameServer as any).logger;
-        logger.log(logMessage);
-
-        // Assert
-        const expectedMessage = `[0.0s] ${logMessage}`;
-        expect(mockWsServer.broadcast).toHaveBeenCalledWith('log', expectedMessage);
-    });
-
-    /**
-     * Tests that invalid command types are ignored
-     * Verifies that non-command messages don't trigger simulation actions
-     */
-    it('should ignore non-command messages', () => {
-        // Arrange
-        const messageHandler = mockWsServer.on.mock.calls.find((call: any) =>
-            call[0] === 'message',
-        )?.[1];
-
-        // Act
-        if (messageHandler) {
-            messageHandler(null, { type: 'status', data: 'ping' });
-        }
-
-        // Assert
-        expect(messageHandler).toBeDefined();
-        // Should not throw or cause errors
-    });
-
-    /**
-     * Tests that unknown commands are logged as warnings
-     * Verifies that the server handles unexpected command types gracefully
-     */
-    it('should log warning for unknown commands', () => {
-        // Arrange
-        const messageHandler = mockWsServer.on.mock.calls.find((call: any) =>
-            call[0] === 'message',
-        )?.[1];
-
-        // Assert
-        expect(() => messageHandler(null, { type: 'command', data: 'unknownCommand' })).toThrow('Unknown command: \"unknownCommand\"');
-    });
-
-    /**
      * Tests that shutdown properly stops simulation and closes WebSocket server
      * Verifies that the server cleans up resources when shutting down
      */
@@ -122,40 +67,16 @@ describe('GameServer', () => {
     });
 
     /**
-     * Tests that command messages are logged to console
-     * Verifies that the server provides visibility into received commands
-     */
-    it('should log received commands to console', () => {
-        // Arrange
-        const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
-        const messageHandler = mockWsServer.on.mock.calls.find((call: any) =>
-            call[0] === 'message',
-        )?.[1];
-
-        // Act
-        if (messageHandler) {
-            messageHandler(null, { type: 'command', data: 'start' });
-        }
-
-        // Assert
-        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Received command: {\"type\":\"command\",\"data\":\"start\"}'));
-        consoleSpy.mockRestore();
-    });
-
-    /**
-     * Tests that new client connections receive initial game state and log events
+     * Tests that new client connections receive initial game state
      * Verifies that the connect handler sends current state to new clients
      */
     it('should send initial state to new clients on connect', () => {
         // Arrange
         const mockWebSocket = {} as WebSocket;
-        const mockGameState = { time: 0, state: 'initialized', units: units };
-        const mockLogEvents = ['[0.0s] Game started'];
+        events.emit(GameEvent.initGame, { gameMode: 'test', map: 'test' });
 
-        // Mock the methods that should be called
-        vi.spyOn(mockGameEngine, 'getState').mockReturnValue(mockGameState);
-        const logger = (gameServer as any).logger;
-        vi.spyOn(logger, 'getEvents').mockReturnValue(mockLogEvents);
+        // Get actual game state from the real GameEngine
+        const actualGameState = gameServer.gameEngine.getState();
 
         // Act - simulate a client connection
         const connectHandler = mockWsServer.on.mock.calls.find((call: any) =>
@@ -167,8 +88,7 @@ describe('GameServer', () => {
         }
 
         // Assert
-        expect(mockWsServer.send).toHaveBeenCalledWith(mockWebSocket, 'gameState', mockGameState);
-        expect(mockWsServer.send).toHaveBeenCalledWith(mockWebSocket, 'log', mockLogEvents);
+        expect(mockWsServer.send).toHaveBeenCalledWith(mockWebSocket, GameEvent.gameStateChanged, { state: actualGameState });
     });
 
     /**
@@ -177,29 +97,37 @@ describe('GameServer', () => {
      */
     it('should broadcast game state on GameEngine initialized event', () => {
         // Arrange
-        const mockGameState = { time: 0, state: 'initialized', units: units };
-        vi.spyOn(mockGameEngine, 'getState').mockReturnValue(mockGameState);
+        const testGameState = { time: 0, state: 'initialized', units: units };
 
         // Act - trigger the initialized event
-        mockGameEngine.emit('updated');
+        events.emit(GameEvent.gameStateChanged, { state: testGameState });
 
         // Assert
-        expect(mockWsServer.broadcast).toHaveBeenCalledWith('gameState', mockGameState);
+        expect(mockWsServer.broadcast).toHaveBeenCalledWith(GameEvent.gameStateChanged, { state: testGameState });
     });
 
     /**
-     * Tests that GameEngine updated events trigger game state broadcast
-     * Verifies that the server broadcasts state updates during game progression
+     * Tests that GameEngine tickFinished events trigger tick data broadcast
+     * Verifies that the server broadcasts tick updates when engine finishes an update
      */
-    it('should broadcast game state on GameEngine updated event', () => {
+    it('should broadcast tick data on GameEngine tickFinished event', () => {
         // Arrange
-        const mockGameState = { time: 1.0, state: 'running', units: units };
-        vi.spyOn(mockGameEngine, 'getState').mockReturnValue(mockGameState);
+        const mockTickData = { time: 0.1, delayTime: 0.1 };
 
-        // Act - trigger the updated event
-        mockGameEngine.emit('updated');
+        // Act - trigger the tickFinished event
+        events.emit(GameEvent.tickFinished, mockTickData);
 
         // Assert
-        expect(mockWsServer.broadcast).toHaveBeenCalledWith('gameState', mockGameState);
+        expect(mockWsServer.broadcast).toHaveBeenCalledWith(GameEvent.tickFinished, mockTickData);
+    });
+
+    it('should throw error if gameEngine is not initialized', () => {
+        expect(() => gameServer.gameEngine).toThrow('GameEngine not initialized');
+    });
+
+    // TODO: implement valdiation
+    it.skip('should throw error if invalid GameEvent is received', () => {
+        // @ts-expect-error invalidGameEvent389274 is not defined in the events enum
+        expect(() => events.emit('invalidGameEvent389274', { data: 'test' })).toThrow('Invalid event');
     });
 });

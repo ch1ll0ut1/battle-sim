@@ -17,7 +17,7 @@ describe('SimulationController', () => {
 
     afterEach(() => {
         if (engine.phase === 'running') {
-            controller.stop();
+            controller.pause();
         }
     });
 
@@ -38,7 +38,7 @@ describe('SimulationController', () => {
         controller.start();
 
         // Act
-        controller.stop();
+        controller.pause();
 
         // Assert
         expect(engine.phase).toBe('paused');
@@ -90,7 +90,7 @@ describe('SimulationController', () => {
         controller.start();
 
         // Act
-        controller.stop();
+        controller.pause();
 
         // Assert
         expect(engine.phase).toBe('paused');
@@ -107,7 +107,7 @@ describe('SimulationController', () => {
         controller.start();
 
         // Act
-        controller.stop();
+        controller.pause();
 
         // Assert
         // should not throw because its not running
@@ -142,7 +142,7 @@ describe('SimulationController', () => {
         expect(updateSpy).toHaveBeenCalledTimes(2);
         expect(engine.getState().time).toBeCloseTo(engine.turnInterval * 2);
 
-        controller.stop();
+        controller.pause();
         vi.useRealTimers();
     });
 });

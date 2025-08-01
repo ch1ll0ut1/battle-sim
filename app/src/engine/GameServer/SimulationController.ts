@@ -46,7 +46,7 @@ export class SimulationController {
      * Stops the simulation and pauses the game engine
      * Clears the simulation interval
      */
-    stop(): void {
+    pause(): void {
         this.engine.pause();
         this.stopInterval();
         this.logger.debug('Simulation paused');

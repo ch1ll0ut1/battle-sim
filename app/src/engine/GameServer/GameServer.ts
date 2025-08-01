@@ -1,8 +1,9 @@
 import { WebSocket } from 'ws';
+import { events, GameEvent, GameEvents } from '../../game/events';
 import { GameEngine } from '../GameEngine/GameEngine';
 import { MovementSandbox } from '../GameMode/MovementSandbox/MovementSandbox';
 import { Logger } from '../ServerLogger';
-import { WebSocketMessage, WebsocketServer } from '../WebsocketServer';
+import { WebsocketServer } from '../WebsocketServer';
 import { SimulationController } from './SimulationController';
 
 /**
@@ -11,9 +12,9 @@ import { SimulationController } from './SimulationController';
  */
 export class GameServer {
     private wsServer: WebsocketServer;
-    private simulationController: SimulationController;
-    private gameEngine: GameEngine;
     private logger: Logger;
+    #simulationController: SimulationController | null = null;
+    #gameEngine: GameEngine | null = null;
 
     /**
      * Creates a new GameServer instance
@@ -23,22 +24,32 @@ export class GameServer {
     constructor(port: number) {
         this.wsServer = new WebsocketServer(port);
         this.logger = new Logger();
-        this.gameEngine = new GameEngine(this.logger, MovementSandbox);
-        this.simulationController = new SimulationController(this.gameEngine, this.logger);
 
         this.setupEventHandlers();
     }
 
-    /**
-     * Gracefully shuts down the game server
-     * Stops the simulation and closes the WebSocket server
-     */
-    shutdown(): void {
-        if (this.simulationController.isRunning()) {
-            this.simulationController.stop();
+    get gameEngine() {
+        if (!this.#gameEngine) {
+            throw new Error('GameEngine not initialized');
         }
+        return this.#gameEngine;
+    }
 
-        this.wsServer.close();
+    get simulationController() {
+        if (!this.#simulationController) {
+            throw new Error('SimulationController not initialized');
+        }
+        return this.#simulationController;
+    }
+
+    private isInitialized() {
+        return this.#gameEngine && this.#simulationController;
+    }
+
+    private handleNewClient(ws: WebSocket) {
+        if (this.isInitialized()) {
+            this.wsServer.send(ws, GameEvent.gameStateChanged, { state: this.gameEngine.getState() });
+        }
     }
 
     /**
@@ -47,51 +58,53 @@ export class GameServer {
      */
     private setupEventHandlers(): void {
         this.wsServer.on('message', (ws, message) => {
-            this.handleCommand(ws, message);
-        });
+            const { type, data } = message;
 
-        this.logger.on('log', (message) => {
-            this.wsServer.broadcast('log', message);
+            // @ts-expect-error TODO: add server-side validation
+            events.emit(type, data);
         });
 
         this.wsServer.on('connect', this.handleNewClient.bind(this));
 
-        this.gameEngine.on('updated', () => {
-            this.wsServer.broadcast('gameState', this.gameEngine.getState());
+        // Listen for actions by the client
+        events.on(GameEvent.initGame, () => {
+            this.#gameEngine = new GameEngine(this.logger, MovementSandbox);
+            this.#simulationController = new SimulationController(this.#gameEngine, this.logger);
+
+            this.simulationController.start();
+        });
+
+        events.on(GameEvent.resumeGame, () => {
+            this.simulationController.start();
+        });
+
+        events.on(GameEvent.pauseGame, () => {
+            this.simulationController.pause();
+        });
+
+        events.on(GameEvent.nextTick, () => {
+            this.simulationController.nextTick();
+        });
+
+        // Send state changes to the client
+        Object.values(GameEvent).forEach((eventValue) => {
+            if (!eventValue.startsWith('action.')) {
+                events.on(eventValue, (...args: GameEvents[GameEvent]) => {
+                    this.wsServer.broadcast(eventValue, args[0]);
+                });
+            }
         });
     }
 
     /**
-     * Handles incoming WebSocket commands and delegates to the simulation controller
-     * Validates command format and routes to appropriate simulation control methods
-     * @param ws - The WebSocket connection that sent the command
-     * @param message - The command message object
+     * Gracefully shuts down the game server
+     * Stops the simulation and closes the WebSocket server
      */
-    private handleCommand(ws: WebSocket, message: WebSocketMessage): void {
-        this.logger.debug('Received command:', message);
-
-        if (message.type !== 'command') return;
-
-        switch (message.data) {
-            case 'start':
-                this.simulationController.start();
-                break;
-            case 'stop':
-                this.simulationController.stop();
-                break;
-            case 'nextTick':
-                this.simulationController.nextTick();
-                break;
-            case 'reset':
-                this.simulationController.reset();
-                break;
-            default:
-                throw new Error(`Unknown command: ${JSON.stringify(message.data)}`);
+    shutdown(): void {
+        if (this.#simulationController?.isRunning()) {
+            this.#simulationController.pause();
         }
-    }
 
-    private handleNewClient(ws: WebSocket) {
-        this.wsServer.send(ws, 'gameState', this.gameEngine.getState());
-        this.wsServer.send(ws, 'log', this.logger.getEvents());
+        this.wsServer.close();
     }
 }

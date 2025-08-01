@@ -114,6 +114,19 @@ class GameClientClass {
     }
 
     /**
+     * Handle incoming messages from the server by directly emitting the event
+     */
+    private handleServerMessage(type: GameEvent, data: unknown) {
+        if (Object.values(GameEvent).includes(type)) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+            events.emit(type as keyof GameEvents, data as any);
+        }
+        else {
+            throw new Error(`Unknown server message type: ${type}`);
+        }
+    }
+
+    /**
      * Send all queued actions to the server
      */
     private sendQueuedActions() {
@@ -132,19 +145,6 @@ class GameClientClass {
             }
 
             this.sendActionEvent(action.eventType, action.args, false);
-        }
-    }
-
-    /**
-     * Handle incoming messages from the server by directly emitting the event
-     */
-    private handleServerMessage(type: GameEvent, data: unknown) {
-        if (Object.values(GameEvent).includes(type)) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
-            events.emit(type as keyof GameEvents, data as any);
-        }
-        else {
-            throw new Error(`Unknown server message type: ${type}`);
         }
     }
 }

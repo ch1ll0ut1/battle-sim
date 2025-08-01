@@ -32,9 +32,9 @@ export enum GameEvent {
     // mapLoaded = 'map.loaded',
     // mapUpdated = 'map.updated',
 
-    // // Connection events
-    // connected = 'connection.connected',
-    // disconnected = 'connection.disconnected',
+    // Connection events
+    connected = 'connection.connected',
+    disconnected = 'connection.disconnected',
 }
 
 export interface GameEvents {
@@ -58,8 +58,8 @@ export interface GameEvents {
     // [GameEvent.mapLoaded]: [{ mapData: object }];
     // [GameEvent.mapUpdated]: [{ mapData: object }];
 
-    // [GameEvent.connected]: [];
-    // [GameEvent.disconnected]: [];
+    [GameEvent.connected]: [];
+    [GameEvent.disconnected]: [];
 }
 
 /**

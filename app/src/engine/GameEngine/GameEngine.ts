@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { events, GameEvent } from '../../game/events';
 import { Map } from '../../game/Map/Map';
 import { generateForestMap } from '../../game/Map/MapGenerator';
 import { GameMode, GameModeConstructor } from '../GameMode/GameMode';
@@ -7,16 +7,11 @@ import { TickUpdate } from '../TickUpdate';
 
 type EnginePhase = 'initialized' | 'paused' | 'running' | 'finished';
 
-interface EventEmitterMessage {
-    updated: [];
-    finished: [];
-}
-
 /**
  * GameEngine class responsible for simulating games and generating events
  * Simulation flow is handled by SimulationController (for controllable server) & runGame() (for CLI)
  */
-export class GameEngine extends EventEmitter<EventEmitterMessage> implements TickUpdate {
+export class GameEngine implements TickUpdate {
     public readonly turnInterval = 0.1; // 100ms per turn
 
     private _phase: EnginePhase = 'initialized';
@@ -34,8 +29,6 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
         logger: Logger,
         gameMode: GameModeConstructor,
     ) {
-        super();
-
         this.gameMode = new gameMode(logger, this);
         this.map = generateForestMap(100 * 100, 100 * 100, 1);
         // this.map = new Map(10 * 100, 10 * 100);
@@ -56,7 +49,7 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
         this._phase = phase;
 
         if (phase === 'finished') {
-            this.emit('finished');
+            events.emit(GameEvent.gameFinished);
         }
     }
 
@@ -67,30 +60,31 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
         this.logger.debug('GameEngine: reset');
         this.phase = 'initialized';
         this.currentTime = 0;
-        this.logger.clear();
-        this.logger.log('Game started');
 
         this.gameMode.reset();
 
-        this.emit('updated');
+        events.emit(GameEvent.gameStarted);
+        events.emit(GameEvent.gameStateChanged, { state: this.getState() });
     }
 
     /**
      * Updates the game state by one turn (used for server)
-     * @param setToPause - If true, state will be set to "paused"
+     * @param remainPausedAfterTick - If true, state will be set to "paused"
      */
-    update(delayTime: number, setToPause = false) {
-        this.logger.debug('GameEngine: update', delayTime, setToPause);
+    update(delayTime: number, remainPausedAfterTick = false) {
+        this.logger.debug('GameEngine: update', delayTime, remainPausedAfterTick);
 
         if (this.phase === 'finished') {
             throw new Error('Game is finished');
         }
 
-        if (this.phase !== 'running') {
-            this.phase = 'running';
+        if (!remainPausedAfterTick && this.phase !== 'paused') {
+            if (this.phase !== 'running') {
+                this.phase = 'running';
+            }
         }
 
-        if (setToPause) {
+        if (remainPausedAfterTick && this.phase !== 'paused') {
             this.phase = 'paused';
         }
 
@@ -99,7 +93,7 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
 
         this.gameMode.update(delayTime);
 
-        this.emit('updated');
+        events.emit(GameEvent.tickFinished, { time: this.currentTime, delayTime });
     }
 
     /**
@@ -107,7 +101,7 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
      */
     pause() {
         this.phase = 'paused';
-        this.emit('updated');
+        events.emit(GameEvent.gamePaused);
     }
 
     /**
@@ -132,7 +126,6 @@ export class GameEngine extends EventEmitter<EventEmitterMessage> implements Tic
         return {
             // winner: winner,
             duration: this.currentTime,
-            events: this.logger.getEvents(),
         };
     }
 
