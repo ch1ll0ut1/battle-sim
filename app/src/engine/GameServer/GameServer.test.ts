@@ -125,6 +125,19 @@ describe('GameServer', () => {
         expect(() => gameServer.gameEngine).toThrow('GameEngine not initialized');
     });
 
+    it('should initialize gameEngine on initGame event', () => {
+        events.emit(GameEvent.initGame, { gameMode: 'test', map: 'test' });
+        expect(gameServer.gameEngine).toBeDefined();
+        expect(gameServer.gameEngine.phase).toBe('initialized');
+        expect(gameServer.gameEngine.map).toBeDefined();
+        expect(gameServer.gameEngine.gameMode).toBeDefined();
+    });
+
+    it('should send gameStateChanged event on gameEngine initialized event', () => {
+        events.emit(GameEvent.initGame, { gameMode: 'test', map: 'test' });
+        expect(mockWsServer.broadcast).toHaveBeenCalledWith(GameEvent.gameStateChanged, { state: gameServer.gameEngine.getState() });
+    });
+
     // TODO: implement valdiation
     it.skip('should throw error if invalid GameEvent is received', () => {
         // @ts-expect-error invalidGameEvent389274 is not defined in the events enum

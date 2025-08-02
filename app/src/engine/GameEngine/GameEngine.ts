@@ -13,12 +13,12 @@ type EnginePhase = 'initialized' | 'paused' | 'running' | 'finished';
  */
 export class GameEngine implements TickUpdate {
     public readonly turnInterval = 0.1; // 100ms per turn
+    public readonly map: Map;
+    public readonly gameMode: GameMode;
 
-    private _phase: EnginePhase = 'initialized';
+    private _phase: EnginePhase = 'finished';
     private logger: Logger;
     private currentTime = 0;
-    private gameMode: GameMode;
-    private map: Map;
 
     /**
      * Creates a new GameEngine instance
