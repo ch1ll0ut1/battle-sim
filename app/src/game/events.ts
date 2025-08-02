@@ -22,11 +22,12 @@ export enum GameEvent {
     gameFinished = 'game.finished',
     tickFinished = 'game.tickFinished',
 
-    // // Unit events
+    // Unit events
     // unitCreated = 'unit.created',
     // unitUpdated = 'unit.updated',
     // unitMoved = 'unit.moved',
     // unitDied = 'unit.died',
+    unitMovementUpdate = 'unit.movementUpdate',
 
     // // Map events
     // mapLoaded = 'map.loaded',
@@ -48,6 +49,14 @@ export interface GameEvents {
     [GameEvent.gamePaused]: [];
     [GameEvent.gameFinished]: [];
     [GameEvent.tickFinished]: [{ time: number; delayTime: number }];
+
+    [GameEvent.unitMovementUpdate]: [{
+        unitId: number;
+        changes: {
+            position?: { x: number; y: number };
+            direction?: number;
+        };
+    }];
 
     // TODO: cleanup
     // [GameEvent.unitCreated]: [{ unitId: number; unitData: object }];

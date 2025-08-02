@@ -1,8 +1,6 @@
-import { movementConfig } from '../../config/movement';
 import { TickUpdate } from '../../engine/TickUpdate';
 import { Position } from './Position';
 import { UnitAttributes, UnitAttributesData } from './UnitAttributes';
-import { UnitMovement } from './UnitMovement';
 import { UnitMovementPhysics } from './UnitMovementPhysics';
 import { UnitStamina } from './UnitStamina';
 
@@ -37,7 +35,7 @@ export class Unit implements TickUpdate {
     /**
      * Location component handles position and facing direction
      */
-    readonly movement: UnitMovement | UnitMovementPhysics;
+    readonly movement: /* UnitMovement |  */UnitMovementPhysics;
 
     /**
      * Stamina component handles energy levels, consumption, and recovery
@@ -80,12 +78,12 @@ export class Unit implements TickUpdate {
         this.team = team;
         this.attributes = new UnitAttributes(attributes);
 
-        if (movementConfig.movementSystem === 'simple') {
-            this.movement = new UnitMovement(this, position, direction);
-        }
-        else {
-            this.movement = new UnitMovementPhysics(this, position, direction);
-        }
+        // if (movementConfig.movementSystem === 'simple') {
+        //     this.movement = new UnitMovement(this, position, direction);
+        // }
+        // else {
+        // }
+        this.movement = new UnitMovementPhysics(this, position, direction);
 
         // Initialize stamina component with full stamina
         this.stamina = new UnitStamina(this, 100);
@@ -94,7 +92,7 @@ export class Unit implements TickUpdate {
     /**
      * Gets the total weight of the unit including body weight and equipment
      */
-    get weight(): number {
+    get weight() {
         return this.attributes.weight + this.equipment.weight;
     }
 
@@ -117,13 +115,12 @@ export class Unit implements TickUpdate {
      * Updates the unit's state and all component systems
      * @param deltaTime - Time elapsed since last update in seconds
      */
-    update(deltaTime: number): void {
+    update(deltaTime: number) {
         // Update movement component first
         this.movement.update(deltaTime);
 
         // Update stamina (it will derive recovery context automatically)
         this.stamina.update(deltaTime);
-
         // TODO: When other components are implemented, call their update methods here
         // this.combat.update(deltaTime);
         // this.body.update(deltaTime);

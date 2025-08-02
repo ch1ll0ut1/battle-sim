@@ -4,7 +4,7 @@ import { GameMode } from '../GameMode';
 
 export class MovementSandbox extends GameMode {
     private nextUnitId = 0; // Start from 2 since we already have Unit 1
-    private units: Unit[] = [this.createRandomUnit()];
+    private units: Unit[] = [];
 
     reset() {
         this.logger.log('MovementSandbox reset');
@@ -17,7 +17,7 @@ export class MovementSandbox extends GameMode {
 
         // Give units random move order
         this.units.filter(unit => !unit.movement.isMoving).forEach((unit) => {
-            unit.movement.moveTo(this.generateRandomPosition());
+            unit.movement.moveTo(this.generateMoveToPosition(unit));
         });
 
         // Each unit takes action
@@ -52,7 +52,7 @@ export class MovementSandbox extends GameMode {
     private generateRandomAttributes(): UnitAttributesData {
         return {
             weight: Math.floor(Math.random() * 80) + 40, // 40-120 kg
-            strength: Math.floor(Math.random() * 100) + 1, // 1-100
+            strength: Math.floor(Math.random() * 80) + 20, // 20-100
             experience: Math.random(), // 0-1
             age: Math.floor(Math.random() * 60) + 1, // 1-60 years
             gender: Math.random() < 0.5 ? 'male' : 'female',
@@ -60,12 +60,35 @@ export class MovementSandbox extends GameMode {
     }
 
     /**
-     * Generates a random position within a reasonable area
+     * Generates a random position within the map bounds based on a random distance from current position
      */
-    private generateRandomPosition(): { x: number; y: number } {
+    private generateRandomPosition() {
+        const { width, height } = this.engine.map;
+
         return {
-            x: Math.floor(Math.random() * 200) + 50, // 50-250
-            y: Math.floor(Math.random() * 200) + 50, // 50-250
+            x: Math.random() * width,
+            y: Math.random() * height,
+        };
+    }
+
+    private generateMoveToPosition(unit: Unit) {
+        const { width, height } = this.engine.map;
+        const { x, y } = unit.movement.position;
+
+        // Generate random distance (50-300 units)
+        const maxDistance = Math.random() * 250 + 50;
+
+        // Generate random direction (0 to 2π radians)
+        const angle = Math.random() * 2 * Math.PI;
+
+        // Calculate new position based on current position + distance in random direction
+        const newX = x + Math.cos(angle) * maxDistance;
+        const newY = y + Math.sin(angle) * maxDistance;
+
+        // Clamp to map bounds
+        return {
+            x: Math.max(0, Math.min(width, newX)),
+            y: Math.max(0, Math.min(height, newY)),
         };
     }
 
@@ -74,6 +97,7 @@ export class MovementSandbox extends GameMode {
      */
     private createRandomUnit(): Unit {
         const attributes = this.generateRandomAttributes();
+        // For new units, generate a completely random position within map bounds
         const position = this.generateRandomPosition();
         const team = Math.floor(Math.random() * 2) + 1; // Team 1 or 2
         const name = `Random Unit ${this.nextUnitId}`;

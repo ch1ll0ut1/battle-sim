@@ -1,5 +1,6 @@
 import { movementConfig } from '../../config/movement';
 import { TickUpdate } from '../../engine/TickUpdate';
+import { events, GameEvent } from '../events';
 import { Position } from './Position';
 import { Unit } from './Unit';
 
@@ -70,22 +71,39 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Gets the X coordinate
      */
-    get x(): number {
+    get x() {
         return this._position.x;
     }
 
     /**
      * Gets the Y coordinate
      */
-    get y(): number {
+    get y() {
         return this._position.y;
+    }
+
+    /**
+     * Gets the current position
+     */
+    get position() {
+        return this._position;
+    }
+
+    set position(position: Position) {
+        this._position = position;
+        events.emit(GameEvent.unitMovementUpdate, { unitId: this.unit.id, changes: { position } });
     }
 
     /**
      * Gets the current direction in radians
      */
-    get direction(): number {
+    get direction() {
         return this._direction;
+    }
+
+    set direction(direction: number) {
+        this._direction = direction;
+        events.emit(GameEvent.unitMovementUpdate, { unitId: this.unit.id, changes: { direction } });
     }
 
     /**
@@ -98,21 +116,21 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Checks if the unit is currently moving or has movement intent
      */
-    get isMoving(): boolean {
+    get isMoving() {
         return this._currentSpeed > 0.1 || this._targetSpeed > 0.1;
     }
 
     /**
      * Gets current speed for external access
      */
-    get currentSpeed(): number {
+    get currentSpeed() {
         return this._currentSpeed;
     }
 
     /**
      * Gets current turn rate for external access
      */
-    get currentTurnRate(): number {
+    get currentTurnRate() {
         return this._currentTurnRate;
     }
 
@@ -122,7 +140,7 @@ export class UnitMovementPhysics implements TickUpdate {
      * @param target - Position to move towards
      * @param urgent - If true, uses running speed; otherwise walking speed
      */
-    moveTo(target: Position, urgent = false): void {
+    moveTo(target: Position, urgent = false) {
         this._isRunning = urgent;
         this._targetSpeed = this.calculateBaseSpeed();
         this.faceTowards(target);
@@ -134,7 +152,7 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Stops current movement with realistic deceleration
      */
-    stop(): void {
+    stop() {
         this._targetSpeed = 0;
         this._targetDirection = null;
         this._isRunning = false;
@@ -144,7 +162,7 @@ export class UnitMovementPhysics implements TickUpdate {
      * Sets the target direction to face the given position
      * @param target - Position to face towards
      */
-    faceTowards(target: Position): void {
+    faceTowards(target: Position) {
         const newDirection = this.normalizeDirection(Math.atan2(
             target.y - this._position.y,
             target.x - this._position.x,
@@ -152,7 +170,7 @@ export class UnitMovementPhysics implements TickUpdate {
 
         // If stationary, turn instantly (no momentum)
         if (this._currentSpeed < 0.1) {
-            this._direction = newDirection;
+            this.direction = newDirection;
             this._targetDirection = null;
         }
         else {
@@ -164,7 +182,7 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Emergency stop with maximum deceleration
      */
-    emergencyStop(): void {
+    emergencyStop() {
         this._targetSpeed = 0;
         this._targetDirection = null;
         this._isRunning = false;
@@ -174,7 +192,7 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Calculates base movement speed (before physics constraints)
      */
-    private calculateBaseSpeed(): number {
+    private calculateBaseSpeed() {
         const baseWalkingSpeed = 1.4; // m/s
         const runningMultiplier = this._isRunning ? 2.0 : 1.0;
         return baseWalkingSpeed * runningMultiplier;
@@ -183,7 +201,7 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Calculates maximum speed based on current unit state and equipment
      */
-    private calculateMaxSpeed(): number {
+    private calculateMaxSpeed() {
         const baseSpeed = this.calculateBaseSpeed();
 
         // Strength bonus: +0.5% per point above 50 (max +25%)
@@ -204,7 +222,7 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Calculates acceleration based on strength-to-weight ratio
      */
-    private calculateAcceleration(): number {
+    private calculateAcceleration() {
         const baseAcceleration = 3.0; // m/s²
         const strengthFactor = this.unit.attributes.strength / 50;
         const massInertiaFactor = 70 / this.unit.weight;
@@ -217,7 +235,7 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Calculates maximum turn rate based on momentum and weight
      */
-    private calculateMaxTurnRate(): number {
+    private calculateMaxTurnRate() {
         const baseTurnRate = 2 * Math.PI; // rad/s when stationary
 
         // Mass inertia: Heavier units have more rotational inertia
@@ -240,7 +258,7 @@ export class UnitMovementPhysics implements TickUpdate {
      * Gets stamina effect on max speed based on current stamina level
      * According to GAME_MECHANICS.md: Above 50% = 1.0x, Below 50% = 0.4 + (stamina / 50) * 0.6
      */
-    private getStaminaEffect(): number {
+    private getStaminaEffect() {
         const staminaPercent = this.unit.stamina.staminaPercentage;
 
         if (staminaPercent >= 50) {
@@ -256,7 +274,7 @@ export class UnitMovementPhysics implements TickUpdate {
      * Gets stamina factor for acceleration based on current stamina level
      * According to GAME_MECHANICS.md: Above 25% = 1.0x, Below 25% = penalty factor
      */
-    private getStaminaFactor(): number {
+    private getStaminaFactor() {
         const staminaPercent = this.unit.stamina.staminaPercentage;
 
         if (staminaPercent >= 25) {
@@ -272,7 +290,7 @@ export class UnitMovementPhysics implements TickUpdate {
      * Gets stamina penalty for turning based on current stamina level
      * According to GAME_MECHANICS.md: Above 25% = 1.0x, Below 25% = penalty factor
      */
-    private getStaminaPenalty(): number {
+    private getStaminaPenalty() {
         const staminaPercent = this.unit.stamina.staminaPercentage;
 
         if (staminaPercent >= 25) {
@@ -288,7 +306,7 @@ export class UnitMovementPhysics implements TickUpdate {
      * Calculates stamina cost per second based on current movement speed
      * Simple formula: faster movement = exponentially higher cost
      */
-    private calculateStaminaCost(): number {
+    private calculateStaminaCost() {
         const currentSpeed = this._currentSpeed;
 
         // No cost when stationary
@@ -316,14 +334,14 @@ export class UnitMovementPhysics implements TickUpdate {
      * Gets current stamina cost for external access
      * @returns Stamina cost in absolute units per second
      */
-    getStaminaCost(): number {
+    getStaminaCost() {
         return this.calculateStaminaCost();
     }
 
     /**
      * Updates stamina consumption during movement
      */
-    private updateStaminaCosts(deltaTime: number): void {
+    private updateStaminaCosts(deltaTime: number) {
         const staminaCost = this.calculateStaminaCost() * deltaTime;
 
         // Only consume stamina if actually moving
@@ -335,7 +353,7 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Updates cached physics calculations
      */
-    private updateCache(): void {
+    private updateCache() {
         if (!this._cacheValid) {
             this._maxSpeed = this.calculateMaxSpeed();
             this._acceleration = this.calculateAcceleration();
@@ -347,14 +365,14 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Invalidates cache when unit state changes
      */
-    invalidateCache(): void {
+    invalidateCache() {
         this._cacheValid = false;
     }
 
     /**
      * Updates linear movement with realistic acceleration/deceleration
      */
-    private updateLinearMovement(deltaTime: number): void {
+    private updateLinearMovement(deltaTime: number) {
         this.updateCache();
 
         const deceleration = this._acceleration * 2.0; // Can brake harder than accelerate
@@ -376,15 +394,17 @@ export class UnitMovementPhysics implements TickUpdate {
         // Update position based on current speed
         if (this._currentSpeed > 0) {
             const directionVector = this.getDirectionVector();
-            this._position.x += directionVector.x * this._currentSpeed * deltaTime * METERS_TO_PIXELS;
-            this._position.y += directionVector.y * this._currentSpeed * deltaTime * METERS_TO_PIXELS;
+            this.position = {
+                x: this._position.x + directionVector.x * this._currentSpeed * deltaTime * METERS_TO_PIXELS,
+                y: this._position.y + directionVector.y * this._currentSpeed * deltaTime * METERS_TO_PIXELS,
+            };
         }
     }
 
     /**
      * Updates angular movement with realistic turn rate limits
      */
-    private updateAngularMovement(deltaTime: number): void {
+    private updateAngularMovement(deltaTime: number) {
         if (this._targetDirection === null) {
             this._currentTurnRate = 0;
             return;
@@ -396,7 +416,7 @@ export class UnitMovementPhysics implements TickUpdate {
 
         if (Math.abs(angleDiff) <= maxTurn) {
             // Snap to target when close enough
-            this._direction = this._targetDirection;
+            this.direction = this._targetDirection;
             this._targetDirection = null;
             this._currentTurnRate = 0;
         }
@@ -404,7 +424,7 @@ export class UnitMovementPhysics implements TickUpdate {
             // Turn towards target at maximum rate
             const turnDirection = angleDiff > 0 ? 1 : -1;
             this._direction += maxTurn * turnDirection;
-            this._direction = this.normalizeDirection(this._direction);
+            this.direction = this.normalizeDirection(this._direction);
             this._currentTurnRate = this._maxTurnRate;
         }
     }
@@ -412,7 +432,7 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Updates movement state based on current physics
      */
-    private updateMovementState(): void {
+    private updateMovementState() {
         const speedThreshold = 0.1; // m/s
 
         if (this._currentSpeed < speedThreshold && this._targetSpeed < speedThreshold) {
@@ -432,7 +452,7 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Gets the shortest angle difference between two directions
      */
-    private getShortestAngleDifference(from: number, to: number): number {
+    private getShortestAngleDifference(from: number, to: number) {
         let diff = to - from;
 
         // Normalize to [-π, π]
@@ -445,7 +465,7 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Normalizes direction to be within [0, 2π) range
      */
-    private normalizeDirection(direction: number): number {
+    private normalizeDirection(direction: number) {
         const twoPi = 2 * Math.PI;
         let normalized = direction % twoPi;
         if (normalized < 0) {
@@ -457,7 +477,7 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Gets the direction in degrees for easier debugging/display
      */
-    getDirectionDegrees(): number {
+    getDirectionDegrees() {
         return (this._direction * 180) / Math.PI;
     }
 
@@ -494,7 +514,7 @@ export class UnitMovementPhysics implements TickUpdate {
      * Main physics update - processes movement and turning over time
      * @param deltaTime - Time elapsed since last update in seconds
      */
-    update(deltaTime: number): void {
+    update(deltaTime: number) {
         this.updateLinearMovement(deltaTime);
         this.updateAngularMovement(deltaTime);
         this.updateMovementState();
