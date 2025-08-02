@@ -1,4 +1,5 @@
 import { debugConfig } from '../config/debug';
+import { isServer } from './environment';
 
 /**
  * Logger service that provides formatted console output with variable parameters
@@ -36,12 +37,15 @@ class LoggerClass {
     private formatMessage(level: string, ...args: unknown[]) {
         const timestamp = new Date().toISOString();
 
-        // const message = args.map(arg =>
-        //     typeof arg === 'object' && arg !== null
-        //         ? arg
-        //         // ? JSON.stringify(arg, null, 2)
-        //         : String(arg),
-        // ).join(' ');
+        if (isServer) {
+            const message = args.map(arg =>
+                typeof arg === 'object' && arg !== null
+                    ? JSON.stringify(arg, null, 2)
+                    : String(arg),
+            ).join(' ');
+
+            return [`[${timestamp}] ${level}:`, message];
+        }
 
         return [`[${timestamp}] ${level}:`, ...args];
     }
