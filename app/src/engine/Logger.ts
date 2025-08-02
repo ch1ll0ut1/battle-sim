@@ -11,7 +11,7 @@ class LoggerClass {
     debug(...args: unknown[]) {
         if (!debugConfig.enabled) return;
         const formatted = this.formatMessage('DEBUG', ...args);
-        console.log(formatted);
+        console.log(...formatted);
     }
 
     /**
@@ -19,7 +19,7 @@ class LoggerClass {
      */
     info(...args: unknown[]) {
         const formatted = this.formatMessage('INFO', ...args);
-        console.log(formatted);
+        console.log(...formatted);
     }
 
     /**
@@ -27,7 +27,7 @@ class LoggerClass {
      */
     error(...args: unknown[]) {
         const formatted = this.formatMessage('ERROR', ...args);
-        console.error(formatted);
+        console.error(...formatted);
     }
 
     /**
@@ -35,13 +35,15 @@ class LoggerClass {
      */
     private formatMessage(level: string, ...args: unknown[]) {
         const timestamp = new Date().toISOString();
-        const message = args.map(arg =>
-            typeof arg === 'object' && arg !== null
-                ? JSON.stringify(arg, null, 2)
-                : String(arg),
-        ).join(' ');
 
-        return `[${timestamp}] ${level}: ${message}`;
+        // const message = args.map(arg =>
+        //     typeof arg === 'object' && arg !== null
+        //         ? arg
+        //         // ? JSON.stringify(arg, null, 2)
+        //         : String(arg),
+        // ).join(' ');
+
+        return [`[${timestamp}] ${level}:`, ...args];
     }
 }
 
