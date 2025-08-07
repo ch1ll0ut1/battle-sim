@@ -66,6 +66,7 @@ export class PlaybackControls extends Container {
      */
     private createBackground() {
         const background = new Graphics();
+        background.label = 'playback-controls-background';
         this.addChild(background);
         return background;
     }

@@ -1,8 +1,24 @@
 import { TickUpdate } from '../../engine/TickUpdate';
 import { Position } from './Position';
 import { UnitAttributes, UnitAttributesData } from './UnitAttributes';
-import { UnitMovementPhysics } from './UnitMovementPhysics';
+import { UnitMovementPhysics, UnitMovementState } from './UnitMovementPhysics';
 import { UnitStamina } from './UnitStamina';
+
+/**
+ * Unit state is a snapshot of the unit's state at a given time.
+ * It is used to render the unit and to update the unit's state on the client.
+ */
+export interface UnitState {
+    id: number;
+    name: string;
+    team: number;
+    // attributes: UnitAttributesState;
+    movement: UnitMovementState;
+    // stamina: UnitStaminaState;
+    // equipment: {
+    //     weight: number;
+    // };
+};
 
 /**
  * Core unit class that represents a combatant in the battle simulation.
@@ -100,7 +116,7 @@ export class Unit implements TickUpdate {
      * Gets a comprehensive summary of this unit for display/serialization
      * @returns Object containing all unit information
      */
-    getState() {
+    getState(): UnitState {
         return {
             id: this.id,
             name: this.name,
@@ -108,7 +124,11 @@ export class Unit implements TickUpdate {
             attributes: this.attributes.getState(),
             movement: this.movement.getState(),
             stamina: this.stamina.getState(),
-        };
+            equipment: {
+                weight: this.equipment.weight,
+            },
+            // TODO: cleanup all unused fields
+        } as UnitState;
     }
 
     /**

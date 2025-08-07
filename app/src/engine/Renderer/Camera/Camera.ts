@@ -30,6 +30,7 @@ export class Camera extends Container {
         this.worldHeight = worldHeight;
 
         this.background = this.createBackground();
+        this.background.label = 'camera-background';
         this.setupWorldContainer();
 
         // Make camera interactive for mouse events
@@ -69,6 +70,7 @@ export class Camera extends Container {
     private setupWorldContainer() {
         // Create mask to clip world content to viewport bounds
         const mask = new Graphics();
+        mask.label = 'camera-mask';
         this.worldContainer.mask = mask;
         this.addChild(mask);
 

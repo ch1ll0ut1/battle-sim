@@ -2,102 +2,115 @@ import { Container, Graphics, Ticker } from 'pixi.js';
 import { Camera } from '../../../engine/Renderer/Camera/Camera';
 import { Screen } from '../../../engine/Renderer/Screen/Screen';
 import { events, GameEvent } from '../../../game/events';
+import { Map } from '../../../game/Map/Map';
+import { TreeData } from '../../../game/Map/Terrain/Tree';
 import { PlaybackControls } from '../../components/PlaybackControls/PlaybackControls';
+import { UnitController } from '../../components/Unit/UnitController';
 
 /**
  * MapScreen demonstrates camera usage with world Container injection
  * Creates a world container with sample content and provides camera controls
  */
 export class MapScreen extends Screen {
-    private camera: Camera;
-    private controls: PlaybackControls;
+    private camera?: Camera;
+    private controls?: PlaybackControls;
+    private worldContainer: Container;
+    private unitController: UnitController;
 
     constructor() {
         super();
 
-        const worldContainer = new Container();
+        this.worldContainer = new Container();
+        this.worldContainer.label = 'world-container';
 
-        // Add some sample world content for testing
-        this.addSampleWorldContent(worldContainer);
-
-        // Init Camera
-        this.camera = new Camera(worldContainer, worldContainer.width, worldContainer.height);
-        this.addChild(this.camera);
-        this.camera.init();
-
-        // Add playback controls
-        this.controls = new PlaybackControls();
-        this.addChild(this.controls);
+        this.unitController = new UnitController();
     }
 
-    prepare() {
+    async prepare() {
+        // Prepare unit controller to load and update units
+        this.unitController.init(this.worldContainer);
+
+        // Create game session
         events.emit(GameEvent.initGame, { gameMode: 'map', map: 'small' });
+
+        await new Promise<void>((resolve) => {
+            events.once(GameEvent.gameStateChanged, (state) => {
+                // Draw map & terrain
+                this.drawMap(this.worldContainer, state.state.map);
+
+                // Init Camera
+                this.camera = new Camera(this.worldContainer, this.worldContainer.width, this.worldContainer.height);
+                this.addChild(this.camera);
+                this.camera.init();
+
+                // Add playback controls
+                this.controls = new PlaybackControls();
+                this.addChild(this.controls);
+
+                resolve();
+            });
+        });
     }
 
-    /**
-     * Add sample content to the world for testing camera functionality
-     */
-    private addSampleWorldContent(worldContainer: Container) {
-        // Create a grid pattern to help visualize camera movement
-        const gridSize = 100;
-        const worldWidth = 2000;
-        const worldHeight = 1500;
+    private drawMap(worldContainer: Container, map: ReturnType<Map['getState']>) {
+        const { width, height, terrain } = map;
 
         // Add a dark green background
         const background = new Graphics();
-        background.rect(0, 0, worldWidth, worldHeight).fill({ color: 0x003300 });
+        background.rect(0, 0, width, height).fill({ color: 0x003300 });
+        background.label = 'map-background';
         worldContainer.addChild(background);
 
-        // Add grid lines
-        for (let x = 0; x <= worldWidth; x += gridSize) {
-            const line = new Graphics();
-            line.moveTo(x, 0).lineTo(x, worldHeight).stroke({ width: 1, color: 0x333333 });
-            worldContainer.addChild(line);
-        }
+        // Add the trees
+        terrain.trees.forEach((tree, index) => {
+            // if (index > 10) return;
+            // this.drawTree(worldContainer, tree);
+        });
+    }
 
-        for (let y = 0; y <= worldHeight; y += gridSize) {
-            const line = new Graphics();
-            line.moveTo(0, y).lineTo(worldWidth, y).stroke({ width: 1, color: 0x333333 });
-            worldContainer.addChild(line);
-        }
+    private drawTree(worldContainer: Container, tree: TreeData) {
+        const { x, y } = tree.position;
 
-        // Add some colored rectangles at various positions
-        const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff];
-        for (let i = 0; i < 10; i++) {
-            const rect = new Graphics();
-            const x = Math.random() * (worldWidth - 50);
-            const y = Math.random() * (worldHeight - 50);
-            const color = colors[i % colors.length];
+        // const sprite = new Sprite();
+        // sprite.position.set(tree.position.x, tree.position.y);
+        // sprite.anchor.set(0.5, 0.5); // Center the sprite
 
-            rect.rect(x, y, 50, 50).fill({ color });
-            worldContainer.addChild(rect);
-        }
+        const graphics = new Graphics();
+        graphics.position.set(x, y);
+        graphics.label = 'tree';
 
-        // Add a center marker
-        const centerMarker = new Graphics();
-        centerMarker.circle(worldWidth / 2, worldHeight / 2, 20).fill({ color: 0xffffff });
-        worldContainer.addChild(centerMarker);
+        graphics.circle(0, 0, tree.canopyRadius).fill({ color: 0x2F4F2F, alpha: 0.5 });
+        graphics.circle(0, 0, tree.trunkRadius).fill({ color: 0x8D6E63 });
+
+        worldContainer.addChild(graphics);
     }
 
     /**
      * Update camera every tick
      */
     update(ticker: Ticker) {
-        this.camera.update(ticker);
+        if (this.camera) {
+            this.camera.update(ticker);
+        }
     }
 
     /**
      * Resize camera viewport
      */
     resize(width: number, height: number) {
-        this.camera.resize(width, height);
+        if (this.camera) {
+            this.camera.resize(width, height);
+        }
     }
 
     /**
      * Clean up camera resources
      */
     destroy() {
-        this.camera.destroy();
+        if (this.camera) {
+            this.camera.destroy();
+        }
+
         super.destroy();
     }
 }

@@ -78,7 +78,7 @@ export class Screen extends Container implements Poolable<ScreenManager> {
      * Generally setting up of UI elements is done in the constructor.
      * In combination with reset() can be used to register & unregister event listeners.
      */
-    prepare?(): void;
+    async prepare?(): Promise<void>;
 
     /**
      * Reset the screen after it is hidden.

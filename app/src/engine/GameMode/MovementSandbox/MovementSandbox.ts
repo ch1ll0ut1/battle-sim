@@ -34,16 +34,6 @@ export class MovementSandbox extends GameMode {
 
     handleCommand(command: string, data?: unknown) {
         this.logger.debug(`MovementSandbox: ${command}`, data);
-
-        switch (command) {
-            case 'generateRandomUnit':
-                const unit = this.createRandomUnit();
-                break;
-
-            default:
-                this.logger.log(`Unknown command: ${command}`);
-                break;
-        }
     }
 
     /**

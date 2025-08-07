@@ -8,6 +8,11 @@ type MovementState = 'stationary' | 'accelerating' | 'moving' | 'decelerating';
 
 export const METERS_TO_PIXELS = 100;
 
+export interface UnitMovementState {
+    position: Position;
+    direction: number;
+}
+
 /**
  * Physics-based UnitMovement with realistic momentum, acceleration, and turning.
  * Implements the same public interface as UnitMovement for drop-in replacement.
@@ -494,7 +499,8 @@ export class UnitMovementPhysics implements TickUpdate {
     /**
      * Creates a summary object for serialization/display
      */
-    getState() {
+    getState(): UnitMovementState {
+        // TODO: remove unused fields
         return {
             position: { x: this._position.x, y: this._position.y },
             direction: this._direction,
@@ -507,7 +513,7 @@ export class UnitMovementPhysics implements TickUpdate {
             acceleration: this._acceleration,
             maxTurnRate: this._maxTurnRate,
             staminaCost: this.getStaminaCost(),
-        };
+        } as UnitMovementState;
     }
 
     /**

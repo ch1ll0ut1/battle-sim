@@ -1,5 +1,6 @@
 import EventEmitter from 'eventemitter3';
 import { debugConfig } from '../config/debug';
+import { GameEngine } from '../engine/GameEngine/GameEngine';
 import { logger } from '../engine/Logger';
 
 export interface EventAction<T extends GameEvent = GameEvent> {
@@ -44,7 +45,7 @@ export interface GameEvents {
     [GameEvent.pauseGame]: [];
     [GameEvent.nextTick]: [];
 
-    [GameEvent.gameStateChanged]: [{ state: object }];
+    [GameEvent.gameStateChanged]: [{ state: ReturnType<GameEngine['getState']> }];
     [GameEvent.gameStarted]: [];
     [GameEvent.gamePaused]: [];
     [GameEvent.gameFinished]: [];
