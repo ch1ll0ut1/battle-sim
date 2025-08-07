@@ -170,6 +170,16 @@ app/
 └── tsconfig.json               # TypeScript configuration
 ```
 
+### Dependencies between core folders
+
+- /config: none
+- /data: none
+- /engine: config
+- /game: config, engine, data
+- /client: config, engine, game, data
+- /server: config, engine, game, data
+
+
 ### Key Architecture Patterns
 
 - **Component-Based**: Units use a component system for modularity (movement, stamina, attributes)
