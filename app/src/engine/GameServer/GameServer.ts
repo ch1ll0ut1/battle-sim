@@ -1,5 +1,6 @@
 import { WebSocket } from 'ws';
 import { events, GameEvent, GameEvents } from '../../game/events';
+import { MapService } from '../../game/Map/MapService';
 import { GameEngine } from '../GameEngine/GameEngine';
 import { MovementSandbox } from '../GameMode/MovementSandbox/MovementSandbox';
 import { Logger } from '../ServerLogger';
@@ -13,6 +14,7 @@ import { SimulationController } from './SimulationController';
 export class GameServer {
     private wsServer: WebsocketServer;
     private logger: Logger;
+    private mapService: MapService;
     #simulationController: SimulationController | null = null;
     #gameEngine: GameEngine | null = null;
 
@@ -24,6 +26,7 @@ export class GameServer {
     constructor(port: number) {
         this.wsServer = new WebsocketServer(port);
         this.logger = new Logger();
+        this.mapService = new MapService();
 
         this.setupEventHandlers();
     }
@@ -68,10 +71,13 @@ export class GameServer {
 
         // Listen for actions by the client
         events.on(GameEvent.initGame, () => {
-            this.#gameEngine = new GameEngine(this.logger, MovementSandbox);
-            this.#simulationController = new SimulationController(this.#gameEngine, this.logger);
-
-            this.#gameEngine.reset();
+            this.mapService.loadMap('smallForest').then((map) => {
+                this.#gameEngine = new GameEngine(this.logger, MovementSandbox, map);
+                this.#simulationController = new SimulationController(this.#gameEngine, this.logger);
+                this.#gameEngine.reset();
+            }).catch((error: unknown) => {
+                throw new Error(`Failed to load map: ${error instanceof Error ? error.message : String(error)}`);
+            });
         });
 
         events.on(GameEvent.resumeGame, () => {
@@ -104,6 +110,8 @@ export class GameServer {
         if (this.#simulationController?.isRunning()) {
             this.#simulationController.pause();
         }
+
+        events.removeAllListeners();
 
         this.wsServer.close();
     }

@@ -3,7 +3,7 @@ import { Camera } from '../../../engine/Renderer/Camera/Camera';
 import { Screen } from '../../../engine/Renderer/Screen/Screen';
 import { events, GameEvent } from '../../../game/events';
 import { Map } from '../../../game/Map/Map';
-import { TreeData } from '../../../game/Map/Terrain/Tree';
+import { TreeState } from '../../../game/Map/Terrain/Tree';
 import { PlaybackControls } from '../../components/PlaybackControls/PlaybackControls';
 import { UnitController } from '../../components/Unit/UnitController';
 
@@ -68,7 +68,7 @@ export class MapScreen extends Screen {
         });
     }
 
-    private drawTree(worldContainer: Container, tree: TreeData) {
+    private drawTree(worldContainer: Container, tree: TreeState) {
         const { x, y } = tree.position;
 
         // const sprite = new Sprite();

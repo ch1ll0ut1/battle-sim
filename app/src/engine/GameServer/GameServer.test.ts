@@ -70,10 +70,13 @@ describe('GameServer', () => {
      * Tests that new client connections receive initial game state
      * Verifies that the connect handler sends current state to new clients
      */
-    it('should send initial state to new clients on connect', () => {
+    it('should send initial state to new clients on connect', async () => {
+        vi.setConfig({ testTimeout: 2000 });
         // Arrange
         const mockWebSocket = {} as WebSocket;
         events.emit(GameEvent.initGame, { gameMode: 'test', map: 'test' });
+
+        await new Promise<void>(resolve => events.once(GameEvent.gameStarted, resolve));
 
         // Get actual game state from the real GameEngine
         const actualGameState = gameServer.gameEngine.getState();
@@ -95,15 +98,12 @@ describe('GameServer', () => {
      * Tests that GameEngine initialized events trigger game state broadcast
      * Verifies that the server broadcasts state updates when game is initialized
      */
-    it('should broadcast game state on GameEngine initialized event', () => {
-        // Arrange
-        const testGameState = { time: 0, state: 'initialized', units: units };
+    it('should broadcast game state on GameEngine initialized event', async () => {
+        events.emit(GameEvent.initGame, { gameMode: 'test', map: 'test' });
 
-        // Act - trigger the initialized event
-        events.emit(GameEvent.gameStateChanged, { state: testGameState });
+        await new Promise<void>(resolve => events.once(GameEvent.gameStarted, resolve));
 
-        // Assert
-        expect(mockWsServer.broadcast).toHaveBeenCalledWith(GameEvent.gameStateChanged, { state: testGameState });
+        expect(mockWsServer.broadcast).toHaveBeenCalledWith(GameEvent.gameStateChanged, { state: gameServer.gameEngine.getState() });
     });
 
     /**
@@ -125,16 +125,19 @@ describe('GameServer', () => {
         expect(() => gameServer.gameEngine).toThrow('GameEngine not initialized');
     });
 
-    it('should initialize gameEngine on initGame event', () => {
+    it('should initialize gameEngine on initGame event', async () => {
         events.emit(GameEvent.initGame, { gameMode: 'test', map: 'test' });
+        await new Promise<void>(resolve => events.once(GameEvent.gameStarted, resolve));
+
         expect(gameServer.gameEngine).toBeDefined();
         expect(gameServer.gameEngine.phase).toBe('initialized');
         expect(gameServer.gameEngine.map).toBeDefined();
         expect(gameServer.gameEngine.gameMode).toBeDefined();
     });
 
-    it('should send gameStateChanged event on gameEngine initialized event', () => {
+    it('should send gameStateChanged event on gameEngine initialized event', async () => {
         events.emit(GameEvent.initGame, { gameMode: 'test', map: 'test' });
+        await new Promise<void>(resolve => events.once(GameEvent.gameStarted, resolve));
         expect(mockWsServer.broadcast).toHaveBeenCalledWith(GameEvent.gameStateChanged, { state: gameServer.gameEngine.getState() });
     });
 

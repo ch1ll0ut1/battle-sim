@@ -1,6 +1,5 @@
 import { events, GameEvent } from '../../game/events';
 import { Map } from '../../game/Map/Map';
-import { generateForestMap } from '../../game/Map/MapGenerator';
 import { GameMode, GameModeConstructor } from '../GameMode/GameMode';
 import { Logger } from '../ServerLogger';
 import { TickUpdate } from '../TickUpdate';
@@ -28,10 +27,10 @@ export class GameEngine implements TickUpdate {
     constructor(
         logger: Logger,
         gameMode: GameModeConstructor,
+        map: Map,
     ) {
         this.gameMode = new gameMode(logger, this);
-        this.map = generateForestMap(100 * 100, 100 * 100, 1);
-        // this.map = new Map(10 * 100, 10 * 100);
+        this.map = map;
         this.logger = logger;
     }
 

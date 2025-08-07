@@ -1,5 +1,11 @@
 import { Position } from '../../Unit/Position';
 
+export interface TreeState {
+    position: Position;
+    trunkRadius: number;
+    canopyRadius: number;
+}
+
 export class Tree {
     /**
      * The position of the tree on the world map.

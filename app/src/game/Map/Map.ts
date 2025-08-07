@@ -1,5 +1,11 @@
 import { TickUpdate } from '../../engine/TickUpdate';
-import { Terrain } from './Terrain/Terrain';
+import { Terrain, TerrainState } from './Terrain/Terrain';
+
+export interface MapState {
+    width: number;
+    height: number;
+    terrain: TerrainState;
+}
 
 /**
  * A map is a 2D world that contains a terrain and a set of units.
@@ -22,8 +28,8 @@ export class Map implements TickUpdate {
      * @param width The width of the map in cm.
      * @param height The height of the map in cm.
      */
-    public constructor(width: number, height: number) {
-        this.terrain = new Terrain();
+    public constructor(width: number, height: number, terrain?: Terrain) {
+        this.terrain = terrain ?? new Terrain([]);
         this.width = width;
         this.height = height;
     }
@@ -32,7 +38,7 @@ export class Map implements TickUpdate {
         // noop
     }
 
-    public getState() {
+    public getState(): MapState {
         return {
             width: this.width,
             height: this.height,

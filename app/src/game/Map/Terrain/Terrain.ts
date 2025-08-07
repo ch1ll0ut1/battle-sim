@@ -1,9 +1,17 @@
-import { Tree } from './Tree';
+import { TreeState } from './Tree';
+
+export interface TerrainState {
+    trees: TreeState[];
+}
 
 export class Terrain {
-    public trees: Tree[] = [];
+    public trees: TreeState[] = [];
 
-    public getState() {
+    constructor(trees: TreeState[]) {
+        this.trees = trees;
+    }
+
+    public getState(): TerrainState {
         return {
             trees: this.trees,
         };
