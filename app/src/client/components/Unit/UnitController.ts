@@ -5,7 +5,7 @@ import { UnitState } from '../../../game/Unit/Unit';
 import { deepMerge, DeepPartial } from '../../utils/deepMerge';
 import { UnitRenderer } from './UnitRenderer';
 
-const isGameModeWithUnits = (gameMode: unknown): gameMode is GameMode & { units: UnitState[] } => {
+export const isGameModeWithUnits = (gameMode: unknown): gameMode is GameMode & { units: UnitState[] } => {
     return typeof gameMode === 'object' && gameMode !== null && 'units' in gameMode;
 };
 
