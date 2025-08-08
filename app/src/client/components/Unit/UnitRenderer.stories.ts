@@ -110,39 +110,39 @@ class TrackMovementSandbox extends MovementSandbox {
     }
 
     /**
-     * Check if units have reached their destinations and turn them around
+     * Check if units have stopped moving (reached their destination) and turn them around
      */
     private checkAndUpdateMovements() {
         const runner = this.units[0];
         const walker = this.units[1];
 
         if (runner) {
-            const runnerPos = runner.movement.getState().position;
-
-            // Check if runner reached the end
-            if (this.directionState.unit1 === 1 && runnerPos.x >= this.trackEndX - 10) {
-                this.directionState.unit1 = -1;
-                runner.movement.moveTo({ x: this.trackStartX, y: this.trackY }, true);
-            }
-            // Check if runner reached the start
-            else if (this.directionState.unit1 === -1 && runnerPos.x <= this.trackStartX + 10) {
-                this.directionState.unit1 = 1;
-                runner.movement.moveTo({ x: this.trackEndX, y: this.trackY }, true);
+            // Check if runner has stopped moving (no movement intent)
+            if (!runner.movement.isMoving) {
+                if (this.directionState.unit1 === 1) {
+                    // Was going right, now turn around and go left
+                    this.directionState.unit1 = -1;
+                    runner.movement.moveTo({ x: this.trackStartX, y: this.trackY }, true);
+                } else {
+                    // Was going left, now turn around and go right
+                    this.directionState.unit1 = 1;
+                    runner.movement.moveTo({ x: this.trackEndX, y: this.trackY }, true);
+                }
             }
         }
 
         if (walker) {
-            const walkerPos = walker.movement.getState().position;
-
-            // Check if walker reached the end
-            if (this.directionState.unit2 === 1 && walkerPos.x >= this.trackEndX - 10) {
-                this.directionState.unit2 = -1;
-                walker.movement.moveTo({ x: this.trackStartX, y: this.trackY + 80 }, false);
-            }
-            // Check if walker reached the start
-            else if (this.directionState.unit2 === -1 && walkerPos.x <= this.trackStartX + 10) {
-                this.directionState.unit2 = 1;
-                walker.movement.moveTo({ x: this.trackEndX, y: this.trackY + 80 }, false);
+            // Check if walker has stopped moving (no movement intent)
+            if (!walker.movement.isMoving) {
+                if (this.directionState.unit2 === 1) {
+                    // Was going right, now turn around and go left
+                    this.directionState.unit2 = -1;
+                    walker.movement.moveTo({ x: this.trackStartX, y: this.trackY + 80 }, false);
+                } else {
+                    // Was going left, now turn around and go right
+                    this.directionState.unit2 = 1;
+                    walker.movement.moveTo({ x: this.trackEndX, y: this.trackY + 80 }, false);
+                }
             }
         }
     }

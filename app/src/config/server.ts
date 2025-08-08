@@ -1,4 +1,4 @@
 export const serverConfig = {
     port: 8081,
-    debug: true,
+    debug: false,
 };

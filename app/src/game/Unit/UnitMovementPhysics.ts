@@ -43,6 +43,7 @@ export class UnitMovementPhysics implements TickUpdate {
      */
     private _targetSpeed = 0; // Target speed to reach
     private _targetDirection: number | null = null; // Target direction to turn towards
+    private _targetPosition: Position | null = null; // Target position for precise navigation
     private _isRunning = false; // Whether unit is trying to run vs walk
 
     /**
@@ -119,10 +120,18 @@ export class UnitMovementPhysics implements TickUpdate {
     }
 
     /**
+     * Clamps tiny floating point values to zero to avoid precision issues
+     */
+    private clampToZero(value: number): number {
+        return Math.abs(value) < 1e-10 ? 0 : value;
+    }
+
+    /**
      * Checks if the unit is currently moving or has movement intent
+     * Returns true during the entire movement sequence: moving, decelerating, turning, accelerating
      */
     get isMoving() {
-        return this._currentSpeed > 0.1 || this._targetSpeed > 0.1;
+        return this._currentSpeed > 0 || this._targetSpeed > 0 || this._targetPosition !== null || this._targetDirection !== null;
     }
 
     /**
@@ -147,8 +156,27 @@ export class UnitMovementPhysics implements TickUpdate {
      */
     moveTo(target: Position, urgent = false) {
         this._isRunning = urgent;
+
+        // Store target for precise navigation
+        this._targetPosition = { x: target.x, y: target.y };
+
+        // Set speed target
         this._targetSpeed = this.calculateBaseSpeed();
+
+        // Only change to accelerating if currently stationary
+        // If already moving, let the normal state logic handle it
+        if (this._movementState === 'stationary') {
+            this._movementState = 'accelerating';
+        }
+
+        // Face towards target (will stop if major turn needed)
         this.faceTowards(target);
+
+        // Ensure we have target speed after facing - needed if unit turned instantly
+        // This should always trigger if the unit turned instantly and lost its target direction
+        if (this._targetDirection === null && this._targetSpeed === 0) {
+            this._targetSpeed = this.calculateBaseSpeed();
+        }
 
         // Invalidate cache since movement parameters changed
         this.invalidateCache();
@@ -160,11 +188,13 @@ export class UnitMovementPhysics implements TickUpdate {
     stop() {
         this._targetSpeed = 0;
         this._targetDirection = null;
+        this._targetPosition = null;
         this._isRunning = false;
     }
 
     /**
      * Sets the target direction to face the given position
+     * Human-like behavior: if major direction change needed, stop first
      * @param target - Position to face towards
      */
     faceTowards(target: Position) {
@@ -173,14 +203,18 @@ export class UnitMovementPhysics implements TickUpdate {
             target.x - this._position.x,
         ));
 
+        // Always set the target direction - let movement update handle stopping logic
+        this._targetDirection = newDirection;
+
         // If stationary, turn instantly (no momentum)
-        if (this._currentSpeed < 0.1) {
+        if (this._currentSpeed === 0) {
             this.direction = newDirection;
             this._targetDirection = null;
-        }
-        else {
-            // If moving, set as target for gradual turning
-            this._targetDirection = newDirection;
+
+            // Restore target speed if we have a target position but no speed
+            if (this._targetPosition !== null && this._targetSpeed === 0) {
+                this._targetSpeed = this.calculateBaseSpeed();
+            }
         }
     }
 
@@ -380,6 +414,45 @@ export class UnitMovementPhysics implements TickUpdate {
     private updateLinearMovement(deltaTime: number) {
         this.updateCache();
 
+        // Check for major direction changes - human-like behavior
+        if (this._targetDirection !== null && this._currentSpeed > 0) {
+            const angleDiff = Math.abs(this.getShortestAngleDifference(this._direction, this._targetDirection));
+
+            // If we need to turn more than 90 degrees, stop first (human behavior)
+            if (angleDiff > Math.PI / 2) {
+                this._targetSpeed = 0; // Force deceleration to stop
+            }
+        }
+
+        // Check if we have reached our target position
+        if (this._targetPosition) {
+            const distanceToTarget = Math.sqrt(
+                Math.pow(this._targetPosition.x - this._position.x, 2)
+                + Math.pow(this._targetPosition.y - this._position.y, 2),
+            );
+
+            // If we're very close to target, snap to exact position and stop
+            if (distanceToTarget < 5) { // Within 5 pixels tolerance
+                this.position = { x: this._targetPosition.x, y: this._targetPosition.y };
+                this._currentSpeed = 0;
+                this._targetSpeed = 0;
+                this._targetPosition = null;
+                this._movementState = 'stationary';
+                return;
+            }
+
+            // Calculate stopping distance based on current speed (physics-based)
+            const deceleration = this._acceleration * 2.0;
+            const stoppingDistance = (this._currentSpeed * this._currentSpeed) / (2 * deceleration) * METERS_TO_PIXELS;
+
+            // If we're within stopping distance, start decelerating
+            if (distanceToTarget <= stoppingDistance) {
+                // Calculate required deceleration to stop at target
+                const requiredDecel = (this._currentSpeed * this._currentSpeed) / (2 * (distanceToTarget / METERS_TO_PIXELS));
+                this._targetSpeed = Math.max(0, this._currentSpeed - requiredDecel * deltaTime);
+            }
+        }
+
         const deceleration = this._acceleration * 2.0; // Can brake harder than accelerate
 
         if (this._currentSpeed < this._targetSpeed) {
@@ -393,8 +466,8 @@ export class UnitMovementPhysics implements TickUpdate {
             this._currentSpeed -= speedDecrease;
         }
 
-        // Cap at maximum possible speed
-        this._currentSpeed = Math.min(this._currentSpeed, this._maxSpeed);
+        // Cap at maximum possible speed and clamp tiny values to zero
+        this._currentSpeed = this.clampToZero(Math.min(this._currentSpeed, this._maxSpeed));
 
         // Update position based on current speed
         if (this._currentSpeed > 0) {
@@ -424,6 +497,11 @@ export class UnitMovementPhysics implements TickUpdate {
             this.direction = this._targetDirection;
             this._targetDirection = null;
             this._currentTurnRate = 0;
+
+            // After completing a turn, restore target speed if we have a target position
+            if (this._targetPosition !== null && this._targetSpeed === 0) {
+                this._targetSpeed = this.calculateBaseSpeed();
+            }
         }
         else {
             // Turn towards target at maximum rate

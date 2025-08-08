@@ -33,6 +33,9 @@ export class MapService {
 
         const terrain = new Terrain(file.trees);
 
+        // TODO: temporarily make map very small
+        // return new Map(1000, 1000, terrain);
+
         return new Map(file.width, file.height, terrain);
     }
 

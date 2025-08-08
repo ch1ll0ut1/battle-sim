@@ -1,9 +1,9 @@
 import { Unit } from '../../../game/Unit/Unit';
 import { UnitAttributesData } from '../../../game/Unit/UnitAttributes';
-import { GameEngine } from '../../GameEngine/GameEngine';
-import { Logger } from '../../ServerLogger';
 import { GameMode } from '../GameMode';
 import { RandomMovementAI } from './RandomMovementAI';
+
+const DEFAULT_UNITS = 1000;
 
 export class MovementSandbox extends GameMode {
     private nextUnitId = 0; // Start from 2 since we already have Unit 1
@@ -19,7 +19,7 @@ export class MovementSandbox extends GameMode {
         this.movementAI = new RandomMovementAI(this.engine.map);
 
         // Create 100 initial units
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < DEFAULT_UNITS; i++) {
             this.units.push(this.createRandomUnit());
         }
     }
@@ -27,15 +27,15 @@ export class MovementSandbox extends GameMode {
     update(deltaTime: number) {
         this.logger.debug(`MovementSandbox: ${deltaTime}`);
 
-        // Use AI to give units random move orders
-        if (this.movementAI) {
-            this.movementAI.updateUnits(this.units);
-        }
-
-        // Each unit takes action
+        // Update unit physics first
         this.units.forEach((unit) => {
             unit.update(deltaTime);
         });
+
+        // Then use AI to give units random move orders based on updated state
+        if (this.movementAI) {
+            this.movementAI.updateUnits(this.units);
+        }
     }
 
     getState() {
