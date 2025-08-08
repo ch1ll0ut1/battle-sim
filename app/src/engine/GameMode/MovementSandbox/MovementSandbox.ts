@@ -1,24 +1,36 @@
 import { Unit } from '../../../game/Unit/Unit';
 import { UnitAttributesData } from '../../../game/Unit/UnitAttributes';
+import { GameEngine } from '../../GameEngine/GameEngine';
+import { Logger } from '../../ServerLogger';
 import { GameMode } from '../GameMode';
+import { RandomMovementAI } from './RandomMovementAI';
 
 export class MovementSandbox extends GameMode {
     private nextUnitId = 0; // Start from 2 since we already have Unit 1
     private units: Unit[] = [];
+    private movementAI: RandomMovementAI | null = null;
 
     reset() {
         this.logger.log('MovementSandbox reset');
         this.nextUnitId = 0;
-        this.units = [this.createRandomUnit()];
+        this.units = [];
+
+        // Initialize movement AI with the current map
+        this.movementAI = new RandomMovementAI(this.engine.map);
+
+        // Create 100 initial units
+        for (let i = 0; i < 100; i++) {
+            this.units.push(this.createRandomUnit());
+        }
     }
 
     update(deltaTime: number) {
         this.logger.debug(`MovementSandbox: ${deltaTime}`);
 
-        // Give units random move order
-        this.units.filter(unit => !unit.movement.isMoving).forEach((unit) => {
-            unit.movement.moveTo(this.generateMoveToPosition(unit));
-        });
+        // Use AI to give units random move orders
+        if (this.movementAI) {
+            this.movementAI.updateUnits(this.units);
+        }
 
         // Each unit takes action
         this.units.forEach((unit) => {
@@ -58,27 +70,6 @@ export class MovementSandbox extends GameMode {
         return {
             x: Math.random() * width,
             y: Math.random() * height,
-        };
-    }
-
-    private generateMoveToPosition(unit: Unit) {
-        const { width, height } = this.engine.map;
-        const { x, y } = unit.movement.position;
-
-        // Generate random distance (50-300 units)
-        const maxDistance = Math.random() * 250 + 50;
-
-        // Generate random direction (0 to 2π radians)
-        const angle = Math.random() * 2 * Math.PI;
-
-        // Calculate new position based on current position + distance in random direction
-        const newX = x + Math.cos(angle) * maxDistance;
-        const newY = y + Math.sin(angle) * maxDistance;
-
-        // Clamp to map bounds
-        return {
-            x: Math.max(0, Math.min(width, newX)),
-            y: Math.max(0, Math.min(height, newY)),
         };
     }
 
