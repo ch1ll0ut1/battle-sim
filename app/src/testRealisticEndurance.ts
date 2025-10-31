@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/restrict-plus-operands */
 import { movementConfig } from './config/movement';
 import { Unit } from './game/Unit/Unit';
 import { UnitMovementPhysics } from './game/Unit/UnitMovementPhysics';
@@ -119,7 +120,7 @@ function runEnduranceTest(
 
     // Get initial measurements
     const initialStaminaSummary = unit.stamina.getState();
-    const movementPhysics = unit.movement as UnitMovementPhysics; // Cast since we're forcing physics system
+    const movementPhysics = unit.movement; // Cast since we're forcing physics system
     const initialMovementSummary = movementPhysics.getState();
 
     const maxStamina = initialStaminaSummary.maxStamina;

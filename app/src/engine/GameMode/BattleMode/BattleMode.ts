@@ -1,107 +1,134 @@
-import { Unit } from '../../../game/Unit/Unit';
 import { GameEngine } from '../../GameEngine/GameEngine';
 import { Logger } from '../../ServerLogger';
-import { BattleAi } from './BattleAi';
+import { Unit } from '../../../game/Unit/Unit';
+import { GameMode } from '../GameMode';
+import { UnitCombatAi } from './UnitCombatAi';
 
 /**
- * Result of a game simulation
+ * BattleMode game mode for autonomous combat (1v1 or NvN)
+ * Units have autonomous AI that handles movement and combat
+ * Configurable with different warrior types via factory functions
  */
-interface GameResult {
-    winner?: string;
-    duration: number;
-    events: string[];
-}
-
-export class BattleMode {
-    private logger: Logger;
-    private battleAI: BattleAi;
-    private teams: Record<number, Unit[]> = {};
+export class BattleMode extends GameMode {
     private units: Unit[] = [];
-    private engine: GameEngine;
+    private unitAis: UnitCombatAi[] = [];
+    private combatMessages: string[] = [];
+    private isBattleOver = false;
+    private team1Factories: (() => Unit)[];
+    private team2Factories: (() => Unit)[];
 
-    constructor(logger: Logger, engine: GameEngine) {
-        this.logger = logger;
-        this.battleAI = new BattleAi();
-        // this.units = units1v1.map(unit => new Unit(unit.id, unit.name, ));
-        this.engine = engine;
-    }
-
-    update(deltaTime: number) {
-        // Use existing battle engine
-        // TODO: implement deltaTime
-        //   this.battleEngine.update(deltaTime);
-
-        // TODO: implement AI and remove combat logic from BattleEngine
-        // Apply mode-specific AI behavior
-        //   this.battleAI.update(this.battleEngine.getUnits(), deltaTime);
-
-        // Check if game should end
-        this.checkGameEnd();
-    }
-
-    reset() {
-        this.teams = {};
-
-        // this.units.forEach(unit => {
-        //     // Unit Reset
-        //     unit.health = 100;
-
-        //     // Log initial unit status
-        //     this.logger.log(`${unit.name} enters the game with ${unit.health} health`);
-
-        //     // Track teams
-        //     if (this.teams[unit.team] === undefined) {
-        //         this.teams[unit.team] = [];
-        //     }
-        //     this.teams[unit.team].push(unit);
-        // });
-
-        this.validateTeams();
+    /**
+     * Creates a battle mode with custom warrior factories
+     * @param team1Factories - Factory functions for team 1 warriors
+     * @param team2Factories - Factory functions for team 2 warriors
+     */
+    constructor(
+        logger: Logger,
+        engine: GameEngine,
+        team1Factories: (() => Unit)[],
+        team2Factories: (() => Unit)[],
+    ) {
+        super(logger, engine);
+        this.team1Factories = team1Factories;
+        this.team2Factories = team2Factories;
     }
 
     /**
-     * Checks if the game should end
+     * Resets the game mode and creates combat-ready units with autonomous AI
      */
-    private checkGameEnd() {
-        // const team1Alive = this.units.some(u => u.team === 1 && u.health > 0);
-        // const team2Alive = this.units.some(u => u.team === 2 && u.health > 0);
+    reset() {
+        this.logger.log('BattleMode reset');
+        this.units = [];
+        this.unitAis = [];
+        this.combatMessages = [];
+        this.isBattleOver = false;
 
-        // if (!team1Alive || !team2Alive) {
-        //     this.logger.log(`${team1Alive ? 'Team 1' : 'Team 2'} wins the game!`);
-        //     this.engine.emit('finished');
-        // }
+        // Create team 1 warriors
+        for (const factory of this.team1Factories) {
+            const warrior = factory();
+            this.units.push(warrior);
+
+            const ai = new UnitCombatAi();
+            this.unitAis.push(ai);
+            warrior.setAi(ai);
+        }
+
+        // Create team 2 warriors
+        for (const factory of this.team2Factories) {
+            const warrior = factory();
+            this.units.push(warrior);
+
+            const ai = new UnitCombatAi();
+            this.unitAis.push(ai);
+            warrior.setAi(ai);
+        }
+
+        // Give each AI access to all units (for enemy detection)
+        this.unitAis.forEach((ai) => {
+            ai.setAllUnits(this.units);
+        });
+
+        this.logger.log(`Created battle: Team 1 (${this.team1Factories.length} warriors) vs Team 2 (${this.team2Factories.length} warriors)`);
     }
 
-    private validateTeams() {
-        if (this.units.length < 2) {
-            throw new Error('Game must have at least 2 units');
+    /**
+     * Updates the game mode - units act autonomously via their AI
+     */
+    update(deltaTime: number) {
+        if (this.isBattleOver) {
+            // Battle is over, just update units
+            this.units.forEach((unit) => {
+                unit.update(deltaTime);
+            });
+            return;
         }
 
-        const teams = Object.values(this.teams);
-        if (teams.length <= 1) {
-            throw new Error('Game must have at least 2 teams');
+        // Check if one team has been eliminated
+        const team1Alive = this.units.filter(u => u.team === 1 && u.health.isAlive()).length;
+        const team2Alive = this.units.filter(u => u.team === 2 && u.health.isAlive()).length;
+
+        if (team1Alive === 0 || team2Alive === 0) {
+            this.isBattleOver = true;
+            const winningTeam = team1Alive > 0 ? 1 : 2;
+            this.logger.log(`Battle Over! Team ${winningTeam} wins! (${team1Alive} vs ${team2Alive} remaining)`);
+            this.combatMessages.push(`Battle Over! Team ${winningTeam} wins!`);
+
+            this.units.forEach((unit) => {
+                unit.update(deltaTime);
+            });
+            return;
         }
 
-        teams.forEach((team) => {
-            if (team.length === 0) {
-                throw new Error('Team has no units');
+        // Update all units - their AI will make autonomous decisions
+        this.units.forEach((unit) => {
+            unit.update(deltaTime);
+        });
+
+        // Collect combat messages from AI instances
+        this.unitAis.forEach((ai) => {
+            const messages = ai.getMessages();
+            if (messages.length > 0) {
+                this.combatMessages.push(...messages);
+                ai.clearMessages();
             }
         });
     }
 
     /**
-     * Determines the winner of the game
+     * Gets the current state of the game mode
      */
-    private determineWinner(): string | undefined {
-        // const team1Alive = this.units.filter(u => u.team === 1 && u.health > 0);
-        // const team2Alive = this.units.filter(u => u.team === 2 && u.health > 0);
+    getState() {
+        return {
+            units: this.units.map(unit => unit.getState()),
+            combatMessages: this.combatMessages,
+            isBattleOver: this.isBattleOver,
+        };
+    }
 
-        // if (team1Alive.length > 0 && team2Alive.length === 0) {
-        //     return 'Team 1';
-        // } else if (team2Alive.length > 0 && team1Alive.length === 0) {
-        //     return 'Team 2';
-        // }
-
-        return undefined;
+    /**
+     * Handles commands (not used in this mode)
+     */
+    handleCommand(command: string, data?: unknown) {
+        this.logger.debug(`BattleMode: ${command}`, data);
     }
 }

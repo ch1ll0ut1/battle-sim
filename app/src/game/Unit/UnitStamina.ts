@@ -13,6 +13,15 @@ const staminaRecoveryRates: Record<StaminaRecoveryContext, number> = {
     exhausted: 0, // No recovery when exhausted
 };
 
+export interface UnitStaminaState {
+    stamina: number;
+    maxStamina: number;
+    staminaPercentage: number;
+    isExhausted: boolean;
+    weightModifier: number;
+    recoveryContext: string;
+}
+
 /**
  * UnitStamina manages a unit's energy level and ability to perform actions.
  * Handles stamina calculation, consumption, and recovery using absolute stamina units.
@@ -77,10 +86,11 @@ export class UnitStamina implements TickUpdate {
     /**
      * Gets the current recovery context based on unit state
      * Derives context from movement and combat state automatically
-     * 1. Exhausted - no recovery
-     * 2. Combat - low recovery
-     * 3. Walking - medium recovery
-     * 4. Resting - highest recovery (default)
+     * Priority order:
+     * 1. Exhausted - no recovery (below 10% stamina)
+     * 2. Combat - low recovery (1% per second)
+     * 3. Walking - no recovery (0% per second)
+     * 4. Resting - highest recovery (8% per second)
      */
     get recoveryContext(): StaminaRecoveryContext {
         // If exhausted, no recovery regardless of other states
@@ -88,15 +98,18 @@ export class UnitStamina implements TickUpdate {
             return 'exhausted';
         }
 
+        // Check combat state - combat takes priority over movement
+        // Units in combat get minimal recovery (adrenaline effect)
+        if (this.unit.combat.getIsInCombat()) {
+            return 'combat';
+        }
+
+        // Moving units don't recover (physiologically realistic)
         if (this.unit.movement.isMoving) {
             return 'moving';
         }
 
-        // TODO: When combat component is available, check combat state
-        // if (this.unit.combat?.state === 'active') {
-        //     return 'combat'; // Use combat rate for running (low recovery)
-        // }
-
+        // Only true rest provides full recovery
         return 'resting';
     }
 
@@ -242,7 +255,7 @@ export class UnitStamina implements TickUpdate {
     /**
      * Creates a summary object for serialization/display
      */
-    getState() {
+    getState(): UnitStaminaState {
         return {
             stamina: this._stamina,
             maxStamina: this._maxStamina,

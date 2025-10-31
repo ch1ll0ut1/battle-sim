@@ -45,6 +45,7 @@ export class UnitMovementPhysics implements TickUpdate {
     private _targetDirection: number | null = null; // Target direction to turn towards
     private _targetPosition: Position | null = null; // Target position for precise navigation
     private _isRunning = false; // Whether unit is trying to run vs walk
+    private _isMovingBackward = false; // Whether unit is moving backwards (maintains facing, moves in reverse)
 
     /**
      * Current movement state based on physics
@@ -183,6 +184,36 @@ export class UnitMovementPhysics implements TickUpdate {
     }
 
     /**
+     * Initiates backward movement (walking in reverse while maintaining facing)
+     * Unit maintains current facing direction while moving backwards (slower than normal)
+     * Movement direction is opposite to facing direction
+     * @param backwardDistance - Distance to move backwards in pixels (default 30)
+     */
+    moveBackward(backwardDistance = 30) {
+        // Enable backward movement mode
+        this._isMovingBackward = true;
+
+        // Calculate target position behind current position (opposite to facing direction)
+        const targetX = this._position.x - Math.cos(this._direction) * backwardDistance;
+        const targetY = this._position.y - Math.sin(this._direction) * backwardDistance;
+        this._targetPosition = { x: targetX, y: targetY };
+
+        // Backward movement is slower (50% of normal walking speed)
+        this._targetSpeed = this.calculateBaseSpeed() * 0.5;
+
+        // DO NOT set target direction - we want to maintain current facing
+        this._targetDirection = null;
+
+        // Only change to accelerating if currently stationary
+        if (this._movementState === 'stationary') {
+            this._movementState = 'accelerating';
+        }
+
+        // Invalidate cache since movement parameters changed
+        this.invalidateCache();
+    }
+
+    /**
      * Stops current movement with realistic deceleration
      */
     stop() {
@@ -190,6 +221,7 @@ export class UnitMovementPhysics implements TickUpdate {
         this._targetDirection = null;
         this._targetPosition = null;
         this._isRunning = false;
+        this._isMovingBackward = false;
     }
 
     /**
@@ -285,7 +317,7 @@ export class UnitMovementPhysics implements TickUpdate {
         const linearMomentumPenalty = 1 + (speedRatio * speedRatio) * 2;
 
         // Equipment momentum: Heavy equipment adds rotational inertia
-        const equipmentMomentumPenalty = 1 + (this.unit.equipment.weight / 30) * 0.5;
+        const equipmentMomentumPenalty = 1 + (this.unit.equipmentWeight / 30) * 0.5;
 
         // Stamina penalty: Low stamina affects coordination
         const staminaPenalty = this.getStaminaPenalty();
@@ -415,7 +447,8 @@ export class UnitMovementPhysics implements TickUpdate {
         this.updateCache();
 
         // Check for major direction changes - human-like behavior
-        if (this._targetDirection !== null && this._currentSpeed > 0) {
+        // Skip this check when moving backward (we maintain facing direction)
+        if (!this._isMovingBackward && this._targetDirection !== null && this._currentSpeed > 0) {
             const angleDiff = Math.abs(this.getShortestAngleDifference(this._direction, this._targetDirection));
 
             // If we need to turn more than 90 degrees, stop first (human behavior)
@@ -437,6 +470,7 @@ export class UnitMovementPhysics implements TickUpdate {
                 this._currentSpeed = 0;
                 this._targetSpeed = 0;
                 this._targetPosition = null;
+                this._isMovingBackward = false;
                 this._movementState = 'stationary';
                 return;
             }
@@ -472,9 +506,13 @@ export class UnitMovementPhysics implements TickUpdate {
         // Update position based on current speed
         if (this._currentSpeed > 0) {
             const directionVector = this.getDirectionVector();
+
+            // If moving backward, negate the direction vector to move in reverse
+            const multiplier = this._isMovingBackward ? -1 : 1;
+
             this.position = {
-                x: this._position.x + directionVector.x * this._currentSpeed * deltaTime * METERS_TO_PIXELS,
-                y: this._position.y + directionVector.y * this._currentSpeed * deltaTime * METERS_TO_PIXELS,
+                x: this._position.x + directionVector.x * this._currentSpeed * deltaTime * METERS_TO_PIXELS * multiplier,
+                y: this._position.y + directionVector.y * this._currentSpeed * deltaTime * METERS_TO_PIXELS * multiplier,
             };
         }
     }

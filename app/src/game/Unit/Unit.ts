@@ -1,8 +1,11 @@
 import { TickUpdate } from '../../engine/TickUpdate';
 import { Position } from './Position';
+import { UnitAi } from './UnitAi';
 import { UnitAttributes, UnitAttributesData } from './UnitAttributes';
+import { UnitCombat, UnitCombatState } from './UnitCombat';
+import { UnitHealth, UnitHealthState } from './UnitHealth';
 import { UnitMovementPhysics, UnitMovementState } from './UnitMovementPhysics';
-import { UnitStamina } from './UnitStamina';
+import { UnitStamina, UnitStaminaState } from './UnitStamina';
 
 /**
  * Unit state is a snapshot of the unit's state at a given time.
@@ -12,12 +15,15 @@ export interface UnitState {
     id: number;
     name: string;
     team: number;
-    // attributes: UnitAttributesState;
+    attributes: UnitAttributesData;
     movement: UnitMovementState;
-    // stamina: UnitStaminaState;
-    // equipment: {
-    //     weight: number;
-    // };
+    stamina: UnitStaminaState;
+    health: UnitHealthState;
+    combat: UnitCombatState;
+    armor: string;
+    equipment: {
+        weight: number;
+    };
 };
 
 /**
@@ -60,16 +66,37 @@ export class Unit implements TickUpdate {
     readonly stamina: UnitStamina;
 
     /**
-     * Equipment weight in kg (armor, weapons, carried items)
-     * TODO: Refactor to proper Equipment/Inventory system later
+     * Health component handles injuries, consciousness, blood loss, and body part functionality
+     * Tracks all physical damage and its effects on combat effectiveness
      */
-    readonly equipment = {
-        weight: 0,
-    };
+    readonly health: UnitHealth;
 
-    // Placeholder for future components - these will be added as we build the system
-    // readonly combat: CombatComponent;     // Will handle actions, combat state, pain
-    // readonly body: BodyComponent;         // Will handle injuries, health, body parts
+    /**
+     * Combat component handles actions, weapon handling, and combat calculations
+     * Integrates with health and stamina for realistic combat mechanics
+     */
+    readonly combat: UnitCombat;
+
+    /**
+     * AI component that controls autonomous unit behavior
+     * Injected by game mode (e.g., UnitCombatAi for battle scenarios)
+     * Null means unit has no autonomous behavior
+     */
+    private ai: UnitAi | null = null;
+
+    /**
+     * Armor worn by the unit
+     */
+    private armor: import('./Armor').Armor | null = null;
+
+    /**
+     * Equipment weight in kg (armor, weapons, carried items)
+     */
+    get equipmentWeight(): number {
+        return (this.armor?.weight ?? 0);
+    }
+
+    // Placeholder for future components
     // readonly work: WorkComponent;         // Will handle non-combat activities
 
     /**
@@ -103,13 +130,33 @@ export class Unit implements TickUpdate {
 
         // Initialize stamina component with full stamina
         this.stamina = new UnitStamina(this, 100);
+
+        // Initialize health component
+        this.health = new UnitHealth(this);
+
+        // Initialize combat component
+        this.combat = new UnitCombat(this);
     }
 
     /**
      * Gets the total weight of the unit including body weight and equipment
      */
     get weight() {
-        return this.attributes.weight + this.equipment.weight;
+        return this.attributes.weight + this.equipmentWeight;
+    }
+
+    /**
+     * Equips armor on the unit
+     */
+    equipArmor(armor: import('./Armor').Armor) {
+        this.armor = armor;
+    }
+
+    /**
+     * Gets the currently equipped armor
+     */
+    getArmor() {
+        return this.armor;
     }
 
     /**
@@ -124,11 +171,22 @@ export class Unit implements TickUpdate {
             attributes: this.attributes.getState(),
             movement: this.movement.getState(),
             stamina: this.stamina.getState(),
+            health: this.health.getState(),
+            combat: this.combat.getState(),
+            armor: this.armor?.name ?? 'None',
             equipment: {
-                weight: this.equipment.weight,
+                weight: this.equipmentWeight,
             },
-            // TODO: cleanup all unused fields
-        } as UnitState;
+        };
+    }
+
+    /**
+     * Sets the AI for this unit
+     * Game modes inject AI implementations to control unit behavior
+     * @param ai - AI implementation or null to remove AI
+     */
+    setAi(ai: UnitAi | null) {
+        this.ai = ai;
     }
 
     /**
@@ -136,14 +194,24 @@ export class Unit implements TickUpdate {
      * @param deltaTime - Time elapsed since last update in seconds
      */
     update(deltaTime: number) {
-        // Update movement component first
+        // Let AI make decisions first (if present)
+        if (this.ai) {
+            this.ai.update(this, deltaTime);
+        }
+
+        // Update movement component
         this.movement.update(deltaTime);
 
         // Update stamina (it will derive recovery context automatically)
         this.stamina.update(deltaTime);
+
+        // Update health (injuries, bleeding, consciousness)
+        this.health.update(deltaTime);
+
+        // Update combat state
+        this.combat.update(deltaTime);
+
         // TODO: When other components are implemented, call their update methods here
-        // this.combat.update(deltaTime);
-        // this.body.update(deltaTime);
         // this.work.update(deltaTime);
     }
 }

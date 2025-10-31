@@ -30,6 +30,11 @@ export enum GameEvent {
     // unitDied = 'unit.died',
     unitMovementUpdate = 'unit.movementUpdate',
 
+    // Combat events
+    attackPreparing = 'combat.attackPreparing',
+    attackExecuting = 'combat.attackExecuting',
+    attackCompleted = 'combat.attackCompleted',
+
     // // Map events
     // mapLoaded = 'map.loaded',
     // mapUpdated = 'map.updated',
@@ -57,6 +62,21 @@ export interface GameEvents {
             position?: { x: number; y: number };
             direction?: number;
         };
+    }];
+
+    [GameEvent.attackPreparing]: [{
+        attackerId: number;
+        targetId: number;
+        attackType: 'attack' | 'heavyAttack' | 'riposte';
+    }];
+    [GameEvent.attackExecuting]: [{
+        attackerId: number;
+        targetId: number;
+        attackType: 'attack' | 'heavyAttack' | 'riposte';
+    }];
+    [GameEvent.attackCompleted]: [{
+        attackerId: number;
+        targetId: number;
     }];
 
     // TODO: cleanup
