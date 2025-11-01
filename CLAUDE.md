@@ -176,13 +176,35 @@ Units use a component-based architecture:
 - **Graceful degradation** when components fail
 - **Resource cleanup** on errors and shutdown
 
-## Development Workflow
+## Documentation Guidelines
 
-1. **Start with tests** - Write tests before implementation
-2. **Small iterations** - Keep changes focused and incremental
-3. **Component isolation** - Keep modules self-contained
-4. **Performance monitoring** - Use built-in performance monitoring
-5. **Code review** - Follow pull request guidelines in CONTRIBUTING.md
+### Game Mechanics Documentation
+
+**Location:** `/docs2/game-mechanics/` - Contains all game design and mechanics specifications
+
+**Before creating or updating documentation:**
+1. **Read the templates guide** - Always read `/docs2/templates/README.md` first
+2. **Choose appropriate template** - Select the correct template based on document type:
+   - `system-mechanics-template.md` - For individual game systems (combat, stamina, shields, etc.)
+   - `design-principles-template.md` - For philosophy, balance, and performance strategy
+   - `folder-readme-template.md` - For folder-level navigation and overviews
+3. **Follow the template structure** - Use the exact sections and format specified in the template
+4. **Stay within length limits** - Keep docs concise and focused (see template README for limits)
+
+**Documentation principles:**
+- Technical and concise - use formulas, tables, and specific values
+- Cross-reference related systems - link to dependencies and affected systems
+- Include concrete examples - show calculations and scenarios
+- Separate concerns - one system per document, split if too large
+- No speculation - only document what is designed and specified
+
+**Review criteria for each new document:**
+Before finalizing any game mechanics document, review against these questions:
+1. **Does this make sense?** - Is the system logical and internally consistent?
+2. **Is the system thought through?** - Are edge cases, interactions, and implications considered?
+3. **Does this mechanic give a feeling of realism on a 2d topdown view with 10000 units?** - Will players perceive realistic behavior at scale?
+4. **Can the player understand and see the mechanic in action?** - Is the system visible and comprehensible to players?
+5. **Is the performance cost worth it for player fun?** - Does the computational cost justify the gameplay value?
 
 ## Dependencies
 
