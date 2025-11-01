@@ -84,48 +84,21 @@ npm run lint         # Run ESLint
 - **SimulationController.ts** - Controls simulation flow for networked games
 - **WebsocketServer.ts** - WebSocket utilities and message handling
 
-### Testing Strategy
-- **Component-focused testing** with Jest
-- **Integration tests** for system interactions
-- **Behavior-driven development** approach
-- Test files co-located with source code using `.test.ts` extension
+## Coding Standards
 
-### Code Organization Principles
-- **One class per file** with matching filename
-- **Self-contained modules** with their own tests and utilities
-- **Files under 300 lines** for maintainability
-- **TypeScript with strict mode** for type safety
+**IMPORTANT:** For comprehensive coding standards, always refer to `/docs2/CODING_GUIDELINES.md`.
 
-## Development Guidelines
+This document contains detailed guidelines for:
+- TypeScript type system (strict typing, no escape hatches)
+- File organization (SRP, max 300 lines, export patterns)
+- Class design patterns (composition, when to use classes vs functions)
+- Error handling (fail fast, type-driven validation)
+- Testing standards (what to test, how to structure tests)
+- Documentation (JSDoc on public API, inline comments for complex logic)
+- Performance (profile-guided optimization)
+- Code style (naming, state management, avoiding common pitfalls)
 
-### Module Structure
-Each module follows this pattern:
-```
-/ModuleName/
-  ModuleName.ts         # Main implementation
-  ModuleName.test.ts    # Unit tests
-  helperFunction.ts     # Module-specific utilities
-  helperFunction.test.ts
-```
-
-### TypeScript Usage
-- Let TypeScript infer types when obvious
-- Explicitly type complex interfaces and function parameters
-- Use strict mode with proper error handling
-- Avoid unnecessary return type annotations for simple functions
-- Never use ": void" return types or other unnecessary type annotations when TypeScript can infer them
-
-### Performance Considerations
-- **Spatial partitioning** for efficient unit queries
-- **Batch processing** for large unit collections
-- **Worker threads** for pathfinding and AI (planned)
-- **Object pooling** to avoid garbage collection overhead
-
-### State Management
-- Use methods for all state changes (never direct property modification)
-- Log important state changes for debugging
-- Clean up resources properly in dispose methods
-- Use event-driven architecture for cross-component communication
+These guidelines must be followed for all code changes to maintain senior developer quality standards.
 
 ## Key Features
 
@@ -246,34 +219,15 @@ The following rules are defined by the user and workspace configuration. Claude 
 ### Workspace-Level Rules
 - All files in the folder "_OLD" are deprecated and only remain to use as example and maybe extract some logic and values later.
 
-### User Rules
-- Propose solutions and present options for the user to choose from.
-- Let TypeScript infer types when possible (e.g., avoid unnecessary return type annotations like `: void`).
-- Do not do things that are not needed (YAGNI principle).
-- Private methods should be at the end of a file.
-- Never do a git reset unless the user is asked and confirms.
-- Add multiline comments to every method, function, and class.
-- Never write `types.ts` files.
-- Do not create proxy methods to dependencies and no getter boilerplate.
-- Only do what is asked; do not do extra work. Make suggestions afterwards without causing any changes.
-- **Export at definition** - Always export classes and enums at their definition (e.g., `export class Foo` instead of separate `export { Foo }`)
-- Cover all files with tests. Tests should not do semantic testing but only test behavior and business logic. Do not test implementation details—only the public API of modules.
-- Develop in small iterations to give the user time to review changes and do git commits in between.
-- Write self-containing modules (single responsibility, containing logic, tests, and types as close together as possible). Example structure:
-  ```
-  /UserAccount/UserAccount.ts
-  /UserAccount/UserAccount.test.ts
-  /UserAccount/calculateSomething.ts (only used by UserAccount.ts)
-  /UserAccount/calculateSomething.test.ts
-  /UserAccount/UserAccountBalance.ts (child dependency of UserAccount)
-  /UserAccount/UserAccountBalance.test.ts
-  ```
-- Tests should follow the guidelines in `@TESTING_STRATEGY.md`.
-- The assistant should inspect the actual code rather than speculate when diagnosing issues.
-- To run TypeScript scripts directly, use `npx tsx script.ts` instead of `npx ts-node` or building first.
-- Do not use object cloning or defensive copying (e.g., `{...obj}` or `Object.assign()`). Use direct property access and assignment instead.
-- Prefer direct property access for object properties. Only add getter/setter methods when needed.
-- State changes should be explicit and logged with configurable log levels to enable simulation debugging without affecting performance in production battles.
-- Documentation files should be placed in the `/docs` directory.
-- The user prefers code that is simple, obvious, and has easy-to-follow references, follow KISS.
-- Use strict TypeScript typing - avoid `any`, `as` type assertions, and `!` non-null assertions.
+### Workflow and Process Rules
+- Propose solutions and present options for the user to choose from
+- Private methods should be at the end of a file
+- Never do a git reset unless the user is asked and confirms
+- Add multiline comments to every method, function, and class
+- Only do what is asked; do not do extra work. Make suggestions afterwards without causing any changes
+- Develop in small iterations to give the user time to review changes and do git commits in between
+- Tests should follow the guidelines in `/docs2/CODING_GUIDELINES.md`
+- The assistant should inspect the actual code rather than speculate when diagnosing issues
+- To run TypeScript scripts directly, use `npx tsx script.ts` instead of `npx ts-node` or building first
+- Documentation files should be placed in the `/docs` directory
+- The user prefers code that is simple, obvious, and has easy-to-follow references (KISS principle)
