@@ -45,12 +45,6 @@ npm run lint         # Run ESLint
 
 ## Architecture Overview
 
-### Core System Design
-- **Component-based architecture** with clear separation of concerns
-- **Event-driven communication** between systems using EventBus
-- **Modular design** where each system is self-contained
-- **Performance-optimized** for large-scale battle simulations
-
 ### Key Components
 
 #### Game Engine (`/backend/src/GameEngine/`)
@@ -120,12 +114,6 @@ These guidelines must be followed for all code changes to maintain senior develo
 - **Pathfinding system** with terrain cost calculations
 - **Visual map editor** using PIXI.js
 
-### Performance Optimization
-- **Spatial hash grid** for efficient collision detection
-- **Batch processing** for large unit updates
-- **Event-driven updates** to minimize unnecessary calculations
-- **Memory management** with proper resource cleanup
-
 ## File Structure Notes
 
 ### Backend Organization
@@ -170,11 +158,10 @@ Units use a component-based architecture:
 - **Event broadcasting** for game state changes
 - **Command handling** for simulation control (start/stop/reset)
 
-### Error Handling
-- **Specific error types** for different failure modes
-- **Comprehensive logging** for debugging and monitoring
-- **Graceful degradation** when components fail
-- **Resource cleanup** on errors and shutdown
+### Error Handling Architecture
+- **Logger system** - Configurable log levels for debugging without performance impact
+- **Event bus error propagation** - Errors in event handlers are caught and logged
+- **Resource cleanup** - Dispose methods for proper cleanup on errors and shutdown
 
 ## Documentation Guidelines
 
